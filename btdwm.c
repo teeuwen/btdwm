@@ -1,25 +1,37 @@
 /*
- * See LICENSE file for copyright and license details.
  *
- * dynamic window manager is designed like any other X client as well. It is
- * driven through handling X events. In contrast to other X clients, a window
- * manager selects for SubstructureRedirectMask on the root window, to receive
- * events about window (dis-)appearance.  Only one X connection at a time is
- * allowed to select for this event mask.
+ * © 2006-2010 Anselm R Garbe <anselm@garbe.us>
+ * © 2006-2007 Sander van Dijk <a dot h dot vandijk at gmail dot com>
+ * © 2006-2009 Jukka Salmi <jukka at salmi dot ch>
+ * © 2007-2009 Premysl Hruby <dfenze at gmail dot com>
+ * © 2007-2009 Szabolcs Nagy <nszabolcs at gmail dot com>
+ * © 2007-2009 Christof Musik <christof at sendfax dot de>
+ * © 2007-2008 Enno Gottox Boland <gottox at s01 dot de>
+ * © 2007-2008 Peter Hartlich <sgkkr at hartlich dot com>
+ * © 2008 Martin Hurton <martin dot hurton at gmail dot com>
+ * © 2008 Neale Pickett <neale dot woozle dot org>
+ * © 2009 Mate Nagy <mnagy@port70.net>
+ * © 2012-2015 Julian Goldsmith <julian@juliangoldsmith.com>
+ * © 2016-2017 Bastiaan Teeuwen <bastiaan.teeuwen170@gmail.com>
  *
- * The event handlers of dwm are organized in an array which is accessed
- * whenever a new event has been fetched. This allows event dispatching
- * in O(1) time.
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  *
- * Each child of the root window is called a client, except windows which have
- * set the override_redirect flag.  Clients are organized in a linked client
- * list on each monitor, the focus history is remembered through a stack list
- * on each monitor. Each client contains a bit array to indicate the tags of a
- * client.
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
  *
- * Keys and tagging rules are organized as arrays and defined in config.h.
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL
+ * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  *
- * To understand everything else, start reading main().
  */
 
 /* Redo includes */
