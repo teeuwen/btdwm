@@ -112,6 +112,24 @@ void detach(struct client *c)
 	}
 }
 
+static void reattach(struct client *c)
+{
+	if (c == c->mon->clients)
+		return;
+
+	if (c->prev)
+		c->prev->next = c->next;
+	if (c->next)
+		c->next->prev = c->prev;
+
+	c->mon->clients->prev = c;
+
+	c->prev = NULL;
+	c->next = c->mon->clients;
+
+	c->mon->clients = c;
+}
+
 void client_resize(struct client *c, int x, int y, int w, int h)
 {
 	uint32_t val[] = { x, y, w, h };
@@ -225,8 +243,6 @@ void bar_draw(struct monitor *m)
 	struct client *c;
 	unsigned int i, occ = 0;
 	int x, w, cx;
-
-	fprintf(stderr, "bar redraw\n");
 
 	for (c = m->clients; c; c = c->next)
 		occ |= c->tags;
@@ -478,6 +494,8 @@ void focus(struct client *c)
 		if (c->mon != selmon)
 			selmon = c->mon;
 
+		reattach(c);
+
 		urgent_clear(c);
 		buttons_grab(c, 1);
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
@@ -488,7 +506,6 @@ void focus(struct client *c)
 	}
 
 	selmon->client = c;
-	bars_draw();
 }
 
 int curpos_get(xcb_window_t w, int *x, int *y)
