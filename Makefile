@@ -1,61 +1,35 @@
-# dwm - dynamic window manager
 # See LICENSE file for copyright and license details.
 
 include config.mk
 
-SRC = dwm.c
-OBJ = ${SRC:.c=.o}
+objects = btdwm.o config.o functions.o layouts.o libnotify.o pango.o xcb.o
 
-all: options dwm
+all: btdwm
 
-options:
-	@echo dwm build options:
-	@echo "CFLAGS   = ${CFLAGS}"
-	@echo "LDFLAGS  = ${LDFLAGS}"
-	@echo "CC       = ${CC}"
-	@echo "DEBUG    = ${DEBUG}"
+%.o: %.c
+	echo -e "  CC      $<"
+	@$(CC) $(CFLAGS) -c $< -o $@
 
-.c.o:
-	@echo CC $<
-	@${CC} -c ${CFLAGS} $<
+PHONY += btdwm
+btdwm: $(objects)
+	echo -e "  LD      $<"
+	@$(CC) $(LDFLAGS) -o $@ $(objects)
 
-${OBJ}: config.h config.mk
-
-config.h:
-	@echo creating $@ from config.def.h
-	@cp config.def.h $@
-
-dwm: ${OBJ}
-	@echo CC -o $@
-	@${CC} -o $@ ${OBJ} ${LDFLAGS}
-
+PHONY += clean
 clean:
 	@echo cleaning
-	@rm -f dwm ${OBJ} dwm-${VERSION}.tar.gz
+	@rm -f btdwm $(objects)
 
-dist: clean
-	@echo creating dist tarball
-	@mkdir -p dwm-${VERSION}
-	@cp -R LICENSE Makefile README config.def.h config.mk \
-		dwm.1 ${SRC} dwm-${VERSION}
-	@tar -cf dwm-${VERSION}.tar dwm-${VERSION}
-	@gzip dwm-${VERSION}.tar
-	@rm -rf dwm-${VERSION}
+PHONY += install
+install: btdwm
+	@echo Installing executable file to $(DESTDIR)$(PREFIX)/bin
+	@mkdir -p $(DESTDIR)$(PREFIX)/bin
+	@cp -f btdwm $(DESTDIR)$(PREFIX)/bin
+	@chmod 755 $(DESTDIR)$(PREFIX)/bin/btdwm
 
-install: all
-	@echo installing executable file to ${DESTDIR}${PREFIX}/bin
-	@mkdir -p ${DESTDIR}${PREFIX}/bin
-	@cp -f dwm ${DESTDIR}${PREFIX}/bin
-	@chmod 755 ${DESTDIR}${PREFIX}/bin/dwm
-	@echo installing manual page to ${DESTDIR}${MANPREFIX}/man1
-	@mkdir -p ${DESTDIR}${MANPREFIX}/man1
-	@sed "s/VERSION/${VERSION}/g" < dwm.1 > ${DESTDIR}${MANPREFIX}/man1/dwm.1
-	@chmod 644 ${DESTDIR}${MANPREFIX}/man1/dwm.1
-
+PHONY += uninstall
 uninstall:
-	@echo removing executable file from ${DESTDIR}${PREFIX}/bin
-	@rm -f ${DESTDIR}${PREFIX}/bin/dwm
-	@echo removing manual page from ${DESTDIR}${MANPREFIX}/man1
-	@rm -f ${DESTDIR}${MANPREFIX}/man1/dwm.1
+	@echo Removing executable file from $(DESTDIR)$(PREFIX)/bin
+	@rm -f $(DESTDIR)$(PREFIX)/bin/btdwm
 
-.PHONY: all options clean dist install uninstall
+.PHONY: $(PHONY)
