@@ -1,5 +1,25 @@
-# dwm - dynamic window manager
-dwm is an extremely fast, small, and dynamic window manager for X.
+# btdwm - Bastiaan Teeuwen's dynamic window manager
+btdwm is a fork of dwm-xcb which again is a fork of dwm, an extremely fast, small, and dynamic window manager for X (see LICENSE file).
+btdwm contains a number of (in my eyes) enhancements over dwm and dwm-xcb.
+
+Enhancements over dwm:
+
+	* libnotify notifications
+	* Per tag layout
+	* Probably more, I should've put this on version control earlier on...
+
+Enhancements over dwm-xcb:
+
+	* Drawing is done using Cairo instead of XCB
+	* Text drawing is done using Pango instead of XCB
+	* Various bug-fixes
+
+Other changes:
+
+	* The default colorscheme had been adjusted to my likings
+	* The clock is now baked in to the center of the statusbar
+	* More color palettes
+	* ...
 
 
 ## Requirements

@@ -1,3 +1,4 @@
-dwm
-dwm.o
-config.h
+*.o
+*.swp
+
+btdwm
