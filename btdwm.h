@@ -137,7 +137,7 @@ struct client {
 
 	int		x, y, w, h;
 	int		oldx, oldy, oldw, oldh;
-	int		isfixed, isfloating, oldstate;
+	int		fixed, floating, urgent, oldstate;
 
 	double		mina, maxa;
 	int		basew, baseh, incw, inch, maxw, maxh, minw, minh;
@@ -164,7 +164,7 @@ struct rule {
 	const char	*title;
 
 	unsigned int	tags;
-	int		isfloating;
+	int		floating;
 	int		monitor;
 };
 

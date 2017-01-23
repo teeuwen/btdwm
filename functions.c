@@ -164,10 +164,10 @@ void togglefloating(const Arg *arg)
 	if (!selmon->client)
 		return;
 
-	selmon->client->isfloating =
-		!selmon->client->isfloating || selmon->client->isfixed;
+	selmon->client->floating =
+		!selmon->client->floating || selmon->client->fixed;
 
-	if (selmon->client->isfloating)
+	if (selmon->client->floating)
 		resize(selmon->client, selmon->client->x, selmon->client->y,
 				selmon->client->w, selmon->client->h, 0);
 
@@ -252,7 +252,7 @@ void zoom(const Arg *arg)
 
 	if (!selmon->lt[selmon->clientlt]->arrange ||
 			selmon->lt[selmon->clientlt]->arrange == monocle ||
-			(selmon->client && selmon->client->isfloating))
+			(selmon->client && selmon->client->floating))
 		return;
 	if (c == nexttiled(selmon->clients))
 		if (!c || !(c = nexttiled(c->next)))

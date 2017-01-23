@@ -248,7 +248,7 @@ static void rules_apply(struct client *c)
 	const char *class, *instance;
 	unsigned int i;
 
-	c->isfloating = c->tags = 0;
+	c->floating = c->tags = 0;
 
 	if (xcb_icccm_get_wm_class_reply(conn, xcb_icccm_get_wm_class(conn,
 			c->win), &ch, 0)) {
@@ -261,7 +261,7 @@ static void rules_apply(struct client *c)
 					strstr(class, r->class)) &&
 					(!r->instance ||
 					strstr(instance, r->instance))) {
-				c->isfloating = r->isfloating;
+				c->floating = r->floating;
 				c->tags |= r->tags;
 
 				for (m = mons; m && m->id != r->monitor;
@@ -322,7 +322,7 @@ void manage(xcb_window_t w)
 	c->h = c->oldh = geom_reply->height;
 
 	if (c->w == c->mon->w && c->h == c->mon->h) {
-		c->isfloating = 1;
+		c->floating = 1;
 
 		c->x = c->mon->x;
 		c->y = c->mon->y;
@@ -353,8 +353,8 @@ void manage(xcb_window_t w)
 	updatesizehints(c);
 	buttons_grab(c, 0);
 
-	if (!c->isfloating)
-		c->isfloating = c->oldstate = trans != 0 || c->isfixed;
+	if (!c->floating)
+		c->floating = c->oldstate = trans != 0 || c->fixed;
 
 	uint32_t config_values[] = {
 		c->x + 2 * screen->width_in_pixels,
@@ -366,7 +366,7 @@ void manage(xcb_window_t w)
 
 	xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_X |
 			XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH |
-			XCB_CONFIG_WINDOW_HEIGHT | (c->isfloating ?
+			XCB_CONFIG_WINDOW_HEIGHT | (c->floating ?
 			XCB_CONFIG_WINDOW_STACK_MODE : 0), config_values);
 	xcb_map_window(conn, c->win);
 
@@ -480,7 +480,7 @@ void client_move_mouse(const Arg *arg, int move)
 			active = 0;
 		case XCB_MOTION_NOTIFY:
 			/* FIXME Check at the very start, why again? */
-			if (!c->isfloating &&
+			if (!c->floating &&
 					selmon->layouts[selmon->tag]->arrange)
 				break;
 
@@ -621,10 +621,12 @@ void urgent_clear(struct client *c)
 {
 	xcb_icccm_wm_hints_t wmh;
 
-	if (!xcb_icccm_get_wm_hints_reply(conn,
+	if (!c->urgent || !xcb_icccm_get_wm_hints_reply(conn,
 			xcb_icccm_get_wm_hints_unchecked(conn, c->win),
 			&wmh, 0))
 		return;
+
+	c->urgent = 0;
 
 	wmh.flags &= ~XCB_ICCCM_WM_HINT_X_URGENCY;
 	xcb_icccm_set_wm_hints(conn, c->win, &wmh);
@@ -656,7 +658,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 	} else if ((c = client_get(e->event))) {
 		focus(c);
 
-		if (c->isfloating || !selmon->layouts[selmon->tag]->arrange)
+		if (c->floating || !selmon->layouts[selmon->tag]->arrange)
 			restack(c->mon);
 
 		click = ClkClientWin;
@@ -691,8 +693,8 @@ static int clientmessage(xcb_generic_event_t *_e)
 					e->window, netatom[NetWMState],
 					XCB_ATOM, 32, 1, (const void *)
 					&netatom[NetWMFullscreen]);
-			c->oldstate = c->isfloating;
-			c->isfloating = 1;
+			c->oldstate = c->floating;
+			c->floating = 1;
 			client_resize(c, c->mon->x, c->mon->y,
 					c->mon->w, c->mon->h);
 			xcb_configure_window(conn, c->win,
@@ -701,7 +703,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 			xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
 					e->window, netatom[NetWMState],
 					XCB_ATOM, 32, 0, (const void *) 0);
-			c->isfloating = c->oldstate;
+			c->floating = c->oldstate;
 			c->x = c->oldx;
 			c->y = c->oldy;
 			c->w = c->oldw;
@@ -728,7 +730,7 @@ static int configurerequest(xcb_generic_event_t *_e)
 	struct client *c;
 
 	if ((c = client_get(e->window))) {
-		if (c->isfloating || !selmon->layouts[selmon->tag]->arrange) {
+		if (c->floating || !selmon->layouts[selmon->tag]->arrange) {
 			m = c->mon;
 			if (e->value_mask & XCB_CONFIG_WINDOW_X)
 			       c->x = m->x + e->x;
@@ -738,9 +740,9 @@ static int configurerequest(xcb_generic_event_t *_e)
 			       c->w = e->width;
 			if (e->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
 				c->h = e->height;
-			if ((c->x + c->w) > m->x + m->w && c->isfloating)
+			if ((c->x + c->w) > m->x + m->w && c->floating)
 				c->x = m->x + (m->w / 2 - c->w / 2);
-			if ((c->y + c->h) > m->y + m->h && c->isfloating)
+			if ((c->y + c->h) > m->y + m->h && c->floating)
 				c->y = m->y + (m->h / 2 - c->h / 2);
 
 			if ((e->value_mask & (XCB_CONFIG_WINDOW_X |
@@ -818,7 +820,7 @@ static int enternotify(xcb_generic_event_t *_e)
 
 	c = client_get(e->event);
 
-	if ((c && (c->isfloating || !c->mon->layouts[c->mon->tag]->arrange)) ||
+	if ((c && (c->floating || !c->mon->layouts[c->mon->tag]->arrange)) ||
 			((e->mode != XCB_NOTIFY_MODE_NORMAL ||
 			e->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
 			e->event != root))
@@ -951,8 +953,8 @@ static int propertynotify(xcb_generic_event_t *_e)
 
 		xcb_icccm_get_wm_transient_for_from_reply( &trans, reply);
 
-		if (trans && !c->isfloating && (c->isfloating =
-				(client_get(trans) != NULL)))
+		if (trans && !c->floating &&
+				(c->floating = (client_get(trans) != NULL)))
 			arrange(c->mon);
 	}
 

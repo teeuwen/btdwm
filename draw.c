@@ -95,7 +95,9 @@ static void rgb_get(cairo_t *cr, int palette, int status, int bg,
 		}
 		break;
 	case PLT_URGENT:
-		/* TODO */
+			*r = colors[COLOR_STURGENT][0];
+			*g = colors[COLOR_STURGENT][1];
+			*b = colors[COLOR_STURGENT][2];
 		break;
 	}
 }

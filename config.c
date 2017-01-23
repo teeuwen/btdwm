@@ -24,7 +24,7 @@ const char fg_light[]		= "#AAAAAA";
 
 const char status_active[]	= "#83A598";
 const char status_focus[]	= "#DFDFDF";
-const char status_urgent[]	= "#A57074";
+const char status_urgent[]	= "#FFA500";
 
 
 /*
