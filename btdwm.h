@@ -57,24 +57,19 @@
 #endif
 #define TEXTW(c, x)		(textnw(c, x, strlen(x)) + 8)
 
-/* EWMH atoms */
-#define NetSupported	0
-#define NetWMName	1
-#define NetWMState	2
-#define NetActiveWindow	3
-#define NetWMWindowType	4
-#define NetWMFullscreen	5
-#define NetLast		6
+#define CLICK_TAGS	1
+#define CLICK_CLIENT	2
 
-/* Default atoms */
-#define WMProtocols	0
-#define WMDelete	1
-#define WMState		2
-#define WMLast		3
-
-/* Click events */
-#define ClkTagBar	1
-#define ClkClientWin	2
+#define ATOM_WM		0
+#define ATOM_DELETE	1
+#define ATOM_STATE	2
+#define ATOM_NET	3
+#define ATOM_NAME	4
+#define ATOM_NETSTATE	5
+#define ATOM_ACTIVE	6
+#define ATOM_TYPE	7
+#define ATOM_FULLSCREEN	8
+#define ATOM_MAX	9
 
 #define CUR_NORMAL	0
 #define CUR_MOVE	1
@@ -212,15 +207,12 @@ extern const int buttons_len;
 extern const unsigned int tdelay;
 
 extern xcb_connection_t *conn;
+extern xcb_window_t root;
+
+extern xcb_atom_t atoms[];
+
 extern struct monitor *mons;
 extern struct monitor *selmon;
-extern xcb_window_t root;
-extern xcb_screen_t *screen; /* XXX TEMP */
-
-extern xcb_cursor_t cursor[];
-
-extern xcb_atom_t wmatom[], netatom[];
-extern struct dc dc;
 
 void attach(struct client *c);
 void detach(struct client *c);
@@ -268,14 +260,16 @@ int textprop_get(xcb_window_t w, xcb_atom_t atom,
 
 xcb_atom_t atom_add(const char *name);
 xcb_atom_t atom_get(xcb_window_t w, xcb_atom_t atom);
+void atom_init(void);
 
 void urgent_clear(struct client *c);
 
-int xinerama_init(void);
+void cur_init(void);
 void events_init(void);
 void font_init(void);
 void mon_init(void);
 void xcb_init(void);
+int xinerama_init(void);
 
 void font_quit(void);
 void mon_quit(void);

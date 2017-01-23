@@ -37,6 +37,7 @@
 #include <xcb/xcb.h>
 #include <xcb/xcb_atom.h>
 #include <xcb/xcb_aux.h>
+#include <xcb/xcb_cursor.h>
 #include <xcb/xcb_event.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
@@ -54,10 +55,16 @@
 #define MOUSEMASK	(BUTTONMASK | XCB_EVENT_MASK_POINTER_MOTION)
 #define CLEANMASK(m)	(m & ~(numlockmask | XCB_MOD_MASK_LOCK))
 
-xcb_screen_t *screen;
+xcb_connection_t *conn;
+static xcb_screen_t *screen;
+xcb_window_t root;
+
 static xcb_generic_error_t *err;
 
 static unsigned int numlockmask;
+
+xcb_atom_t atoms[ATOM_MAX];
+static xcb_cursor_t cursor[CUR_MAX];
 static xcb_key_symbols_t *syms;
 
 static int (*xcb_handlers[XCB_NO_OPERATION]) (xcb_generic_event_t *);
@@ -158,7 +165,7 @@ void numlockmask_update(void)
 
 static void title_update(struct client *c)
 {
-	if (!textprop_get(c->win, netatom[NetWMName], c->name, sizeof(c->name)))
+	if (!textprop_get(c->win, atoms[ATOM_NAME], c->name, sizeof(c->name)))
 		if (!textprop_get(c->win,
 				XCB_ATOM_WM_NAME, c->name, sizeof(c->name)))
 			strcpy(c->name, "broken");
@@ -208,7 +215,7 @@ void scan(void)
 			continue;
 
 		if (ga_reply->map_state == XCB_MAP_STATE_VIEWABLE ||
-			atom_get(wins[i], wmatom[WMState]) == XCB_ICCCM_WM_STATE_ICONIC)
+			atom_get(wins[i], atoms[ATOM_STATE]) == XCB_ICCCM_WM_STATE_ICONIC)
 			manage(wins[i]);
 
 		free(ga_reply);
@@ -227,7 +234,7 @@ void scan(void)
 
 		if (trans_reply && (ga_reply->map_state ==
 				XCB_MAP_STATE_VIEWABLE ||
-				atom_get(wins[i], wmatom[WMState]) ==
+				atom_get(wins[i], atoms[ATOM_STATE]) ==
 				XCB_ICCCM_WM_STATE_ICONIC))
 			manage(wins[i]);
 
@@ -405,9 +412,9 @@ void client_kill(void)
 		ev.response_type = XCB_CLIENT_MESSAGE;
 		ev.window = selmon->client->win;
 		ev.format = 32;
-		ev.data.data32[0] = wmatom[WMDelete];
+		ev.data.data32[0] = atoms[ATOM_DELETE];
 		ev.data.data32[1] = XCB_TIME_CURRENT_TIME;
-		ev.type = wmatom[WMProtocols];
+		ev.type = atoms[ATOM_WM];
 
 		testcookie(xcb_send_event_checked(conn, 0, selmon->client->win,
 				XCB_EVENT_MASK_NO_EVENT, (const char *) &ev));
@@ -529,7 +536,7 @@ void buttons_grab(struct client *c, int focused)
 
 	if (focused) {
 		for (i = 0; i < buttons_len; i++)
-			if (buttons[i].click == ClkClientWin)
+			if (buttons[i].click == CLICK_CLIENT)
 				for (j = 0; j < LENGTH(val); j++)
 					xcb_grab_button(conn, 0, c->win, BUTTONMASK, XCB_GRAB_MODE_SYNC,
 						XCB_GRAB_MODE_ASYNC, 0, XCB_CURSOR_NONE,
@@ -566,30 +573,6 @@ void keys_grab(void)
 					*code, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
 		free(code);
 	}
-}
-
-xcb_atom_t atom_get(xcb_window_t w, xcb_atom_t atom)
-{
-	xcb_get_property_reply_t *reply;
-	xcb_atom_t result;
-
-	reply = xcb_get_property_reply(conn, xcb_get_property(conn, 0, w, atom,
-			XCB_ATOM_ATOM, 0, 0), &err);
-	testerr();
-
-	if (!reply)
-		return -1;
-
-	/* if (!xcb_get_property_value_length(reply)) {
-		free(reply);
-		return -1;
-	} */
-
-	result = *(xcb_atom_t *) xcb_get_property_value(reply);
-
-	free(reply);
-
-	return result;
 }
 
 int textprop_get(xcb_window_t w, xcb_atom_t atom, char *text, unsigned int size)
@@ -652,7 +635,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 		} while (e->event_x >= x && ++i < tags_len);
 
 		if (i < tags_len) {
-			click = ClkTagBar;
+			click = CLICK_TAGS;
 			arg.i = i;
 		}
 	} else if ((c = client_get(e->event))) {
@@ -661,7 +644,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 		if (c->floating || !selmon->layouts[selmon->tag]->arrange)
 			restack(c->mon);
 
-		click = ClkClientWin;
+		click = CLICK_CLIENT;
 	}
 
 	for (i = 0; i < buttons_len; i++)
@@ -669,7 +652,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 				buttons[i].button == e->detail &&
 				CLEANMASK(buttons[i].mask) ==
 				CLEANMASK(e->state))
-			buttons[i].func(click == ClkTagBar &&
+			buttons[i].func(click == CLICK_CLIENT &&
 					buttons[i].arg.i == 0 ?
 					&arg : &buttons[i].arg);
 
@@ -686,13 +669,13 @@ static int clientmessage(xcb_generic_event_t *_e)
 	if (!(c = client_get(e->window)))
 		return 0;
 
-	if (e->type == netatom[NetWMState] && 
-			e->data.data32[1] == netatom[NetWMFullscreen]) {
+	if (e->type == atoms[ATOM_NETSTATE] && 
+			e->data.data32[1] == atoms[ATOM_FULLSCREEN]) {
 		if (e->data.data32[0]) {
 			xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
-					e->window, netatom[NetWMState],
+					e->window, atoms[ATOM_NETSTATE],
 					XCB_ATOM, 32, 1, (const void *)
-					&netatom[NetWMFullscreen]);
+					&atoms[ATOM_FULLSCREEN]);
 			c->oldstate = c->floating;
 			c->floating = 1;
 			client_resize(c, c->mon->x, c->mon->y,
@@ -701,7 +684,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 					XCB_CONFIG_WINDOW_STACK_MODE, values);
 		} else {
 			xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
-					e->window, netatom[NetWMState],
+					e->window, atoms[ATOM_NETSTATE],
 					XCB_ATOM, 32, 0, (const void *) 0);
 			c->floating = c->oldstate;
 			c->x = c->oldx;
@@ -711,7 +694,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 			client_resize(c, c->x, c->y, c->w, c->h);
 			arrange(c->mon);
 		}
-	} else if (e->type == netatom[NetActiveWindow]) {
+	} else if (e->type == atoms[ATOM_ACTIVE]) {
 		if (!ISVISIBLE(c)) /* XXX Set urgent or something maybe? */
 			return 0;
 
@@ -938,12 +921,12 @@ static int propertynotify(xcb_generic_event_t *_e)
 	} else if (e->atom == XCB_ATOM_WM_HINTS) {
 		updatewmhints(c);
 		bars_draw();
-	} else if (e->atom == XCB_ATOM_WM_NAME || netatom[NetWMName]) {
+	} else if (e->atom == XCB_ATOM_WM_NAME || atoms[ATOM_NAME]) {
 		title_update(c);
 
 		if (c == c->mon->client)
 			bar_draw(c->mon);
-	} else if (e->atom == netatom[NetWMWindowType]) {
+	} else if (e->atom == atoms[ATOM_TYPE]) {
 		windowtype_update(c);
 	} else if (e->atom == XCB_ATOM_WM_TRANSIENT_FOR) {
 		reply = xcb_get_property_reply(conn,
@@ -1068,6 +1051,21 @@ void mon_quit(void)
 		m = m->next;
 		free(m);
 	}
+}
+
+void cur_init(void)
+{
+	xcb_cursor_context_t *ctx;
+
+	xcb_cursor_context_new(conn, screen, &ctx);
+	cursor[CUR_NORMAL] = xcb_cursor_load_cursor(ctx, "left_ptr");
+	cursor[CUR_MOVE] = xcb_cursor_load_cursor(ctx, "fleur");
+	cursor[CUR_RESIZE_TL] = xcb_cursor_load_cursor(ctx, "top_left_corner");
+	cursor[CUR_RESIZE_TR] = xcb_cursor_load_cursor(ctx, "top_right_corner");
+	cursor[CUR_RESIZE_BL] =
+		xcb_cursor_load_cursor(ctx, "bottom_left_corner");
+	cursor[CUR_RESIZE_BR] =
+		xcb_cursor_load_cursor(ctx, "bottom_right_corner");
 }
 
 void run(void)

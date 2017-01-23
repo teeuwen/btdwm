@@ -38,13 +38,10 @@
 
 #include <xcb/xcb.h>
 #include <xcb/xcb_atom.h>
-#include <xcb/xcb_cursor.h>
 #include <xcb/xcb_aux.h>
 #include <xcb/xcb_event.h>
 #include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
-#include <xcb/xcb_keysyms.h>
-#include <xcb/xinerama.h>
 
 #include <errno.h>
 #include <signal.h>
@@ -62,15 +59,9 @@
 static char ttime[MAX_NAME];
 static char tdate[MAX_NAME];
 
-xcb_connection_t *conn;
 static int screen_w, screen_h;
 struct monitor *mons;
 struct monitor *selmon;
-xcb_window_t root;
-
-xcb_cursor_t cursor[CUR_MAX];
-
-xcb_atom_t wmatom[WMLast], netatom[NetLast];
 
 /* TODO Show __FILE__ as well */
 void die(const char *errstr, ...)
@@ -505,14 +496,14 @@ void focus(struct client *c)
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
 				c->win, XCB_CURRENT_TIME);
 		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
-				netatom[NetActiveWindow], XCB_ATOM,
+				atoms[ATOM_ACTIVE], XCB_ATOM,
 				32, 1, (const void *) &c->win);
 
 	} else {
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
 				root, XCB_CURRENT_TIME);
 		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
-				netatom[NetActiveWindow], XCB_ATOM,
+				atoms[ATOM_ACTIVE], XCB_ATOM,
 				32, 0, (const void *) 0);
 	}
 
@@ -543,9 +534,9 @@ int isprotodel(struct client *c)
 
 	if (xcb_icccm_get_wm_protocols_reply(conn,
 			xcb_icccm_get_wm_protocols_unchecked(conn,
-			c->win, wmatom[WMProtocols]), &proto_reply, 0)) {
+			c->win, atoms[ATOM_WM]), &proto_reply, 0)) {
 		for (i = 0; i < proto_reply.atoms_len; i++)
-			if (proto_reply.atoms[i] == wmatom[WMDelete])
+			if (proto_reply.atoms[i] == atoms[ATOM_DELETE])
 				ret = 1;
 
 		xcb_icccm_get_wm_protocols_reply_wipe(&proto_reply);
@@ -585,16 +576,55 @@ void setclientstate(struct client *c, long state)
 	long data[] = { state, XCB_ATOM_NONE };
 
 	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, c->win,
-			wmatom[WMState], wmatom[WMState], 32, 2,
+			atoms[ATOM_STATE], atoms[ATOM_STATE], 32, 2,
 			(unsigned char*) data);
 }
-
-#define NUM_ATOMS (WMLast + NetLast)
 
 xcb_atom_t atom_add(const char *name)
 {
 	return xcb_intern_atom_reply(conn, xcb_intern_atom(conn,
 			0, strlen(name), name), 0)->atom;
+}
+
+void atom_init(void)
+{
+	atoms[ATOM_WM] = atom_add("WM_PROTOCOLS");
+	atoms[ATOM_DELETE] = atom_add("WM_DELETE_WINDOW");
+	atoms[ATOM_STATE] = atom_add("WM_STATE");
+	atoms[ATOM_NET] = atom_add("_NET_WM_SUPPORTED");
+	atoms[ATOM_NAME] = atom_add("_NET_WM_NAME");
+	atoms[ATOM_NETSTATE] = atom_add("_NET_WM_STATE");
+	atoms[ATOM_ACTIVE] = atom_add("_NET_ACTIVE_WINDOW");
+	atoms[ATOM_TYPE] = atom_add("_NET_WM_WINDOW_TYPE");
+	atoms[ATOM_FULLSCREEN] = atom_add("_NET_WM_STATE_FULLSCREEN");
+
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
+			atoms[ATOM_NET], XCB_ATOM,
+			32, ATOM_MAX - ATOM_NET,
+			(const void *) &atoms[ATOM_NET]);
+}
+
+xcb_atom_t atom_get(xcb_window_t w, xcb_atom_t atom)
+{
+	xcb_get_property_reply_t *reply;
+	xcb_atom_t result;
+
+	reply = xcb_get_property_reply(conn, xcb_get_property(conn, 0, w, atom,
+			XCB_ATOM_ATOM, 0, 0), 0);
+
+	if (!reply)
+		return -1;
+
+	/* if (!xcb_get_property_value_length(reply)) {
+		free(reply);
+		return -1;
+	} */
+
+	result = *(xcb_atom_t *) xcb_get_property_value(reply);
+
+	free(reply);
+
+	return result;
 }
 
 void showhide(struct client *c)
@@ -633,10 +663,10 @@ void unfocus(struct client *c, int setfocus)
 void windowtype_update(struct client *c)
 {
 	printf("called\n");
-	xcb_atom_t wtype = atom_get(c->win, netatom[NetWMWindowType]);
+	xcb_atom_t wtype = atom_get(c->win, atoms[ATOM_TYPE]);
 	printf("%d\n", wtype);
 
-	if (wtype == netatom[NetWMWindowType])
+	if (wtype == atoms[ATOM_TYPE])
 		c->floating = 1;
 
 	/* TODO Fullscreen windows */
@@ -711,33 +741,6 @@ void updatewmhints(struct client *c)
 
 void setup(void)
 {
-	xcb_cursor_context_t *ctx;
-
-	wmatom[WMProtocols] = atom_add("WM_PROTOCOLS");
-	wmatom[WMDelete] = atom_add("WM_DELETE_WINDOW");
-	wmatom[WMState] = atom_add("WM_STATE");
-
-	netatom[NetSupported] = atom_add("_NET_WM_SUPPORTED");
-	netatom[NetWMName] = atom_add("_NET_WM_NAME");
-	netatom[NetWMState] = atom_add("_NET_WM_STATE");
-	netatom[NetActiveWindow] = atom_add("_NET_ACTIVE_WINDOW");
-	netatom[NetWMWindowType] = atom_add("_NET_WM_WINDOW_TYPE");
-	netatom[NetWMFullscreen] = atom_add("_NET_WM_STATE_FULLSCREEN");
-
-	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
-			netatom[NetSupported], XCB_ATOM, 32, NetLast,
-			(const void *) netatom);
-
-	xcb_cursor_context_new(conn, screen, &ctx);
-	cursor[CUR_NORMAL] = xcb_cursor_load_cursor(ctx, "left_ptr");
-	cursor[CUR_MOVE] = xcb_cursor_load_cursor(ctx, "fleur");
-	cursor[CUR_RESIZE_TL] = xcb_cursor_load_cursor(ctx, "top_left_corner");
-	cursor[CUR_RESIZE_TR] = xcb_cursor_load_cursor(ctx, "top_right_corner");
-	cursor[CUR_RESIZE_BL] =
-		xcb_cursor_load_cursor(ctx, "bottom_left_corner");
-	cursor[CUR_RESIZE_BR] =
-		xcb_cursor_load_cursor(ctx, "bottom_right_corner");
-
 	time_update(0);
 	bars_update();
 
@@ -769,7 +772,9 @@ int main(int argc, char *argv[])
 
 	xcb_init();
 	mon_init();
+	atom_init();
 	font_init();
+	cur_init();
 	msg_init();
 
 	setup();
