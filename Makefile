@@ -2,7 +2,7 @@
 
 include config.mk
 
-objects = btdwm.o config.o functions.o layouts.o libnotify.o pango.o xcb.o
+objects = btdwm.o config.o draw.o functions.o layouts.o msg.o xcb.o
 
 all: btdwm
 

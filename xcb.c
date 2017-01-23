@@ -254,7 +254,7 @@ static void rules_apply(struct client *c)
 			c->win), &ch, 0)) {
 		class = ch.class_name ? ch.class_name : "broken";
 		instance = ch.instance_name ? ch.instance_name : "broken";
-		for(i = 0; i < rules_len; i++) {
+		for (i = 0; i < rules_len; i++) {
 			r = &rules[i];
 			if ((!r->title || strstr(c->name, r->title)) &&
 					(!r->class ||
@@ -345,8 +345,7 @@ void manage(xcb_window_t w)
 		XCB_EVENT_MASK_PROPERTY_CHANGE |
 		XCB_EVENT_MASK_STRUCTURE_NOTIFY
 	};
-	xcb_change_window_attributes(conn, w,
-			XCB_CW_BORDER_PIXEL | XCB_CW_EVENT_MASK, cw_values);
+	xcb_change_window_attributes(conn, w, XCB_CW_EVENT_MASK, cw_values);
 
 	attach(c);
 	configure(c);
@@ -433,7 +432,7 @@ void client_move_mouse(const Arg *arg, int move)
 	if (!(c = selmon->client) || !curpos_get(c->win, &x, &y))
 		return;
 
-	restack(selmon);
+	/* restack(selmon); */
 	ox = c->x;
 	oy = c->y;
 	ow = c->w;
@@ -531,7 +530,7 @@ void buttons_grab(struct client *c, int focused)
 	if (focused) {
 		for (i = 0; i < buttons_len; i++)
 			if (buttons[i].click == ClkClientWin)
-				for(j = 0; j < LENGTH(val); j++)
+				for (j = 0; j < LENGTH(val); j++)
 					xcb_grab_button(conn, 0, c->win, BUTTONMASK, XCB_GRAB_MODE_SYNC,
 						XCB_GRAB_MODE_ASYNC, 0, XCB_CURSOR_NONE,
 						buttons[i].button, buttons[i].mask | val[j]);
@@ -562,7 +561,7 @@ void keys_grab(void)
 	for (i = 0; i < keys_len; i++) {
 		code = xcb_key_symbols_get_keycode(syms, keys[i].keysym);
 		if (code)
-			for(j = 0; j < LENGTH(val); j++)
+			for (j = 0; j < LENGTH(val); j++)
 				xcb_grab_key(conn, 1, root, keys[i].mod | val[j],
 					*code, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
 		free(code);
@@ -656,6 +655,10 @@ static int buttonpress(xcb_generic_event_t *_e)
 		}
 	} else if ((c = client_get(e->event))) {
 		focus(c);
+
+		if (c->isfloating || !selmon->layouts[selmon->tag]->arrange)
+			restack(c->mon);
+
 		click = ClkClientWin;
 	}
 
@@ -775,7 +778,7 @@ static int configurenotify(xcb_generic_event_t *e)
 
 	if (ev->window == root) {
 		if (geom_update(ev->width, ev->height)) {
-			bars_update();
+			/* bars_update(); */
 
 			arrange(0);
 		}
@@ -799,11 +802,15 @@ static int destroynotify(xcb_generic_event_t *_e)
 static int enternotify(xcb_generic_event_t *e)
 {
 	struct monitor *m;
+	struct client *c;
 	xcb_enter_notify_event_t *ev = (xcb_enter_notify_event_t*) e;
 
-	if ((ev->mode != XCB_NOTIFY_MODE_NORMAL ||
+	c = client_get(ev->event);
+
+	if ((c && (c->isfloating || !c->mon->layouts[c->mon->tag]->arrange)) ||
+			((ev->mode != XCB_NOTIFY_MODE_NORMAL ||
 			ev->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
-			ev->event != root)
+			ev->event != root))
 		return 0;
 
 	if ((m = mon_get(ev->event)) && m != selmon) {
@@ -811,7 +818,7 @@ static int enternotify(xcb_generic_event_t *e)
 		selmon = m;
 	}
 
-	focus(client_get(ev->event));
+	focus(c);
 
 	return 0;
 }
@@ -890,7 +897,7 @@ static int maprequest(xcb_generic_event_t *e)
 	return 0;
 }
 
-static int motionnotify(xcb_generic_event_t *_e)
+/* static int motionnotify(xcb_generic_event_t *_e)
 {
 	xcb_motion_notify_event_t* e;
 	struct monitor *m;
@@ -907,7 +914,7 @@ static int motionnotify(xcb_generic_event_t *_e)
 	}
 
 	return 0;
-}
+} */
 
 static int unmapnotify(xcb_generic_event_t *_e)
 {
@@ -972,7 +979,7 @@ static int (*xcb_handlers[XCB_NO_OPERATION]) (xcb_generic_event_t *) = {
 	[XCB_KEY_PRESS] =		&keypress,
 	[XCB_MAPPING_NOTIFY] =		&mappingnotify,
 	[XCB_MAP_REQUEST] =		&maprequest,
-	[XCB_MOTION_NOTIFY] =		&motionnotify,
+	/* [XCB_MOTION_NOTIFY] =		&motionnotify, */
 	[XCB_PROPERTY_NOTIFY] =		&propertynotify,
 	[XCB_UNMAP_NOTIFY] =		&unmapnotify,
 	[XCB_NONE] =			NULL

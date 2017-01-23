@@ -57,7 +57,7 @@
 #include <unistd.h>
 
 #include "btdwm.h"
-#include "libnotify.h"
+#include "msg.h"
 
 static char ttime[MAX_NAME];
 static char tdate[MAX_NAME];
@@ -404,7 +404,7 @@ int applysizehints(struct client *c, int *x, int *y, int *w, int *h, int interac
 	if (*w < 16)
 		*w = 16;
 
-	if (c->isfloating) {
+	if (c->isfloating || !c->mon->layouts[c->mon->tag]->arrange) {
 		baseismin = c->basew == c->minw && c->baseh == c->minh;
 
 		/* Temporarily remove base dimensions */
