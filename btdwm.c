@@ -495,14 +495,20 @@ void focus(struct client *c)
 			selmon = c->mon;
 
 		reattach(c);
-
 		urgent_clear(c);
 		buttons_grab(c, 1);
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
 				c->win, XCB_CURRENT_TIME);
+		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
+				netatom[NetActiveWindow], XCB_ATOM,
+				32, 1, (const void *) &c->win);
+
 	} else {
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
 				root, XCB_CURRENT_TIME);
+		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
+				netatom[NetActiveWindow], XCB_ATOM,
+				32, 0, (const void *) 0);
 	}
 
 	selmon->client = c;
@@ -707,12 +713,13 @@ void setup(void)
 	netatom[NetSupported] = atom_add("_NET_WM_SUPPORTED");
 	netatom[NetWMName] = atom_add("_NET_WM_NAME");
 	netatom[NetWMState] = atom_add("_NET_WM_STATE");
+	netatom[NetActiveWindow] = atom_add("_NET_ACTIVE_WINDOW");
 	netatom[NetWMWindowType] = atom_add("_NET_WM_WINDOW_TYPE");
 	netatom[NetWMFullscreen] = atom_add("_NET_WM_STATE_FULLSCREEN");
 
 	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
 			netatom[NetSupported], XCB_ATOM, 32, NetLast,
-			(unsigned char *) netatom);
+			(const void *) netatom);
 
 	xcb_cursor_context_new(conn, screen, &ctx);
 	cursor[CUR_NORMAL] = xcb_cursor_load_cursor(ctx, "left_ptr");

@@ -61,9 +61,10 @@
 #define NetSupported	0
 #define NetWMName	1
 #define NetWMState	2
-#define NetWMWindowType	3
-#define NetWMFullscreen	4
-#define NetLast		5
+#define NetActiveWindow	3
+#define NetWMWindowType	4
+#define NetWMFullscreen	5
+#define NetLast		6
 
 /* Default atoms */
 #define WMProtocols	0
@@ -223,6 +224,7 @@ extern struct dc dc;
 
 void attach(struct client *c);
 void detach(struct client *c);
+
 void restack(struct monitor *m);
 
 void client_resize(struct client *c, int x, int y, int w, int h);

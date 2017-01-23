@@ -162,11 +162,18 @@ const struct key keys[] = {
 	{ 0,			K_STOP,	spawn,		{ .v = cmd_stop } },
 	{ 0,			K_PREV,	spawn,		{ .v = cmd_prev } },
 	{ 0,			K_NEXT,	spawn,		{ .v = cmd_next } },
+	{ 0,			K_K,	spawn,		{ .v = cmd_play } },
+	{ 0,			K_H,	spawn,		{ .v = cmd_stop } },
+	{ 0,			K_J,	spawn,		{ .v = cmd_prev } },
+	{ 0,			K_L,	spawn,		{ .v = cmd_next } },
 
 	/* Volume control */
 	{ 0,			K_VDEC,	spawn,		{ .v = cmd_vdec } },
 	{ 0,			K_VINC,	spawn,		{ .v = cmd_vinc } },
 	{ 0,			K_MUTE,	spawn,		{ .v = cmd_mute } },
+	{ 0,			K_M,	spawn,		{ .v = cmd_stop } },
+	{ 0,			K_PER,	spawn,		{ .v = cmd_prev } },
+	{ 0,			K_COM,	spawn,		{ .v = cmd_next } },
 
 	/* Backlight control */
 	{ 0,			K_BDEC,	spawn,		{ .v = cmd_bdec } },
@@ -223,10 +230,6 @@ const struct key keys[] = {
 #endif
 
 	/* TODO */
-
-	/* { K_SUPER,          K_T,      setlayout,      { .v = &layouts[0] } },
-	{ K_SUPER,          K_F,      setlayout,      { .v = &layouts[1] } },
-	{ K_SUPER,          K_M,      setlayout,      { .v = &layouts[2] } },*/
 };
 const int keys_len = sizeof(keys) / sizeof(keys[0]);
 

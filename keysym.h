@@ -99,6 +99,8 @@
 #define K_B	XK_b
 #define K_N	XK_n
 #define K_M	XK_m
+#define K_PER	XK_period
+#define K_COM	XK_comma
 
 #define K_SPACE	XK_space
 
