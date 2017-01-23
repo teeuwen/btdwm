@@ -241,11 +241,15 @@ void arrange(struct monitor *m)
 void bar_draw(struct monitor *m)
 {
 	struct client *c;
-	unsigned int i, occ = 0;
+	unsigned int i, ca = 0, cu = 0;
 	int x, w, cx;
 
-	for (c = m->clients; c; c = c->next)
-		occ |= c->tags;
+	for (c = m->clients; c; c = c->next) {
+		ca |= c->tags;
+
+		if (c->urgent)
+			cu |= c->tags;
+	}
 
 	x = 0;
 
@@ -256,13 +260,14 @@ void bar_draw(struct monitor *m)
 				(m->tags & 1 << i) ? PLT_FOCUS : PLT_INACTIVE);
 
 		if ((m == selmon && selmon->client &&
-				selmon->client->tags & 1 << i) || occ & 1 << i) {
-			if (m == selmon && selmon->client && selmon->client->tags
-					& 1 << i)
+				selmon->client->tags & 1 << i) || ca & 1 << i) {
+			if (cu & 1 << i)
+				status_draw(m->barcr, x, 0, w, PLT_URGENT);
+			else if (m == selmon && selmon->client &&
+					selmon->client->tags & 1 << i)
 				status_draw(m->barcr, x, 0, w, PLT_FOCUS);
-			else if (occ & 1 << i)
+			else if (ca & 1 << i)
 				status_draw(m->barcr, x, 0, w, PLT_ACTIVE);
-			/* TODO PLT_URGENT */
 		}
 
 		x += w;
@@ -404,7 +409,7 @@ int applysizehints(struct client *c, int *x, int *y, int *w, int *h, int interac
 	if (*w < 16)
 		*w = 16;
 
-	if (c->isfloating || !c->mon->layouts[c->mon->tag]->arrange) {
+	if (c->floating || !c->mon->layouts[c->mon->tag]->arrange) {
 		baseismin = c->basew == c->minw && c->baseh == c->minh;
 
 		/* Temporarily remove base dimensions */
@@ -467,7 +472,7 @@ struct monitor *dirtomon(int dir)
 
 struct client *nexttiled(struct client *c)
 {
-	for (; c && (c->isfloating || !ISVISIBLE(c)); c = c->next);
+	for (; c && (c->floating || !ISVISIBLE(c)); c = c->next);
 	return c;
 }
 
@@ -557,7 +562,7 @@ void restack(struct monitor *m) {
 	if (!m->client)
 		return;
 
-	if (m->client->isfloating || !m->layouts[m->tag]->arrange) {
+	if (m->client->floating || !m->layouts[m->tag]->arrange) {
 		uint32_t values[] = { XCB_STACK_MODE_ABOVE };
 		xcb_configure_window(conn, m->client->win, XCB_CONFIG_WINDOW_STACK_MODE, values);
 	}
@@ -565,7 +570,7 @@ void restack(struct monitor *m) {
 	if (m->layouts[m->tag]->arrange) {
 		uint32_t values[] = { m->barwin, XCB_STACK_MODE_BELOW };
 		for (c = m->clients; c; c = c->next)
-			if (!c->isfloating && ISVISIBLE(c)) {
+			if (!c->floating && ISVISIBLE(c)) {
 				xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_SIBLING |
 					XCB_CONFIG_WINDOW_STACK_MODE, values);
 				values[0] = c->win;
@@ -603,7 +608,7 @@ void showhide(struct client *c)
 		xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_X |
 				XCB_CONFIG_WINDOW_Y, values);
 
-		if (!c->mon->layouts[c->mon->tag]->arrange || c->isfloating)
+		if (!c->mon->layouts[c->mon->tag]->arrange || c->floating)
 			resize(c, c->x, c->y, c->w, c->h, 0);
 		showhide(c->next);
 	} else {
@@ -632,7 +637,7 @@ void windowtype_update(struct client *c)
 	printf("%d\n", wtype);
 
 	if (wtype == netatom[NetWMWindowType])
-		c->isfloating = 1;
+		c->floating = 1;
 
 	/* TODO Fullscreen windows */
 }
@@ -684,7 +689,7 @@ void updatesizehints(struct client *c)
 		c->mina = c->maxa = 0.0;
 	}
 
-	c->isfixed = c->minw && c->maxw && c->minh && c->maxh &&
+	c->fixed = c->minw && c->maxw && c->minh && c->maxh &&
 			c->minw == c->maxw && c->minh == c->maxh;
 }
 
@@ -696,9 +701,11 @@ void updatewmhints(struct client *c)
 			c->win), &wmh, 0))
 		return;
 
-	if (c == selmon->client && wmh.flags & XCB_ICCCM_WM_HINT_X_URGENCY) {
+	if (c == selmon->client && (wmh.flags & XCB_ICCCM_WM_HINT_X_URGENCY)) {
 		wmh.flags &= ~XCB_ICCCM_WM_HINT_X_URGENCY;
 		xcb_icccm_set_wm_hints(conn, c->win, &wmh);
+	} else {
+		c->urgent = (wmh.flags & XCB_ICCCM_WM_HINT_X_URGENCY) ? 1 : 0;
 	}
 }
 
