@@ -116,10 +116,6 @@ struct monitor {
 	cairo_t		*barcr;
 	int		showbar, redrawbar;
 
-#if 0
-	struct tag	*tags[LENGTH(tags);
-	unsigned int	tag;
-#else
 	unsigned int	tags;
 	unsigned int	tag;
 	struct layout	*layouts[7];
@@ -127,41 +123,27 @@ struct monitor {
 
 	struct client	*clients;
 	struct client	*client;
-#endif	
 
 	struct monitor	*next;
 };
-
-#if 0
-struct tag {
-	const struct tagi	*info;
-
-	const struct layouti	*dlayout;
-	double			mfact;
-
-	struct client	*clients;
-	struct client	*client;
-};
-#endif
 
 struct client {
 	struct monitor	*mon;
 	xcb_window_t	win;
 
 	char		name[MAX_NAME];
-	int		isfixed, isfloating, oldstate;
-
 	unsigned int	tags;
 
 	int		x, y, w, h;
-	double		mina, maxa;
 	int		oldx, oldy, oldw, oldh;
+	int		isfixed, isfloating, oldstate;
+
+	double		mina, maxa;
 	int		basew, baseh, incw, inch, maxw, maxh, minw, minh;
 
 	struct client	*prev, *next;
 };
 
-/* struct layouti { */
 struct layout {
 	const char	*symbol;
 	const char	*name;
@@ -170,13 +152,11 @@ struct layout {
 	double		mfact;
 };
 
-/* struct tagi { */
 struct tag {
 	const char	*name;
 	struct layout	*layout;
 };
 
-/* struct rulei { */
 struct rule {
 	const char	*class;
 	const char	*instance;
@@ -194,7 +174,6 @@ struct rule {
 
 #define SHCMD(cmd) "/bin/sh", "-c", cmd
 
-/* struct keyi { */
 struct key {
 	unsigned int	mod;
 	xcb_keysym_t	keysym;
@@ -202,7 +181,6 @@ struct key {
 	const Arg	arg;
 };
 
-/* struct buttoni { */
 struct button {
 	unsigned int	click;
 	unsigned int	mask;
@@ -283,7 +261,8 @@ void buttons_grab(struct client *c, int focused);
 void keys_grab(void);
 
 int curpos_get(xcb_window_t w, int *x, int *y);
-int textprop_get(xcb_window_t w, xcb_atom_t atom, char *text, unsigned int size);
+int textprop_get(xcb_window_t w, xcb_atom_t atom,
+		char *text, unsigned int size);
 
 xcb_atom_t atom_add(const char *name);
 xcb_atom_t atom_get(xcb_window_t w, xcb_atom_t atom);

@@ -41,7 +41,7 @@
 #include <unistd.h>
 
 #include "btdwm.h"
-#include "libnotify.h"
+#include "msg.h"
 
 static NotifyNotification *msg_layout;
 

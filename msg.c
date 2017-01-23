@@ -22,7 +22,7 @@
  *
  */
 
-#include "libnotify.h"
+#include "msg.h"
 
 NotifyNotification *msg_create(const char *title, const char *body,
 		int t, int destroy)
