@@ -632,7 +632,7 @@ void urgent_clear(struct client *c)
 
 static int buttonpress(xcb_generic_event_t *_e)
 {
-	xcb_button_press_event_t *e = (xcb_button_press_event_t *) _e;
+	xcb_button_press_event_t *e = (void *) _e;
 	struct monitor *m;
 	struct client *c;
 	unsigned int i = 0, x = 0, click = 0;
@@ -674,26 +674,33 @@ static int buttonpress(xcb_generic_event_t *_e)
 	return 0;
 }
 
-static int clientmessage(xcb_generic_event_t *e)
+static int clientmessage(xcb_generic_event_t *_e)
 {
-	xcb_client_message_event_t *cme = (xcb_client_message_event_t*)e;
+	uint32_t values[] = { XCB_STACK_MODE_ABOVE };
+
+	xcb_client_message_event_t *e = (void *) _e;
 	struct client *c;
 
-	if ((c = client_get(cme->window)) &&
-			(cme->type == netatom[NetWMState] &&
-			cme->data.data32[1] == netatom[NetWMFullscreen])) {
-		if (cme->data.data32[0]) {
-			xcb_change_property(conn, XCB_PROP_MODE_REPLACE, cme->window,
-					netatom[NetWMState], XCB_ATOM, 32, 1,
-					(unsigned char*)&netatom[NetWMFullscreen]);
+	if (!(c = client_get(e->window)))
+		return 0;
+
+	if (e->type == netatom[NetWMState] && 
+			e->data.data32[1] == netatom[NetWMFullscreen]) {
+		if (e->data.data32[0]) {
+			xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
+					e->window, netatom[NetWMState],
+					XCB_ATOM, 32, 1, (const void *)
+					&netatom[NetWMFullscreen]);
 			c->oldstate = c->isfloating;
 			c->isfloating = 1;
-			client_resize(c, c->mon->x, c->mon->y, c->mon->w, c->mon->h);
-			uint32_t values[] = { XCB_STACK_MODE_ABOVE };
-			xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_STACK_MODE, values);
+			client_resize(c, c->mon->x, c->mon->y,
+					c->mon->w, c->mon->h);
+			xcb_configure_window(conn, c->win,
+					XCB_CONFIG_WINDOW_STACK_MODE, values);
 		} else {
-			xcb_change_property(conn, XCB_PROP_MODE_REPLACE, cme->window,
-					netatom[NetWMState], XCB_ATOM, 32, 0, (unsigned char*)0);
+			xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
+					e->window, netatom[NetWMState],
+					XCB_ATOM, 32, 0, (const void *) 0);
 			c->isfloating = c->oldstate;
 			c->x = c->oldx;
 			c->y = c->oldy;
@@ -702,6 +709,11 @@ static int clientmessage(xcb_generic_event_t *e)
 			client_resize(c, c->x, c->y, c->w, c->h);
 			arrange(c->mon);
 		}
+	} else if (e->type == netatom[NetActiveWindow]) {
+		if (!ISVISIBLE(c)) /* XXX Set urgent or something maybe? */
+			return 0;
+
+		focus(c);
 	}
 
 	return 0;
@@ -772,25 +784,24 @@ static int configurerequest(xcb_generic_event_t *_e)
 	return 0;
 }
 
-static int configurenotify(xcb_generic_event_t *e)
+static int configurenotify(xcb_generic_event_t *_e)
 {
-	xcb_configure_notify_event_t *ev = (xcb_configure_notify_event_t*)e;
+	xcb_configure_notify_event_t *e = (void *) _e;
 
-	if (ev->window == root) {
-		if (geom_update(ev->width, ev->height)) {
-			/* bars_update(); */
+	if (e->window != root)
+		return 0;
 
-			arrange(0);
-		}
-		xcb_flush(conn);
-	}
+	if (geom_update(e->width, e->height))
+		arrange(0);
+
+	xcb_flush(conn);
 
 	return 0;
 }
 
 static int destroynotify(xcb_generic_event_t *_e)
 {
-	xcb_destroy_notify_event_t *e = (xcb_destroy_notify_event_t *) _e;
+	xcb_destroy_notify_event_t *e = (void *) _e;
 	struct client *c;
 
 	if ((c = client_get(e->window)))
@@ -799,21 +810,21 @@ static int destroynotify(xcb_generic_event_t *_e)
 	return 0;
 }
 
-static int enternotify(xcb_generic_event_t *e)
+static int enternotify(xcb_generic_event_t *_e)
 {
+	xcb_enter_notify_event_t *e = (void *) _e;
 	struct monitor *m;
 	struct client *c;
-	xcb_enter_notify_event_t *ev = (xcb_enter_notify_event_t*) e;
 
-	c = client_get(ev->event);
+	c = client_get(e->event);
 
 	if ((c && (c->isfloating || !c->mon->layouts[c->mon->tag]->arrange)) ||
-			((ev->mode != XCB_NOTIFY_MODE_NORMAL ||
-			ev->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
-			ev->event != root))
+			((e->mode != XCB_NOTIFY_MODE_NORMAL ||
+			e->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
+			e->event != root))
 		return 0;
 
-	if ((m = mon_get(ev->event)) && m != selmon) {
+	if ((m = mon_get(e->event)) && m != selmon) {
 		unfocus(selmon->client, 1);
 		selmon = m;
 	}
@@ -823,22 +834,22 @@ static int enternotify(xcb_generic_event_t *e)
 	return 0;
 }
 
-static int expose(xcb_generic_event_t *e)
+static int expose(xcb_generic_event_t *_e)
 {
 	struct monitor *m;
-	xcb_expose_event_t *ev = (xcb_expose_event_t*) e;
+	xcb_expose_event_t *e = (void *) _e;
 
-	if (ev->count == 0 && (m = mon_get(ev->window)))
+	if (e->count == 0 && (m = mon_get(e->window)))
 		bar_draw(m);
 
 	return 0;
 }
 
-static int focusin(xcb_generic_event_t *e) /* there are some broken focus acquiring clients */
+static int focusin(xcb_generic_event_t *_e)
 {
-	xcb_focus_in_event_t *ev = (xcb_focus_in_event_t*)e;
+	xcb_focus_in_event_t *e = (void *) _e;
 
-	if (selmon->client && ev->event != selmon->client->win)
+	if (selmon->client && e->event != selmon->client->win)
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
 				selmon->client->win, XCB_CURRENT_TIME);
 
@@ -896,25 +907,6 @@ static int maprequest(xcb_generic_event_t *e)
 
 	return 0;
 }
-
-/* static int motionnotify(xcb_generic_event_t *_e)
-{
-	xcb_motion_notify_event_t* e;
-	struct monitor *m;
-
-	e = (void *) _e;
-
-	if (e->event != root)
-		return 0;
-
-	if ((m = ptrtomon(e->root_x, e->root_y)) != selmon) {
-		mon_send(client_get(e->event), m);
-		selmon = m;
-		focus(NULL);
-	}
-
-	return 0;
-} */
 
 static int unmapnotify(xcb_generic_event_t *_e)
 {
@@ -979,7 +971,6 @@ static int (*xcb_handlers[XCB_NO_OPERATION]) (xcb_generic_event_t *) = {
 	[XCB_KEY_PRESS] =		&keypress,
 	[XCB_MAPPING_NOTIFY] =		&mappingnotify,
 	[XCB_MAP_REQUEST] =		&maprequest,
-	/* [XCB_MOTION_NOTIFY] =		&motionnotify, */
 	[XCB_PROPERTY_NOTIFY] =		&propertynotify,
 	[XCB_UNMAP_NOTIFY] =		&unmapnotify,
 	[XCB_NONE] =			NULL
