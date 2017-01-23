@@ -162,18 +162,18 @@ const struct key keys[] = {
 	{ 0,			K_STOP,	spawn,		{ .v = cmd_stop } },
 	{ 0,			K_PREV,	spawn,		{ .v = cmd_prev } },
 	{ 0,			K_NEXT,	spawn,		{ .v = cmd_next } },
-	{ 0,			K_K,	spawn,		{ .v = cmd_play } },
-	{ 0,			K_H,	spawn,		{ .v = cmd_stop } },
-	{ 0,			K_J,	spawn,		{ .v = cmd_prev } },
-	{ 0,			K_L,	spawn,		{ .v = cmd_next } },
+	{ K_SUPER,		K_S,	spawn,		{ .v = cmd_play } },
+	{ K_SUPER,		K_W,	spawn,		{ .v = cmd_stop } },
+	{ K_SUPER,		K_A,	spawn,		{ .v = cmd_prev } },
+	{ K_SUPER,		K_D,	spawn,		{ .v = cmd_next } },
 
 	/* Volume control */
 	{ 0,			K_VDEC,	spawn,		{ .v = cmd_vdec } },
 	{ 0,			K_VINC,	spawn,		{ .v = cmd_vinc } },
 	{ 0,			K_MUTE,	spawn,		{ .v = cmd_mute } },
-	{ 0,			K_M,	spawn,		{ .v = cmd_stop } },
-	{ 0,			K_PER,	spawn,		{ .v = cmd_prev } },
-	{ 0,			K_COM,	spawn,		{ .v = cmd_next } },
+	{ K_SUPER,		K_COM,	spawn,		{ .v = cmd_vdec } },
+	{ K_SUPER,		K_PER,	spawn,		{ .v = cmd_vinc } },
+	{ K_SUPER,		K_M,	spawn,		{ .v = cmd_mute } },
 
 	/* Backlight control */
 	{ 0,			K_BDEC,	spawn,		{ .v = cmd_bdec } },
@@ -240,12 +240,12 @@ const int keys_len = sizeof(keys) / sizeof(keys[0]);
 
 const struct button buttons[] = {
 	/* Event	Mask	Button	Function	Arguments */
-	{ ClkTagBar,	0,	B_LEFT,	viewtag,	{ 0 } },
-	{ ClkTagBar,	0,	B_RIGHT,toggletag,	{ 0 } },
-	{ ClkTagBar,	K_SUPER,B_LEFT,	moveclient,	{ 0 } },
+	{ CLICK_TAGS,	0,	B_LEFT,	viewtag,	{ 0 } },
+	{ CLICK_TAGS,	0,	B_RIGHT,toggletag,	{ 0 } },
+	{ CLICK_TAGS,	K_SUPER,B_LEFT,	moveclient,	{ 0 } },
 
-	{ ClkClientWin,	K_SUPER,B_LEFT,	movemouse,	{ 0 } },
-	{ ClkClientWin,	K_SUPER,B_RIGHT,resizemouse,	{ 0 } }
+	{ CLICK_CLIENT,	K_SUPER,B_LEFT,	movemouse,	{ 0 } },
+	{ CLICK_CLIENT,	K_SUPER,B_RIGHT,resizemouse,	{ 0 } }
 
 };
 const int buttons_len = sizeof(buttons) / sizeof(buttons[0]);
