@@ -78,12 +78,17 @@ void die(const char *errstr, ...)
 
 void attach(struct client *c)
 {
-	if (c->mon->clients)
-		c->mon->clients->prev = c;
+	struct client *cn;
 
-	c->prev = NULL;
-	c->next = c->mon->clients;
-	c->mon->clients = c;
+	for (cn = c->mon->clients; cn && cn->next; cn = cn->next);
+
+	if (cn)
+		cn->next = c;
+	else
+		c->mon->clients = c;
+
+	c->prev = cn;
+	c->next = NULL;
 
 	if (c->mon->stack)
 		c->mon->stack->sprev = c;
@@ -614,6 +619,7 @@ void atom_init(void)
 	atoms[ATOM_NETSTATE] = atom_add("_NET_WM_STATE");
 	atoms[ATOM_ACTIVE] = atom_add("_NET_ACTIVE_WINDOW");
 	atoms[ATOM_TYPE] = atom_add("_NET_WM_WINDOW_TYPE");
+	atoms[ATOM_TYPE_DIALOG] = atom_add("_NET_WM_WINDOW_TYPE_DIALOG");
 	atoms[ATOM_FULLSCREEN] = atom_add("_NET_WM_STATE_FULLSCREEN");
 
 	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
@@ -622,27 +628,28 @@ void atom_init(void)
 			(const void *) &atoms[ATOM_NET]);
 }
 
-xcb_atom_t atom_get(xcb_window_t w, xcb_atom_t atom)
+int atom_check(xcb_window_t w, xcb_atom_t prop, xcb_atom_t target)
 {
 	xcb_get_property_reply_t *reply;
-	xcb_atom_t result;
+	xcb_atom_t *atom;
+	int res = 0, i;
 
-	reply = xcb_get_property_reply(conn, xcb_get_property(conn, 0, w, atom,
+	reply = xcb_get_property_reply(conn, xcb_get_property(conn, 0, w, prop,
 			XCB_ATOM_ATOM, 0, 0), 0);
 
-	if (!reply)
-		return -1;
-
-	/* if (!xcb_get_property_value_length(reply)) {
-		free(reply);
-		return -1;
-	} */
-
-	result = *(xcb_atom_t *) xcb_get_property_value(reply);
+	if (reply && (atom = (xcb_atom_t *) xcb_get_property_value(reply))) {
+		for (i = 0; i < xcb_get_property_value_length(reply) /
+				sizeof(xcb_atom_t); i++) {
+			if (atom[i] == target) {
+				res = 1;
+				break;
+			}
+		}
+	}
 
 	free(reply);
 
-	return result;
+	return res;
 }
 
 void showhide(struct client *c)
@@ -681,14 +688,8 @@ void unfocus(struct client *c, int setfocus)
 
 void windowtype_update(struct client *c)
 {
-	printf("called\n");
-	xcb_atom_t wtype = atom_get(c->win, atoms[ATOM_TYPE]);
-	printf("%d\n", wtype);
-
-	if (wtype == atoms[ATOM_TYPE])
+	if (atom_check(c->win, atoms[ATOM_TYPE], atoms[ATOM_TYPE_DIALOG]))
 		c->floating = 1;
-
-	/* TODO Fullscreen windows */
 }
 
 void updatesizehints(struct client *c)

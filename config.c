@@ -109,10 +109,11 @@ static const char *cmd_n[] = { SHCMD("chromium -incognito"), 0 };
 static const char *cmd_scrot[] = { SHCMD("scrot"), 0 };
 
 /* TODO OSD */
+static const char *cmd_cur[] = { SHCMD("mpc -f %file% | head -1 | rev | cut -c 5- | rev | tr -d '\n' | xargs -0 notify-send"), 0 };
 static const char *cmd_play[] = { SHCMD("mpc toggle"), 0 };
 static const char *cmd_stop[] = { SHCMD("mpc stop"), 0 };
-static const char *cmd_prev[] = { SHCMD("mpc prev"), 0 };
-static const char *cmd_next[] = { SHCMD("mpc next"), 0 };
+static const char *cmd_prev[] = { SHCMD("mpc prev && mpc -f %file% | head -1 | rev | cut -c 5- | rev | tr -d '\n' | xargs -0 notify-send"), 0 };
+static const char *cmd_next[] = { SHCMD("mpc next && mpc -f %file% | head -1 | rev | cut -c 5- | rev | tr -d '\n' | xargs -0 notify-send"), 0 };
 
 /* TODO OSD */
 static const char *cmd_vdec[] = { SHCMD("amixer set Master 5%-"), 0 };
@@ -162,6 +163,7 @@ const struct key keys[] = {
 	{ 0,			K_STOP,	spawn,		{ .v = cmd_stop } },
 	{ 0,			K_PREV,	spawn,		{ .v = cmd_prev } },
 	{ 0,			K_NEXT,	spawn,		{ .v = cmd_next } },
+	{ K_SUPER,		K_E,	spawn,		{ .v = cmd_cur } },
 	{ K_SUPER,		K_S,	spawn,		{ .v = cmd_play } },
 	{ K_SUPER,		K_W,	spawn,		{ .v = cmd_stop } },
 	{ K_SUPER,		K_A,	spawn,		{ .v = cmd_prev } },
@@ -194,8 +196,8 @@ const struct key keys[] = {
 	{ K_SUPER,		K_DOWN,	focusstack,	{ .i = +1 } },
 	{ K_SUPER,		K_LEFT,	focusstack,	{ .i = -1 } },
 	{ K_SUPER,		K_RIGHT,focusstack,	{ .i = +1 } },
-	{ K_ALT | K_SHIFT,	K_TAB,	focusstack,	{ .i = -1 } },
-	{ K_ALT,		K_TAB,	focusstack,	{ .i = +1 } },
+	{ K_ALT | K_SHIFT,	K_TAB,	focusstack,	{ .i = -2 } },
+	{ K_ALT,		K_TAB,	focusstack,	{ .i = +2 } },
 
 	/* Tags */
 	{ TAGKEYS(K_1, 0) },
