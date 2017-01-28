@@ -80,28 +80,27 @@ void focusmon(const Arg *arg)
 
 void focusstack(const Arg *arg)
 {
-	struct client *c = NULL, *i;
+	struct client *c = NULL;
 
 	if (!selmon->client)
 		return;
 
 	if (arg->i < 0) {
-		for (i = selmon->clients; i != selmon->client; i = i->next)
-			if (ISVISIBLE(i))
-				c = i;
+		for (c = selmon->client->prev; c && !ISVISIBLE(c);
+				c = c->prev);
 	} else {
-		for (c = selmon->client->next; c && !ISVISIBLE(c); c = c->next);
+		for (c = selmon->client->next; c && !ISVISIBLE(c);
+				c = c->next);
 	}
 
 	if (!c) {
-		if (arg->i < 0)
-			for (c = selmon->client->next; c && !ISVISIBLE(c);
+		if (arg->i < 0) {
+			for (c = selmon->client->next; c->next; c = c->next);
+			for (; c && !ISVISIBLE(c); c = c->prev);
+		} else {
+			for (c = selmon->clients; c && !ISVISIBLE(c);
 					c = c->next);
-		else
-			for (i = selmon->clients; i != selmon->client;
-					i = i->next)
-				if (ISVISIBLE(i))
-					c = i;
+		}
 	}
 
 	if (c) {
@@ -258,8 +257,7 @@ void zoom(const Arg *arg)
 		if (!c || !(c = nexttiled(c->next)))
 			return;
 
-	detach(c);
-	attach(c);
+	reattach(c);
 	focus(c);
 	arrange(c->mon);
 }

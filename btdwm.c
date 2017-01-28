@@ -81,44 +81,60 @@ void attach(struct client *c)
 	if (c->mon->clients)
 		c->mon->clients->prev = c;
 
+	c->prev = NULL;
 	c->next = c->mon->clients;
 	c->mon->clients = c;
+
+	if (c->mon->stack)
+		c->mon->stack->sprev = c;
+
+	c->sprev = NULL;
+	c->snext = c->mon->stack;
+	c->mon->stack = c;
 }
 
 void detach(struct client *c)
 {
 	struct client *i;
 
-	if (c == c->mon->clients)
-		c->mon->clients = c->next;
-
 	if (c->prev)
 		c->prev->next = c->next;
 	if (c->next)
 		c->next->prev = c->prev;
+
+	if (c == c->mon->clients)
+		c->mon->clients = c->next;
 
 	if (c == c->mon->client) {
 		for (i = c->mon->clients; i && !ISVISIBLE(i); i = i->next);
 		c->mon->client = i;
 	}
+
+	if (c->sprev)
+		c->sprev->snext = c->snext;
+	if (c->snext)
+		c->snext->sprev = c->sprev;
+
+	if (c == c->mon->stack)
+		c->mon->stack = c->snext;
 }
 
 static void reattach(struct client *c)
 {
-	if (c == c->mon->clients)
+	if (c == c->mon->stack)
 		return;
 
-	if (c->prev)
-		c->prev->next = c->next;
-	if (c->next)
-		c->next->prev = c->prev;
+	if (c->sprev)
+		c->sprev->snext = c->snext;
+	if (c->snext)
+		c->snext->sprev = c->sprev;
 
-	c->mon->clients->prev = c;
+	if (c->mon->stack)
+		c->mon->stack->sprev = c;
 
-	c->prev = NULL;
-	c->next = c->mon->clients;
-
-	c->mon->clients = c;
+	c->sprev = NULL;
+	c->snext = c->mon->stack;
+	c->mon->stack = c;
 }
 
 void client_resize(struct client *c, int x, int y, int w, int h)
@@ -481,7 +497,7 @@ struct monitor *ptrtomon(int x, int y)
 void focus(struct client *c)
 {
 	if (!c || !ISVISIBLE(c))
-		for (c = selmon->clients; c && !ISVISIBLE(c); c = c->next);
+		for (c = selmon->stack; c && !ISVISIBLE(c); c = c->snext);
 
 	if (selmon->client)
 		unfocus(selmon->client, 0);
@@ -493,6 +509,7 @@ void focus(struct client *c)
 		reattach(c);
 		urgent_clear(c);
 		buttons_grab(c, 1);
+
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
 				c->win, XCB_CURRENT_TIME);
 		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
@@ -508,6 +525,8 @@ void focus(struct client *c)
 	}
 
 	selmon->client = c;
+
+	xcb_flush(conn);
 }
 
 int curpos_get(xcb_window_t w, int *x, int *y)
@@ -560,7 +579,7 @@ void restack(struct monitor *m) {
 
 	if (m->layouts[m->tag]->arrange) {
 		uint32_t values[] = { m->barwin, XCB_STACK_MODE_BELOW };
-		for (c = m->clients; c; c = c->next)
+		for (c = m->stack; c; c = c->next)
 			if (!c->floating && ISVISIBLE(c)) {
 				xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_SIBLING |
 					XCB_CONFIG_WINDOW_STACK_MODE, values);

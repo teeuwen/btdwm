@@ -16,7 +16,7 @@
 const char font_desc[]		= "Broad 5.8";
 
 const char bg_normal[]		= "#222222";
-const char bg_focus[]		= "#1C1C1C";
+const char bg_focus[]		= "#1D1D1D";
 const char bg_center[]		= "#444444";
 
 const char fg_normal[]		= "#ECECEC";
@@ -50,7 +50,7 @@ const struct tag tags[] = {
 	{ "α",		&layouts[2] },
 	{ "β",		&layouts[0] },
 	{ "γ",		&layouts[0] },
-	{ "δ",		&layouts[1] },
+	{ "δ",		&layouts[0] },
 	{ "μ",		&layouts[2] },
 	{ "π",		&layouts[1] },
 };
@@ -89,7 +89,7 @@ static const char *cmd_halt[] = { SHCMD("systemctl halt") , 0 };
 
 static const char *cmd_lock[] = { SHCMD("~/Documents/cs/scripts/lock/lock.sh") , 0 };
 
-static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Noto Sans Mono-8' -nb '#444444'"), 0 };
+static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Noto Sans Mono-8' -nb '#333333' -nf '#ECECEC'"), 0 };
 static const char *cmd_term[]  = { "st", 0 };
 
 static const char *cmd_w[] = { SHCMD("WINEARCH=win32 WINEPREFIX=~/.office2010 wine ~/.office2010/drive_c/Program\\ Files/Microsoft\\ Office/Office14/WINWORD.EXE"), 0 };

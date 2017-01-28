@@ -255,7 +255,7 @@ static void rules_apply(struct client *c)
 	const char *class, *instance;
 	unsigned int i;
 
-	c->floating = c->tags = 0;
+	c->tags = c->floating = 0;
 
 	if (xcb_icccm_get_wm_class_reply(conn, xcb_icccm_get_wm_class(conn,
 			c->win), &ch, 0)) {
@@ -403,21 +403,21 @@ void unmanage(struct client *c, int destroyed)
 
 void client_kill(void)
 {
-	xcb_client_message_event_t ev;
+	xcb_client_message_event_t e;
 
 	if (!selmon->client)
 		return;
 
 	if (isprotodel(selmon->client)) {
-		ev.response_type = XCB_CLIENT_MESSAGE;
-		ev.window = selmon->client->win;
-		ev.format = 32;
-		ev.data.data32[0] = atoms[ATOM_DELETE];
-		ev.data.data32[1] = XCB_TIME_CURRENT_TIME;
-		ev.type = atoms[ATOM_WM];
+		e.response_type = XCB_CLIENT_MESSAGE;
+		e.window = selmon->client->win;
+		e.format = 32;
+		e.data.data32[0] = atoms[ATOM_DELETE];
+		e.data.data32[1] = XCB_TIME_CURRENT_TIME;
+		e.type = atoms[ATOM_WM];
 
 		testcookie(xcb_send_event_checked(conn, 0, selmon->client->win,
-				XCB_EVENT_MASK_NO_EVENT, (const char *) &ev));
+				XCB_EVENT_MASK_NO_EVENT, (const char *) &e));
 	} else {
 		xcb_grab_server(conn);
 		xcb_set_close_down_mode(conn, XCB_CLOSE_DOWN_DESTROY_ALL);
@@ -486,7 +486,7 @@ void client_move_mouse(const Arg *arg, int move)
 		case XCB_BUTTON_RELEASE:
 			active = 0;
 		case XCB_MOTION_NOTIFY:
-			/* FIXME Check at the very start, why again? */
+			/* FIXME Check at the very start */
 			if (!c->floating &&
 					selmon->layouts[selmon->tag]->arrange)
 				break;
@@ -652,7 +652,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 				buttons[i].button == e->detail &&
 				CLEANMASK(buttons[i].mask) ==
 				CLEANMASK(e->state))
-			buttons[i].func(click == CLICK_CLIENT &&
+			buttons[i].func(click == CLICK_TAGS &&
 					buttons[i].arg.i == 0 ?
 					&arg : &buttons[i].arg);
 
@@ -661,15 +661,14 @@ static int buttonpress(xcb_generic_event_t *_e)
 
 static int clientmessage(xcb_generic_event_t *_e)
 {
-	uint32_t values[] = { XCB_STACK_MODE_ABOVE };
-
 	xcb_client_message_event_t *e = (void *) _e;
 	struct client *c;
+	uint32_t val[] = { XCB_STACK_MODE_ABOVE };
 
 	if (!(c = client_get(e->window)))
 		return 0;
 
-	if (e->type == atoms[ATOM_NETSTATE] && 
+	if (e->type == atoms[ATOM_NETSTATE] &&
 			e->data.data32[1] == atoms[ATOM_FULLSCREEN]) {
 		if (e->data.data32[0]) {
 			xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
@@ -681,7 +680,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 			client_resize(c, c->mon->x, c->mon->y,
 					c->mon->w, c->mon->h);
 			xcb_configure_window(conn, c->win,
-					XCB_CONFIG_WINDOW_STACK_MODE, values);
+					XCB_CONFIG_WINDOW_STACK_MODE, val);
 		} else {
 			xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
 					e->window, atoms[ATOM_NETSTATE],
@@ -706,7 +705,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 
 static int configurerequest(xcb_generic_event_t *_e)
 {
-	xcb_configure_request_event_t *e = (xcb_configure_request_event_t *) _e;
+	xcb_configure_request_event_t *e = (void *) _e;
 	xcb_params_configure_window_t params;
 	uint32_t mask = 0;
 	struct monitor *m;
@@ -803,7 +802,7 @@ static int enternotify(xcb_generic_event_t *_e)
 
 	c = client_get(e->event);
 
-	if ((c && (c->floating || !c->mon->layouts[c->mon->tag]->arrange)) ||
+	if ((c && !c->mon->layouts[c->mon->tag]->arrange) ||
 			((e->mode != XCB_NOTIFY_MODE_NORMAL ||
 			e->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
 			e->event != root))
@@ -815,14 +814,16 @@ static int enternotify(xcb_generic_event_t *_e)
 	}
 
 	focus(c);
+	/* if (c)
+		restack(c->mon); */
 
 	return 0;
 }
 
 static int expose(xcb_generic_event_t *_e)
 {
-	struct monitor *m;
 	xcb_expose_event_t *e = (void *) _e;
+	struct monitor *m;
 
 	if (e->count == 0 && (m = mon_get(e->window)))
 		bar_draw(m);
@@ -841,42 +842,41 @@ static int focusin(xcb_generic_event_t *_e)
 	return 0;
 }
 
-static int keypress(xcb_generic_event_t *e)
+static int keypress(xcb_generic_event_t *_e)
 {
-	xcb_key_press_event_t *ev;
+	xcb_key_press_event_t *e = (void *) _e;;
 	xcb_keysym_t keysym;
 	unsigned int i;
 
-	ev = (xcb_key_press_event_t*) e;
-	keysym = xcb_key_press_lookup_keysym(syms, ev, 0);
+	keysym = xcb_key_press_lookup_keysym(syms, e, 0);
 
 	for (i = 0; i < keys_len; i++)
 		if (keysym == keys[i].keysym && CLEANMASK(keys[i].mod) ==
-				CLEANMASK(ev->state) && keys[i].func)
+				CLEANMASK(e->state) && keys[i].func)
 			keys[i].func(&(keys[i].arg));
 
 	return 0;
 }
 
-static int mappingnotify(xcb_generic_event_t *e)
+static int mappingnotify(xcb_generic_event_t *_e)
 {
-	xcb_mapping_notify_event_t *ev = (xcb_mapping_notify_event_t*)e;
+	xcb_mapping_notify_event_t *e = (void *) _e;
 
-	xcb_refresh_keyboard_mapping(syms, ev);
+	xcb_refresh_keyboard_mapping(syms, e);
 
-	if (ev->request == XCB_MAPPING_NOTIFY)
+	if (e->request == XCB_MAPPING_NOTIFY)
 		keys_grab();
 
 	return 0;
 }
 
-static int maprequest(xcb_generic_event_t *e)
+static int maprequest(xcb_generic_event_t *_e)
 {
-	xcb_map_request_event_t *ev = (xcb_map_request_event_t*)e;
+	xcb_map_request_event_t *e = (void *) _e;
 
 	xcb_get_window_attributes_reply_t *ga_reply =
 			xcb_get_window_attributes_reply(conn,
-			xcb_get_window_attributes(conn, ev->window), &err);
+			xcb_get_window_attributes(conn, e->window), &err);
 	testerr();
 
 	if (!ga_reply)
@@ -885,8 +885,8 @@ static int maprequest(xcb_generic_event_t *e)
 	if (ga_reply->override_redirect)
 		return 0;
 
-	if (!client_get(ev->window))
-		manage(ev->window);
+	if (!client_get(e->window))
+		manage(e->window);
 
 	free(ga_reply);
 
@@ -895,7 +895,7 @@ static int maprequest(xcb_generic_event_t *e)
 
 static int unmapnotify(xcb_generic_event_t *_e)
 {
-	xcb_unmap_notify_event_t *e = (xcb_unmap_notify_event_t *) _e;
+	xcb_unmap_notify_event_t *e = (void *) _e;
 	struct client *c;
 
 	if ((c = client_get(e->window)))
@@ -906,12 +906,10 @@ static int unmapnotify(xcb_generic_event_t *_e)
 
 static int propertynotify(xcb_generic_event_t *_e)
 {
+	xcb_property_notify_event_t *e = (void *) _e;
 	xcb_get_property_reply_t* reply;
-	xcb_property_notify_event_t *e;
 	xcb_window_t trans = 0;
 	struct client *c;
-
-	e = (void *) _e;
 
 	if (e->state == XCB_PROPERTY_DELETE || !(c = client_get(e->window)))
 		return 0;
@@ -934,7 +932,7 @@ static int propertynotify(xcb_generic_event_t *_e)
 				&err);
 		testerr();
 
-		xcb_icccm_get_wm_transient_for_from_reply( &trans, reply);
+		xcb_icccm_get_wm_transient_for_from_reply(&trans, reply);
 
 		if (trans && !c->floating &&
 				(c->floating = (client_get(trans) != NULL)))
