@@ -161,7 +161,80 @@ void client_resize(struct client *c, int x, int y, int w, int h)
 
 void resize(struct client *c, int x, int y, int w, int h, int interact)
 {
-	if (applysizehints(c, &x, &y, &w, &h, interact))
+	struct monitor *m = c->mon;
+	int baseismin;
+
+	/* Set minimum possible */
+	w = MAX(1, w);
+	h = MAX(1, h);
+
+	if (interact) {
+		if (x > screen_w)
+			x = screen_w - c->w;
+		if (y > screen_h)
+			y = screen_h - c->h;
+		if (x + w < 0)
+			x = 0;
+		if (y + h < 0)
+			y = 0;
+	} else {
+		if (x > m->x + m->w)
+			x = m->x + m->w - c->w;
+		if (y > m->y + m->h)
+			y = m->y + m->h - c->h;
+		if (x + w < m->x)
+			x = m->x;
+		if (y + h < m->y)
+			y = m->y;
+	}
+
+	if (h < 16)
+		h = 16;
+	if (w < 16)
+		w = 16;
+
+	if (c->floating || !c->mon->layouts[c->mon->tag]->arrange) {
+		baseismin = c->basew == c->minw && c->baseh == c->minh;
+
+		/* Temporarily remove base dimensions */
+		if (!baseismin) {
+			w -= c->basew;
+			h -= c->baseh;
+		}
+
+		/* Adjust for aspect limits */
+		if (c->mina > 0 && c->maxa > 0) {
+			if (c->maxa < (double) w / h)
+				w = h * c->maxa + 0.5;
+			else if (c->mina < (double) h / w)
+				h = w * c->mina + 0.5;
+		}
+
+		/* Increment calculation requires this */
+		if (baseismin) {
+			w -= c->basew;
+			h -= c->baseh;
+		}
+
+		/* Adjust for increment value */
+		if (c->incw)
+			w -= w % c->incw;
+		if (c->inch)
+			h -= h % c->inch;
+
+		/* Restore base dimensions */
+		w += c->basew;
+		h += c->baseh;
+		w = MAX(w, c->minw);
+		h = MAX(h, c->minh);
+
+		if (c->maxw)
+			w = MIN(w, c->maxw);
+		if (c->maxh)
+			h = MIN(h, c->maxh);
+	}
+
+	if (x != c->x || y != c->y || w != c->w || h != c->h)
 		client_resize(c, x, y, w, h);
 }
 
@@ -243,6 +316,41 @@ void arrange(struct monitor *m)
 	else
 		for (m = mons; m; m = m->next)
 			mon_arrange(m);
+}
+
+void focus(struct client *c)
+{
+	if (!c || !ISVISIBLE(c))
+		for (c = selmon->stack; c && !ISVISIBLE(c); c = c->snext);
+
+	if (selmon->client)
+		unfocus(selmon->client, 0);
+
+	if (c) {
+		if (c->mon != selmon)
+			selmon = c->mon;
+
+		reattach(c);
+		urgent_clear(c);
+		buttons_grab(c, 1);
+
+		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
+				c->win, XCB_CURRENT_TIME);
+		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
+				atoms[ATOM_ACTIVE], XCB_ATOM,
+				32, 1, (const void *) &c->win);
+
+	} else {
+		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
+				root, XCB_CURRENT_TIME);
+		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
+				atoms[ATOM_ACTIVE], XCB_ATOM,
+				32, 0, (const void *) 0);
+	}
+
+	selmon->client = c;
+
+	xcb_flush(conn);
 }
 
 void bar_draw(struct monitor *m)
@@ -382,84 +490,6 @@ static void time_update(int sig)
 
 /* ************************************************************************** */
 
-int applysizehints(struct client *c, int *x, int *y, int *w, int *h, int interact)
-{
-	struct monitor *m = c->mon;
-	int baseismin;
-
-	/* Set minimum possible */
-	*w = MAX(1, *w);
-	*h = MAX(1, *h);
-
-	if (interact) {
-		if (*x > screen_w)
-			*x = screen_w - c->w;
-		if (*y > screen_h)
-			*y = screen_h - c->h;
-		if (*x + *w < 0)
-			*x = 0;
-		if (*y + *h < 0)
-			*y = 0;
-	} else {
-		if (*x > m->x + m->w)
-			*x = m->x + m->w - c->w;
-		if (*y > m->y + m->h)
-			*y = m->y + m->h - c->h;
-		if (*x + *w < m->x)
-			*x = m->x;
-		if (*y + *h < m->y)
-			*y = m->y;
-	}
-
-	if (*h < 16)
-		*h = 16;
-	if (*w < 16)
-		*w = 16;
-
-	if (c->floating || !c->mon->layouts[c->mon->tag]->arrange) {
-		baseismin = c->basew == c->minw && c->baseh == c->minh;
-
-		/* Temporarily remove base dimensions */
-		if (!baseismin) {
-			*w -= c->basew;
-			*h -= c->baseh;
-		}
-
-		/* Adjust for aspect limits */
-		if (c->mina > 0 && c->maxa > 0) {
-			if (c->maxa < (double) *w / *h)
-				*w = *h * c->maxa + 0.5;
-			else if (c->mina < (double) *h / *w)
-				*h = *w * c->mina + 0.5;
-		}
-
-		/* Increment calculation requires this */
-		if (baseismin) {
-			*w -= c->basew;
-			*h -= c->baseh;
-		}
-
-		/* Adjust for increment value */
-		if (c->incw)
-			*w -= *w % c->incw;
-		if (c->inch)
-			*h -= *h % c->inch;
-
-		/* Restore base dimensions */
-		*w += c->basew;
-		*h += c->baseh;
-		*w = MAX(*w, c->minw);
-		*h = MAX(*h, c->minh);
-
-		if (c->maxw)
-			*w = MIN(*w, c->maxw);
-		if (c->maxh)
-			*h = MIN(*h, c->maxh);
-	}
-
-	return *x != c->x || *y != c->y || *w != c->w || *h != c->h;
-}
-
 struct monitor *dirtomon(int dir)
 {
 	struct monitor *m = NULL;
@@ -480,6 +510,7 @@ struct monitor *dirtomon(int dir)
 struct client *nexttiled(struct client *c)
 {
 	for (; c && (c->floating || !ISVISIBLE(c)); c = c->next);
+
 	return c;
 }
 
@@ -492,41 +523,6 @@ struct monitor *ptrtomon(int x, int y)
 				m->w, m->h - ((m->showbar) ? 16 : 0)))
 			return m;
 	return selmon;
-}
-
-void focus(struct client *c)
-{
-	if (!c || !ISVISIBLE(c))
-		for (c = selmon->stack; c && !ISVISIBLE(c); c = c->snext);
-
-	if (selmon->client)
-		unfocus(selmon->client, 0);
-
-	if (c) {
-		if (c->mon != selmon)
-			selmon = c->mon;
-
-		reattach(c);
-		urgent_clear(c);
-		buttons_grab(c, 1);
-
-		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
-				c->win, XCB_CURRENT_TIME);
-		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
-				atoms[ATOM_ACTIVE], XCB_ATOM,
-				32, 1, (const void *) &c->win);
-
-	} else {
-		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
-				root, XCB_CURRENT_TIME);
-		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
-				atoms[ATOM_ACTIVE], XCB_ATOM,
-				32, 0, (const void *) 0);
-	}
-
-	selmon->client = c;
-
-	xcb_flush(conn);
 }
 
 int curpos_get(xcb_window_t w, int *x, int *y)
@@ -574,15 +570,18 @@ void restack(struct monitor *m) {
 
 	if (m->client->floating || !m->layouts[m->tag]->arrange) {
 		uint32_t values[] = { XCB_STACK_MODE_ABOVE };
-		xcb_configure_window(conn, m->client->win, XCB_CONFIG_WINDOW_STACK_MODE, values);
+		xcb_configure_window(conn, m->client->win,
+				XCB_CONFIG_WINDOW_STACK_MODE, values);
 	}
 
 	if (m->layouts[m->tag]->arrange) {
 		uint32_t values[] = { m->barwin, XCB_STACK_MODE_BELOW };
 		for (c = m->stack; c; c = c->next)
 			if (!c->floating && ISVISIBLE(c)) {
-				xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_SIBLING |
-					XCB_CONFIG_WINDOW_STACK_MODE, values);
+				xcb_configure_window(conn, c->win,
+						XCB_CONFIG_WINDOW_SIBLING |
+						XCB_CONFIG_WINDOW_STACK_MODE,
+						values);
 				values[0] = c->win;
 			}
 	}
@@ -663,7 +662,8 @@ void showhide(struct client *c)
 	} else {
 		showhide(c->next);
 		uint32_t values[] = { c->x + 2 * screen_w, c->y };
-		xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, values);
+		xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_X |
+				XCB_CONFIG_WINDOW_Y, values);
 	}
 }
 

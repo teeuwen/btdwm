@@ -51,7 +51,8 @@
 #include "btdwm.h"
 #include "keysym.h"
 
-#define BUTTONMASK	(XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE)
+#define BUTTONMASK	\
+		(XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE)
 #define MOUSEMASK	(BUTTONMASK | XCB_EVENT_MASK_POINTER_MOTION)
 #define CLEANMASK(m)	(m & ~(numlockmask | XCB_MOD_MASK_LOCK))
 
@@ -84,7 +85,8 @@ static void _testerr(const char* file, const int line)
 }
 #define testerr() _testerr(__FILE__, __LINE__);
 
-static inline void _testcookie(xcb_void_cookie_t cookie, const char* file, const int line)
+static inline void _testcookie(xcb_void_cookie_t cookie,
+		const char* file, const int line)
 {
 	err = xcb_request_check(conn, cookie);
 	_testerr(file, line);
@@ -192,41 +194,45 @@ void configure(struct client *c)
 
 void scan(void)
 {
+	xcb_get_window_attributes_reply_t *ga_reply;
+	xcb_query_tree_reply_t *query_reply;
+	xcb_window_t *wins, trans_reply = 0;
 	unsigned int i, num;
-	xcb_window_t *wins = NULL;
 
-	xcb_query_tree_reply_t *query_reply = xcb_query_tree_reply(conn, xcb_query_tree(conn, root), &err);
+	query_reply =
+		xcb_query_tree_reply(conn, xcb_query_tree(conn, root), &err);
 	num = query_reply->children_len;
 	wins = xcb_query_tree_children(query_reply);
 
 	for (i = 0; i < num; i++) {
-		xcb_get_window_attributes_reply_t *ga_reply =
-			xcb_get_window_attributes_reply(conn, xcb_get_window_attributes(conn, wins[i]), &err);
+		ga_reply = xcb_get_window_attributes_reply(conn,
+				xcb_get_window_attributes(conn, wins[i]), &err);
 		testerr();
 
 		if (ga_reply->override_redirect)
 			continue;
 
-		xcb_window_t trans_reply = 0;
-		xcb_icccm_get_wm_transient_for_reply(conn, xcb_icccm_get_wm_transient_for(conn, wins[i]), &trans_reply, &err);
+		xcb_icccm_get_wm_transient_for_reply(conn,
+				xcb_icccm_get_wm_transient_for(conn, wins[i]),
+				&trans_reply, &err);
 		testerr();
 		
 		if (trans_reply != 0)
 			continue;
 
 		if (ga_reply->map_state == XCB_MAP_STATE_VIEWABLE ||
-			atom_get(wins[i], atoms[ATOM_STATE]) == XCB_ICCCM_WM_STATE_ICONIC)
+				atom_get(wins[i], atoms[ATOM_STATE]) ==
+				XCB_ICCCM_WM_STATE_ICONIC)
 			manage(wins[i]);
 
 		free(ga_reply);
 	}
 
 	for (i = 0; i < num; i++) {
-		xcb_get_window_attributes_reply_t *ga_reply =
-			xcb_get_window_attributes_reply(conn, xcb_get_window_attributes(conn, wins[i]), &err);
+		ga_reply = xcb_get_window_attributes_reply(conn,
+				xcb_get_window_attributes(conn, wins[i]), &err);
 		testerr();
 
-		xcb_window_t trans_reply = 0;
 		xcb_icccm_get_wm_transient_for_reply(conn,
 				xcb_icccm_get_wm_transient_for(conn,
 				wins[i]), &trans_reply, &err);
@@ -282,10 +288,8 @@ static void rules_apply(struct client *c)
 		xcb_icccm_get_wm_class_reply_wipe(&ch);
 	}
 
-	/* TODO Confirm */
 	if (!c->tags)
 		c->tags = c->mon->tags;
-	/* c->tags = c->tags & TAGMASK() ? c->tags & TAGMASK() : c->mon->tagset; */
 }
 
 void manage(xcb_window_t w)
@@ -538,20 +542,26 @@ void buttons_grab(struct client *c, int focused)
 		for (i = 0; i < buttons_len; i++)
 			if (buttons[i].click == CLICK_CLIENT)
 				for (j = 0; j < LENGTH(val); j++)
-					xcb_grab_button(conn, 0, c->win, BUTTONMASK, XCB_GRAB_MODE_SYNC,
-						XCB_GRAB_MODE_ASYNC, 0, XCB_CURSOR_NONE,
-						buttons[i].button, buttons[i].mask | val[j]);
+					xcb_grab_button(conn, 0, c->win,
+							BUTTONMASK,
+							XCB_GRAB_MODE_SYNC,
+							XCB_GRAB_MODE_ASYNC, 0,
+							XCB_CURSOR_NONE,
+							buttons[i].button,
+							buttons[i].mask |
+							val[j]);
 	} else {
-		xcb_grab_button(conn, 0, c->win, BUTTONMASK, XCB_GRAB_MODE_ASYNC,
-			XCB_GRAB_MODE_SYNC, 0, XCB_CURSOR_NONE,
-			XCB_BUTTON_INDEX_ANY, XCB_BUTTON_MASK_ANY);
+		xcb_grab_button(conn, 0, c->win, BUTTONMASK,
+				XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC, 0,
+				XCB_CURSOR_NONE, XCB_BUTTON_INDEX_ANY,
+				XCB_BUTTON_MASK_ANY);
 	}
 }
 
 void keys_grab(void)
 {
-	unsigned int i, j;
 	xcb_keycode_t *code;
+	unsigned int i, j;
 
 	numlockmask_update();
 	uint32_t val[] = {
@@ -565,12 +575,16 @@ void keys_grab(void)
 		syms = xcb_key_symbols_alloc(conn);
 
 	xcb_ungrab_key(conn, XCB_GRAB_ANY, root, XCB_MOD_MASK_ANY);
+
 	for (i = 0; i < keys_len; i++) {
 		code = xcb_key_symbols_get_keycode(syms, keys[i].keysym);
-		if (code)
-			for (j = 0; j < LENGTH(val); j++)
-				xcb_grab_key(conn, 1, root, keys[i].mod | val[j],
-					*code, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
+		if (!code)
+			continue;
+
+		for (j = 0; j < LENGTH(val); j++)
+			xcb_grab_key(conn, 1, root, keys[i].mod | val[j], *code,
+					XCB_GRAB_MODE_ASYNC,
+					XCB_GRAB_MODE_ASYNC);
 		free(code);
 	}
 }
@@ -814,8 +828,6 @@ static int enternotify(xcb_generic_event_t *_e)
 	}
 
 	focus(c);
-	/* if (c)
-		restack(c->mon); */
 
 	return 0;
 }
@@ -1066,10 +1078,24 @@ void cur_init(void)
 		xcb_cursor_load_cursor(ctx, "bottom_right_corner");
 }
 
+static void xcb_error(xcb_generic_error_t *e)
+{
+	if (e->error_code != 3)
+		return;
+
+	fprintf(stderr, "%s, err. %i (%s) [%i, %i], res. %i, type. %i\n",
+			__FILE__,
+			(int) e->error_code,
+			xcb_event_get_error_label(e->error_code),
+			(uint32_t) e->major_code,
+			(uint32_t) e->minor_code,
+			(uint32_t) e->resource_id,
+			(uint32_t) e->response_type & ~0x80);
+}
+
 void run(void)
 {
 	xcb_generic_event_t *e;
-	xcb_generic_error_t *error;
 	
 	while ((e = xcb_wait_for_event(conn))) {
 		if (e->response_type & ~0x80) {
@@ -1081,18 +1107,7 @@ void run(void)
 				xcb_handlers[e->response_type & ~0x80](e);
 			}
 		} else {
-			error = (void *) e;
-
-			if (error->error_code != 3) {
-				fprintf(stderr, "%s, previous request returned error %i (%s) [%i, %i], res. %i, type. %i\n",
-					__FILE__,
-					(int) error->error_code,
-					xcb_event_get_error_label(error->error_code),
-					(uint32_t) error->major_code,
-					(uint32_t) error->minor_code,
-					(uint32_t) error->resource_id,
-					(uint32_t) error->response_type & ~0x80);
-			}
+			xcb_error((void *) e);
 		}
 
 		free(e);
