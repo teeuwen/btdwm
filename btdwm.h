@@ -98,7 +98,6 @@
 
 typedef union {
 	int		i;
-	unsigned int	ui;
 	double		f;
 	const void	*v;
 } Arg;
@@ -118,6 +117,7 @@ struct monitor {
 	/* unsigned int	tags[LENGTH(tags)]; FIXME FIXME FIXME FIXME FIXME */
 
 	struct client	*clients;
+	struct client	*stack;
 	struct client	*client;
 
 	struct monitor	*next;
@@ -137,7 +137,8 @@ struct client {
 	double		mina, maxa;
 	int		basew, baseh, incw, inch, maxw, maxh, minw, minh;
 
-	struct client	*prev, *next;
+	struct client	*prev, *sprev;
+	struct client	*next, *snext;
 };
 
 struct layout {
