@@ -218,12 +218,12 @@ extern struct monitor *selmon;
 void attach(struct client *c);
 void detach(struct client *c);
 
+void arrange(struct monitor *m);
+void focus(struct client *c);
 void restack(struct monitor *m);
 
 void client_resize(struct client *c, int x, int y, int w, int h);
 void resize(struct client *c, int x, int y, int w, int h, int interact);
-
-void arrange(struct monitor *m);
 
 struct monitor *mon_alloc(void);
 struct monitor *mon_get(xcb_window_t w);
@@ -284,10 +284,8 @@ void die(const char *errstr, ...);
 
 /* **** */
 
-int applysizehints(struct client *c, int *x, int *y, int *w, int *h, int interact);
-struct monitor *dirtomon(int dir);
-void focus(struct client *c);
 int isprotodel(struct client *c);
+struct monitor *dirtomon(int dir);
 struct client *nexttiled(struct client *c);
 struct monitor *ptrtomon(int x, int y);
 void setclientstate(struct client *c, long state);
