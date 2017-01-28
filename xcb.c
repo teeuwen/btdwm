@@ -53,7 +53,6 @@
 
 #define BUTTONMASK	\
 		(XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE)
-#define MOUSEMASK	(BUTTONMASK | XCB_EVENT_MASK_POINTER_MOTION)
 #define CLEANMASK(m)	(m & ~(numlockmask | XCB_MOD_MASK_LOCK))
 
 xcb_connection_t *conn;
@@ -221,8 +220,8 @@ void scan(void)
 			continue;
 
 		if (ga_reply->map_state == XCB_MAP_STATE_VIEWABLE ||
-				atom_get(wins[i], atoms[ATOM_STATE]) ==
-				XCB_ICCCM_WM_STATE_ICONIC)
+				atom_check(wins[i], atoms[ATOM_STATE],
+				XCB_ICCCM_WM_STATE_ICONIC))
 			manage(wins[i]);
 
 		free(ga_reply);
@@ -240,8 +239,8 @@ void scan(void)
 
 		if (trans_reply && (ga_reply->map_state ==
 				XCB_MAP_STATE_VIEWABLE ||
-				atom_get(wins[i], atoms[ATOM_STATE]) ==
-				XCB_ICCCM_WM_STATE_ICONIC))
+				atom_check(wins[i], atoms[ATOM_STATE],
+				XCB_ICCCM_WM_STATE_ICONIC)))
 			manage(wins[i]);
 
 		free(ga_reply);
@@ -382,6 +381,7 @@ void manage(xcb_window_t w)
 	xcb_map_window(conn, c->win);
 
 	setclientstate(c, XCB_ICCCM_WM_STATE_NORMAL);
+	focus(c);
 	arrange(c->mon);
 }
 
@@ -443,7 +443,6 @@ void client_move_mouse(const Arg *arg, int move)
 	if (!(c = selmon->client) || !curpos_get(c->win, &x, &y))
 		return;
 
-	/* restack(selmon); */
 	ox = c->x;
 	oy = c->y;
 	ow = c->w;
@@ -470,7 +469,8 @@ void client_move_mouse(const Arg *arg, int move)
 	}
 
 	free(xcb_grab_pointer_reply(conn, xcb_grab_pointer(conn, 0, root,
-			MOUSEMASK, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, 0,
+			BUTTONMASK | XCB_EVENT_MASK_POINTER_MOTION,
+			XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, 0,
 			cursor[cur], XCB_TIME_CURRENT_TIME), &err));
 	if (err)
 		return;
@@ -653,10 +653,9 @@ static int buttonpress(xcb_generic_event_t *_e)
 			arg.i = i;
 		}
 	} else if ((c = client_get(e->event))) {
+		/* if (c->floating || !selmon->layouts[selmon->tag]->arrange) */
 		focus(c);
-
-		if (c->floating || !selmon->layouts[selmon->tag]->arrange)
-			restack(c->mon);
+		restack(c->mon);
 
 		click = CLICK_CLIENT;
 	}
@@ -827,7 +826,9 @@ static int enternotify(xcb_generic_event_t *_e)
 		selmon = m;
 	}
 
+	/* FIXME Don't do after switching to tag */
 	focus(c);
+	/* TODO Restack after this without everything glitching out */
 
 	return 0;
 }
@@ -1080,7 +1081,7 @@ void cur_init(void)
 
 static void xcb_error(xcb_generic_error_t *e)
 {
-	if (e->error_code != 3)
+	if (e->error_code == 3)
 		return;
 
 	fprintf(stderr, "%s, err. %i (%s) [%i, %i], res. %i, type. %i\n",

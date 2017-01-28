@@ -43,7 +43,7 @@
 #include "btdwm.h"
 #include "msg.h"
 
-static NotifyNotification *msg_layout;
+static NotifyNotification *msg;
 
 void movemouse(const Arg *arg)
 {
@@ -80,31 +80,33 @@ void focusmon(const Arg *arg)
 
 void focusstack(const Arg *arg)
 {
-	struct client *c = NULL;
+	struct client *c;
 
 	if (!selmon->client)
 		return;
 
-	if (arg->i < 0) {
+	if (arg->i < 0)
 		for (c = selmon->client->prev; c && !ISVISIBLE(c);
 				c = c->prev);
-	} else {
+	else
 		for (c = selmon->client->next; c && !ISVISIBLE(c);
 				c = c->next);
-	}
 
 	if (!c) {
-		if (arg->i < 0) {
-			for (c = selmon->client->next; c->next; c = c->next);
+		if (arg->i < -1) {
+			for (c = selmon->client->next; c && c->next;
+					c = c->next);
 			for (; c && !ISVISIBLE(c); c = c->prev);
-		} else {
+		} else if (arg->i > 1) {
 			for (c = selmon->clients; c && !ISVISIBLE(c);
 					c = c->next);
 		}
 	}
 
 	if (c) {
-		/* TODO Message */
+		/* TODO Icon */
+		if (arg->i < -1 || arg->i > 1)
+			msg = msg_update(msg, c->name, NULL, 500);
 
 		focus(c);
 		restack(selmon);
@@ -218,9 +220,9 @@ void setlayout(const Arg *arg)
 		i -= 3;
 
 	selmon->layouts[selmon->tag] = &layouts[i + arg->i];
-	msg_layout = msg_update(msg_layout,
+	msg = msg_update(msg,
 			selmon->layouts[selmon->tag]->symbol,
-			selmon->layouts[selmon->tag]->name, 1);
+			selmon->layouts[selmon->tag]->name, 500);
 
 	if (selmon->client)
 		arrange(selmon);

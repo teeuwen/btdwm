@@ -42,9 +42,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* To avoid conflicts with limits.h */
-#define MAX_NAME	256
-
 /* FIXME */
 #define INRECT(x,y,rx,ry,rw,rh)	((x) >= (rx) && (x) < (rx) + (rw) && (y) >= (ry) && (y) < (ry) + (rh))
 #define ISVISIBLE(c)		((c->tags & c->mon->tags))
@@ -57,19 +54,20 @@
 #endif
 #define TEXTW(c, x)		(textnw(c, x, strlen(x)) + 8)
 
+#define ATOM_WM			0
+#define ATOM_DELETE		1
+#define ATOM_STATE		2
+#define ATOM_NET		3
+#define ATOM_NAME		4
+#define ATOM_NETSTATE		5
+#define ATOM_ACTIVE		6
+#define ATOM_TYPE		7
+#define ATOM_TYPE_DIALOG	8
+#define ATOM_FULLSCREEN		9
+#define ATOM_MAX		10
+
 #define CLICK_TAGS	1
 #define CLICK_CLIENT	2
-
-#define ATOM_WM		0
-#define ATOM_DELETE	1
-#define ATOM_STATE	2
-#define ATOM_NET	3
-#define ATOM_NAME	4
-#define ATOM_NETSTATE	5
-#define ATOM_ACTIVE	6
-#define ATOM_TYPE	7
-#define ATOM_FULLSCREEN	8
-#define ATOM_MAX	9
 
 #define CUR_NORMAL	0
 #define CUR_MOVE	1
@@ -96,8 +94,11 @@
 #define COLOR_STURGENT	7
 #define COLOR_MAX	8
 
+/* To avoid conflicts with limits.h */
+#define MAX_NAME	256
+
 typedef union {
-	int		i;
+	int		i, b;
 	double		f;
 	const void	*v;
 } Arg;
@@ -260,7 +261,7 @@ int textprop_get(xcb_window_t w, xcb_atom_t atom,
 		char *text, unsigned int size);
 
 xcb_atom_t atom_add(const char *name);
-xcb_atom_t atom_get(xcb_window_t w, xcb_atom_t atom);
+int atom_check(xcb_window_t w, xcb_atom_t prop, xcb_atom_t target);
 void atom_init(void);
 
 void urgent_clear(struct client *c);
