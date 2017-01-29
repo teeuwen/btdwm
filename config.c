@@ -109,11 +109,11 @@ static const char *cmd_n[] = { SHCMD("chromium -incognito"), 0 };
 static const char *cmd_scrot[] = { SHCMD("scrot"), 0 };
 
 /* TODO OSD */
-static const char *cmd_cur[] = { SHCMD("mpc -f %file% | head -1 | rev | cut -c 5- | rev | tr -d '\n' | xargs -0 notify-send"), 0 };
-static const char *cmd_play[] = { SHCMD("mpc toggle"), 0 };
+static const char *cmd_cur[] = { SHCMD("mpc | head -1 | tr -d '\n' | xargs -0 notify-send"), 0 };
+static const char *cmd_play[] = { SHCMD("mpc toggle && [[ `mpc` == *'playing'* ]] && mpc | head -1 | tr -d '\n' | xargs -0 notify-send"), 0 };
 static const char *cmd_stop[] = { SHCMD("mpc stop"), 0 };
-static const char *cmd_prev[] = { SHCMD("mpc prev && mpc -f %file% | head -1 | rev | cut -c 5- | rev | tr -d '\n' | xargs -0 notify-send"), 0 };
-static const char *cmd_next[] = { SHCMD("mpc next && mpc -f %file% | head -1 | rev | cut -c 5- | rev | tr -d '\n' | xargs -0 notify-send"), 0 };
+static const char *cmd_prev[] = { SHCMD("mpc prev && mpc | head -1 | tr -d '\n' | xargs -0 notify-send"), 0 };
+static const char *cmd_next[] = { SHCMD("mpc next && mpc | head -1 | tr -d '\n' | xargs -0 notify-send"), 0 };
 
 /* TODO OSD */
 static const char *cmd_vdec[] = { SHCMD("amixer set Master 5%-"), 0 };
@@ -225,10 +225,10 @@ const struct key keys[] = {
 
 #if 0
 	/* Notifications */
-	{ K_SUPER,		K_C,	not_close,	{ 0 } },
-	{ K_SUPER,		K_X,	not_closeall,	{ 0 } },
-	{ K_SUPER,		K_V,	not_history,	{ 0 } },
-	{ K_SUPER,		K_B,	not_context,	{ 0 } },
+	{ K_SUPER,		K_C,	msg_close,	{ 0 } },
+	{ K_SUPER,		K_X,	msg_closeall,	{ 0 } },
+	{ K_SUPER,		K_V,	msg_history,	{ 0 } },
+	{ K_SUPER,		K_B,	msg_context,	{ 0 } },
 #endif
 
 	/* TODO */
