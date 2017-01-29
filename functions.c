@@ -68,10 +68,9 @@ void focusmon(const Arg *arg)
 
 	curpos_get(0, &x, &y);
 
-	/* FIXME Not working! */
 	xcb_warp_pointer(conn, 0, root, 0, 0, 0, 0,
-			m->x + (x / selmon->w * m->w),
-			m->y + (y / selmon->h * m->h));
+			m->x + (((double) (x - selmon->x) / selmon->w) * m->w),
+			m->y + (((double) (y - selmon->y) / selmon->h) * m->h));
 
 	unfocus(selmon->client, 1);
 	selmon = m;
@@ -141,6 +140,8 @@ void tagmon(const Arg *arg)
 		return;
 
 	mon_send(selmon->client, dirtomon(arg->i));
+
+	focusmon(arg);
 }
 
 void togglebar(const Arg *arg)
