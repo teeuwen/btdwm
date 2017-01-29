@@ -221,7 +221,7 @@ const struct key keys[] = {
 	/* Multihead */
 	{ K_SUPER,		K_BL,	focusmon,	{ .i = -1 } },
 	{ K_SUPER,		K_BR,	focusmon,	{ .i = +1 } },
-	{ K_SUPER,		K_O,	tagmon,		{ .i = -1 } }
+	{ K_SUPER,		K_O,	tagmon,		{ .i = +1 } }
 
 #if 0
 	/* Notifications */
