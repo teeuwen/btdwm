@@ -63,8 +63,9 @@
 #define ATOM_ACTIVE		6
 #define ATOM_TYPE		7
 #define ATOM_TYPE_DIALOG	8
-#define ATOM_FULLSCREEN		9
-#define ATOM_MAX		10
+#define ATOM_TYPE_SPLASH	9
+#define ATOM_FULLSCREEN		10
+#define ATOM_MAX		11
 
 #define CLICK_TAGS	1
 #define CLICK_CLIENT	2

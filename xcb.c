@@ -936,8 +936,8 @@ static int propertynotify(xcb_generic_event_t *_e)
 
 		if (c == c->mon->client)
 			bar_draw(c->mon);
-	} else if (e->atom == atoms[ATOM_TYPE]) {
-		windowtype_update(c);
+	/* } else if (e->atom == atoms[ATOM_TYPE]) {
+		windowtype_update(c); */
 	} else if (e->atom == XCB_ATOM_WM_TRANSIENT_FOR) {
 		reply = xcb_get_property_reply(conn,
 				xcb_icccm_get_wm_transient_for(conn, c->win),

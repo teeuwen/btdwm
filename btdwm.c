@@ -620,6 +620,7 @@ void atom_init(void)
 	atoms[ATOM_ACTIVE] = atom_add("_NET_ACTIVE_WINDOW");
 	atoms[ATOM_TYPE] = atom_add("_NET_WM_WINDOW_TYPE");
 	atoms[ATOM_TYPE_DIALOG] = atom_add("_NET_WM_WINDOW_TYPE_DIALOG");
+	atoms[ATOM_TYPE_SPLASH] = atom_add("_NET_WM_WINDOW_TYPE_SPLASH");
 	atoms[ATOM_FULLSCREEN] = atom_add("_NET_WM_STATE_FULLSCREEN");
 
 	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root, atoms[ATOM_NET],
@@ -634,7 +635,7 @@ int atom_check(xcb_window_t w, xcb_atom_t prop, xcb_atom_t target)
 	int res = 0, i;
 
 	reply = xcb_get_property_reply(conn, xcb_get_property(conn, 0, w, prop,
-			XCB_ATOM_ATOM, 0, 0), 0);
+			XCB_ATOM_ATOM, 0, UINT32_MAX), 0);
 
 	if (reply && (atom = (xcb_atom_t *) xcb_get_property_value(reply))) {
 		for (i = 0; i < xcb_get_property_value_length(reply) /
@@ -687,7 +688,9 @@ void unfocus(struct client *c, int setfocus)
 
 void windowtype_update(struct client *c)
 {
-	if (atom_check(c->win, atoms[ATOM_TYPE], atoms[ATOM_TYPE_DIALOG]))
+	if (atom_check(c->win, atoms[ATOM_TYPE], atoms[ATOM_TYPE_DIALOG]) ||
+			atom_check(c->win, atoms[ATOM_TYPE],
+			atoms[ATOM_TYPE_SPLASH]))
 		c->floating = 1;
 }
 
