@@ -525,6 +525,7 @@ void client_move_mouse(const Arg *arg, int move)
 
 void buttons_grab(struct client *c, int focused)
 {
+	numlockmask_update();
 	uint32_t val[] = {
 		0,
 		XCB_MOD_MASK_LOCK,
@@ -534,27 +535,21 @@ void buttons_grab(struct client *c, int focused)
 
 	unsigned int i, j;
 
-	numlockmask_update();
-
 	xcb_ungrab_button(conn, XCB_BUTTON_INDEX_ANY, c->win, XCB_GRAB_ANY);
 
-	if (focused) {
-		for (i = 0; i < buttons_len; i++)
-			if (buttons[i].click == CLICK_CLIENT)
-				for (j = 0; j < LENGTH(val); j++)
-					xcb_grab_button(conn, 0, c->win,
-							BUTTONMASK,
-							XCB_GRAB_MODE_SYNC,
-							XCB_GRAB_MODE_ASYNC, 0,
-							XCB_CURSOR_NONE,
-							buttons[i].button,
-							buttons[i].mask |
-							val[j]);
-	} else {
-		xcb_grab_button(conn, 0, c->win, BUTTONMASK,
-				XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC, 0,
-				XCB_CURSOR_NONE, XCB_BUTTON_INDEX_ANY,
-				XCB_BUTTON_MASK_ANY);
+	if (!focused)
+		return;
+
+	for (i = 0; i < buttons_len; i++) {
+		if (buttons[i].click != CLICK_CLIENT)
+			continue;
+
+		for (j = 0; j < LENGTH(val); j++)
+			xcb_grab_button(conn, 0, c->win,
+					XCB_EVENT_MASK_BUTTON_PRESS,
+					XCB_GRAB_MODE_SYNC, XCB_GRAB_MODE_ASYNC,
+					0, 0, buttons[i].button,
+					buttons[i].mask | val[j]);
 	}
 }
 
@@ -659,6 +654,9 @@ static int buttonpress(xcb_generic_event_t *_e)
 
 		click = CLICK_CLIENT;
 	}
+
+	if (!click)
+		return 0;
 
 	for (i = 0; i < buttons_len; i++)
 		if (click == buttons[i].click && buttons[i].func &&
