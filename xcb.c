@@ -476,7 +476,8 @@ void client_move_mouse(const Arg *arg, int move)
 		return;
 
 	do {
-		while (!(e = (void *) xcb_wait_for_event(conn)));
+		while (!(e = (xcb_motion_notify_event_t *)
+				xcb_wait_for_event(conn)));
 
 		switch (e->response_type & ~0x80) {
 		case XCB_CONFIGURE_REQUEST:
@@ -626,7 +627,7 @@ void urgent_clear(struct client *c)
 
 static int buttonpress(xcb_generic_event_t *_e)
 {
-	xcb_button_press_event_t *e = (void *) _e;
+	xcb_button_press_event_t *e = (xcb_button_press_event_t *) _e;
 	struct monitor *m;
 	struct client *c;
 	unsigned int i = 0, x = 0, click = 0;
@@ -672,7 +673,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 
 static int clientmessage(xcb_generic_event_t *_e)
 {
-	xcb_client_message_event_t *e = (void *) _e;
+	xcb_client_message_event_t *e = (xcb_client_message_event_t *) _e;
 	struct client *c;
 	uint32_t val[] = { XCB_STACK_MODE_ABOVE };
 
@@ -716,7 +717,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 
 static int configurerequest(xcb_generic_event_t *_e)
 {
-	xcb_configure_request_event_t *e = (void *) _e;
+	xcb_configure_request_event_t *e = (xcb_configure_request_event_t *) _e;
 	xcb_params_configure_window_t params;
 	uint32_t mask = 0;
 	struct monitor *m;
@@ -781,7 +782,7 @@ static int configurerequest(xcb_generic_event_t *_e)
 
 static int configurenotify(xcb_generic_event_t *_e)
 {
-	xcb_configure_notify_event_t *e = (void *) _e;
+	xcb_configure_notify_event_t *e = (xcb_configure_notify_event_t *) _e;
 
 	if (e->window != root)
 		return 0;
@@ -796,7 +797,7 @@ static int configurenotify(xcb_generic_event_t *_e)
 
 static int destroynotify(xcb_generic_event_t *_e)
 {
-	xcb_destroy_notify_event_t *e = (void *) _e;
+	xcb_destroy_notify_event_t *e = (xcb_destroy_notify_event_t *) _e;
 	struct client *c;
 
 	if ((c = client_get(e->window)))
@@ -807,7 +808,7 @@ static int destroynotify(xcb_generic_event_t *_e)
 
 static int enternotify(xcb_generic_event_t *_e)
 {
-	xcb_enter_notify_event_t *e = (void *) _e;
+	xcb_enter_notify_event_t *e = (xcb_enter_notify_event_t *) _e;
 	struct monitor *m;
 	struct client *c;
 
@@ -833,7 +834,7 @@ static int enternotify(xcb_generic_event_t *_e)
 
 static int expose(xcb_generic_event_t *_e)
 {
-	xcb_expose_event_t *e = (void *) _e;
+	xcb_expose_event_t *e = (xcb_expose_event_t *) _e;
 	struct monitor *m;
 
 	if (e->count == 0 && (m = mon_get(e->window)))
@@ -844,7 +845,7 @@ static int expose(xcb_generic_event_t *_e)
 
 static int focusin(xcb_generic_event_t *_e)
 {
-	xcb_focus_in_event_t *e = (void *) _e;
+	xcb_focus_in_event_t *e = (xcb_focus_in_event_t *) _e;
 
 	if (selmon->client && e->event != selmon->client->win)
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
@@ -855,7 +856,7 @@ static int focusin(xcb_generic_event_t *_e)
 
 static int keypress(xcb_generic_event_t *_e)
 {
-	xcb_key_press_event_t *e = (void *) _e;;
+	xcb_key_press_event_t *e = (xcb_key_press_event_t *) _e;;
 	xcb_keysym_t keysym;
 	unsigned int i;
 
@@ -871,7 +872,7 @@ static int keypress(xcb_generic_event_t *_e)
 
 static int mappingnotify(xcb_generic_event_t *_e)
 {
-	xcb_mapping_notify_event_t *e = (void *) _e;
+	xcb_mapping_notify_event_t *e = (xcb_mapping_notify_event_t *) _e;
 
 	xcb_refresh_keyboard_mapping(syms, e);
 
@@ -883,7 +884,7 @@ static int mappingnotify(xcb_generic_event_t *_e)
 
 static int maprequest(xcb_generic_event_t *_e)
 {
-	xcb_map_request_event_t *e = (void *) _e;
+	xcb_map_request_event_t *e = (xcb_map_request_event_t *) _e;
 
 	xcb_get_window_attributes_reply_t *ga_reply =
 			xcb_get_window_attributes_reply(conn,
@@ -906,7 +907,7 @@ static int maprequest(xcb_generic_event_t *_e)
 
 static int unmapnotify(xcb_generic_event_t *_e)
 {
-	xcb_unmap_notify_event_t *e = (void *) _e;
+	xcb_unmap_notify_event_t *e = (xcb_unmap_notify_event_t *) _e;
 	struct client *c;
 
 	if ((c = client_get(e->window)))
@@ -917,7 +918,7 @@ static int unmapnotify(xcb_generic_event_t *_e)
 
 static int propertynotify(xcb_generic_event_t *_e)
 {
-	xcb_property_notify_event_t *e = (void *) _e;
+	xcb_property_notify_event_t *e = (xcb_property_notify_event_t *) _e;
 	xcb_get_property_reply_t* reply;
 	xcb_window_t trans = 0;
 	struct client *c;
@@ -1106,7 +1107,7 @@ void run(void)
 				xcb_handlers[e->response_type & ~0x80](e);
 			}
 		} else {
-			xcb_error((void *) e);
+			xcb_error((xcb_generic_error_t *) e);
 		}
 
 		free(e);
