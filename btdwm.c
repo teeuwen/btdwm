@@ -622,9 +622,8 @@ void atom_init(void)
 	atoms[ATOM_TYPE_DIALOG] = atom_add("_NET_WM_WINDOW_TYPE_DIALOG");
 	atoms[ATOM_FULLSCREEN] = atom_add("_NET_WM_STATE_FULLSCREEN");
 
-	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
-			atoms[ATOM_NET], XCB_ATOM,
-			32, ATOM_MAX - ATOM_NET,
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root, atoms[ATOM_NET],
+			XCB_ATOM, 32, ATOM_MAX - ATOM_NET,
 			(const void *) &atoms[ATOM_NET]);
 }
 
