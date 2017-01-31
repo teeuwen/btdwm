@@ -39,9 +39,6 @@
 
 #include <cairo/cairo-xcb.h>
 
-#include <stdio.h>
-#include <stdlib.h>
-
 /* FIXME */
 #define INRECT(x,y,rx,ry,rw,rh)	((x) >= (rx) && (x) < (rx) + (rw) && (y) >= (ry) && (y) < (ry) + (rh))
 #define ISVISIBLE(c)		((c->tags & c->mon->tags))

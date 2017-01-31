@@ -26,6 +26,7 @@
 #include <pango/pangocairo.h>
 
 #include <string.h>
+#include <stdlib.h>
 
 #include "btdwm.h"
 
