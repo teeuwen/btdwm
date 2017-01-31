@@ -37,20 +37,16 @@
 /* Redo includes */
 
 #include <xcb/xcb.h>
-#include <xcb/xcb_atom.h>
-#include <xcb/xcb_aux.h>
-#include <xcb/xcb_event.h>
-#include <xcb/xcb_ewmh.h>
 #include <xcb/xcb_icccm.h>
 
-#include <errno.h>
 #include <signal.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/wait.h>
+#include <time.h>
 #include <unistd.h>
 
 #include "btdwm.h"

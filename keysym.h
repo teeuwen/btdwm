@@ -132,4 +132,6 @@
 #define K_BDEC	XF86XK_MonBrightnessDown
 #define K_BINC	XF86XK_MonBrightnessUp
 
+#define K_PWR	XF86XK_PowerOff
+
 #endif

@@ -256,27 +256,28 @@ static void rules_apply(struct client *c)
 {
 	xcb_icccm_get_wm_class_reply_t ch;
 	struct monitor *m;
-	const struct rule *r;
-	const char *class, *instance;
 	unsigned int i;
 
 	c->tags = c->floating = 0;
 
 	if (xcb_icccm_get_wm_class_reply(conn, xcb_icccm_get_wm_class(conn,
 			c->win), &ch, 0)) {
-		class = ch.class_name ? ch.class_name : "broken";
-		instance = ch.instance_name ? ch.instance_name : "broken";
-		for (i = 0; i < rules_len; i++) {
-			r = &rules[i];
-			if ((!r->title || strstr(c->name, r->title)) &&
-					(!r->class ||
-					strstr(class, r->class)) &&
-					(!r->instance ||
-					strstr(instance, r->instance))) {
-				c->floating = r->floating;
-				c->tags |= r->tags;
+		if (!ch.class_name || !ch.instance_name)
+			return;
 
-				for (m = mons; m && m->id != r->monitor;
+		for (i = 0; i < rules_len; i++) {
+			if ((!rules[i].title ||
+					strstr(c->name, rules[i].title)) &&
+					(!rules[i].class ||
+					strstr(ch.class_name,
+					rules[i].class)) &&
+					(!rules[i].instance ||
+					strstr(ch.instance_name,
+					rules[i].instance))) {
+				c->floating = rules[i].floating;
+				c->tags |= rules[i].tags;
+
+				for (m = mons; m && m->id != rules[i].monitor;
 						m = m->next);
 
 				if (m)

@@ -73,7 +73,7 @@ static const char *tags[] = {
 
 const struct rule rules[] = {
 	/* Class	Instance	Title	Mask	Float	Monitor */
-	{ "NULL",	NULL,		NULL,	0,	0,	-1 }
+	{ NULL,		NULL,		"QEMU",	0,	1,	-1 }
 };
 const int rules_len = sizeof(rules) / sizeof(rules[0]);
 
@@ -82,12 +82,14 @@ const int rules_len = sizeof(rules) / sizeof(rules[0]);
  * Key bindings
  */
 
-static const char *cmd_poweroff[] = { SHCMD("systemctl poweroff") , 0 };
-static const char *cmd_reboot[] = { SHCMD("systemctl reboot") , 0 };
-static const char *cmd_suspend[] = { SHCMD("systemctl suspend") , 0 };
-static const char *cmd_halt[] = { SHCMD("systemctl halt") , 0 };
+static const char *cmd_eject[] = { SHCMD("eject"), 0 };
 
-static const char *cmd_lock[] = { SHCMD("~/Documents/cs/scripts/lock/lock.sh") , 0 };
+static const char *cmd_poweroff[] = { SHCMD("systemctl poweroff"), 0 };
+static const char *cmd_reboot[] = { SHCMD("systemctl reboot"), 0 };
+static const char *cmd_suspend[] = { SHCMD("systemctl suspend"), 0 };
+static const char *cmd_halt[] = { SHCMD("systemctl halt"), 0 };
+
+static const char *cmd_lock[] = { SHCMD("~/Documents/cs/scripts/lock/lock.sh"), 0 };
 
 static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Noto Sans Mono-8' -nb '#333333' -nf '#ECECEC'"), 0 };
 static const char *cmd_term[]  = { "st", 0 };
@@ -127,6 +129,8 @@ static const char *cmd_binc[] = { SHCMD("xbacklight -inc 5"), 0 };
 const struct key keys[] = {
 	/* Modifier		Key	Function	Arguments */
 	{ K_SUPER | K_CTRL,	K_Q,	quit,		{ 0 } },
+
+	{ 0,			K_PWR,	spawn,		{ .v = cmd_eject } },
 
 	/* Power */
 	{ K_SUPER | K_CTRL,	K_ESC,	spawn,		{ .v = cmd_poweroff } },
