@@ -54,5 +54,6 @@ void moveclient(const Arg *arg);
 void movemouse(const Arg *arg);
 void resizemouse(const Arg *arg);
 void togglefloating(const Arg *arg);
+void togglesticky(const Arg *arg);
 
 #endif

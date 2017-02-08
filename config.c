@@ -103,7 +103,7 @@ static const char *cmd_i[] = { "loimpress", 0 };
 static const char *cmd_d[] = { "audacity", 0 };
 static const char *cmd_f[] = { "firefox", 0 };
 static const char *cmd_g[] = { "gimp", 0 };
-static const char *cmd_k[] = { "keepassx", 0 };
+static const char *cmd_k[] = { SHCMD("passmenu -fn 'Noto Sans Mono-8' -nb '#333333' -nf '#ECECEC'"), 0 };
 static const char *cmd_c[] = { "chromium", 0 };
 static const char *cmd_v[] = { "virtualbox", 0 };
 static const char *cmd_n[] = { SHCMD("chromium -incognito"), 0 };
@@ -217,7 +217,9 @@ const struct key keys[] = {
 
 	/* Client */
 	{ K_SUPER,		K_Q,	killclient,	{ 0 } },
+
 	{ K_SUPER | K_CTRL,	K_SPACE,togglefloating,	{ 0 } },
+	{ K_SUPER,		K_T,	togglesticky,	{ 0 } },
 
 	{ K_SUPER | K_SHIFT,	K_LEFT,	setmfact,	{ .f = -0.05 } },
 	{ K_SUPER | K_SHIFT,	K_RIGHT,setmfact,	{ .f = +0.05 } },

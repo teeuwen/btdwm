@@ -12,6 +12,7 @@ Enhancements over dwm-xcb:
 
 	* Drawing is done using Cairo instead of XCB
 	* Text drawing is done using Pango instead of XCB
+	* Xinerama support
 	* Various bug-fixes
 
 Other changes:

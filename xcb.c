@@ -51,8 +51,6 @@
 #include "btdwm.h"
 #include "keysym.h"
 
-#define BUTTONMASK	\
-		(XCB_EVENT_MASK_BUTTON_PRESS | XCB_EVENT_MASK_BUTTON_RELEASE)
 #define CLEANMASK(m)	(m & ~(numlockmask | XCB_MOD_MASK_LOCK))
 
 xcb_connection_t *conn;
@@ -349,7 +347,7 @@ void manage(xcb_window_t w)
 				(c->x + (c->w / 2) < c->mon->x + c->mon->w)) ?
 				16 : c->mon->y);
 	}
-	
+
 	uint32_t cw_values[] = {
 		XCB_EVENT_MASK_ENTER_WINDOW |
 		XCB_EVENT_MASK_FOCUS_CHANGE |
@@ -365,7 +363,7 @@ void manage(xcb_window_t w)
 	buttons_grab(c, 0);
 
 	if (!c->floating)
-		c->floating = c->oldstate = trans != 0 || c->fixed;
+		c->floating = trans != 0 || c->fixed;
 
 	uint32_t config_values[] = {
 		c->x + 2 * screen->width_in_pixels,
@@ -470,7 +468,9 @@ void client_move_mouse(const Arg *arg, int move)
 	}
 
 	free(xcb_grab_pointer_reply(conn, xcb_grab_pointer(conn, 0, root,
-			BUTTONMASK | XCB_EVENT_MASK_POINTER_MOTION,
+			XCB_EVENT_MASK_BUTTON_PRESS |
+			XCB_EVENT_MASK_BUTTON_RELEASE |
+			XCB_EVENT_MASK_POINTER_MOTION,
 			XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, 0,
 			cursor[cur], XCB_TIME_CURRENT_TIME), &err));
 	if (err)
@@ -493,8 +493,8 @@ void client_move_mouse(const Arg *arg, int move)
 			active = 0;
 		case XCB_MOTION_NOTIFY:
 			/* FIXME Check at the very start */
-			if (!c->floating &&
-					selmon->layouts[selmon->tag]->arrange)
+			if (c->fullscreen || (!c->floating &&
+					selmon->layouts[selmon->tag]->arrange))
 				break;
 
 			/* TODO Adhere to incw and inch */
@@ -681,28 +681,41 @@ static int clientmessage(xcb_generic_event_t *_e)
 	if (!(c = client_get(e->window)))
 		return 0;
 
-	if (e->type == atoms[ATOM_NETSTATE] &&
-			e->data.data32[1] == atoms[ATOM_FULLSCREEN]) {
-		if (e->data.data32[0]) {
-			xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
-					e->window, atoms[ATOM_NETSTATE],
-					XCB_ATOM, 32, 1, (const void *)
-					&atoms[ATOM_FULLSCREEN]);
-			c->oldstate = c->floating;
+	if (e->type == atoms[ATOM_NETSTATE]) {
+		if (e->data.data32[1] == atoms[ATOM_FULLSCREEN]) {
+			if (e->data.data32[0]) {
+				xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
+						e->window, atoms[ATOM_NETSTATE],
+						XCB_ATOM, 32, 1, (const void *)
+						&atoms[ATOM_FULLSCREEN]);
+
+				c->fullscreen = 1;
+
+				client_resize(c, c->mon->x, c->mon->y,
+						c->mon->w, c->mon->h);
+
+				xcb_configure_window(conn, c->win,
+						XCB_CONFIG_WINDOW_STACK_MODE,
+						val);
+			} else {
+				xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
+						e->window, atoms[ATOM_NETSTATE],
+						XCB_ATOM, 32, 0,
+						(const void *) 0);
+
+				c->fullscreen = 0;
+				c->x = c->oldx;
+				c->y = c->oldy;
+				c->w = c->oldw;
+				c->h = c->oldh;
+
+				client_resize(c, c->x, c->y, c->w, c->h);
+				arrange(c->mon);
+			}
+		} else if (e->data.data32[1] == atoms[ATOM_MODAL]) {
+			fprintf(stderr, "!\n");
 			c->floating = 1;
-			client_resize(c, c->mon->x, c->mon->y,
-					c->mon->w, c->mon->h);
-			xcb_configure_window(conn, c->win,
-					XCB_CONFIG_WINDOW_STACK_MODE, val);
-		} else {
-			xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
-					e->window, atoms[ATOM_NETSTATE],
-					XCB_ATOM, 32, 0, (const void *) 0);
-			c->floating = c->oldstate;
-			c->x = c->oldx;
-			c->y = c->oldy;
-			c->w = c->oldw;
-			c->h = c->oldh;
+
 			client_resize(c, c->x, c->y, c->w, c->h);
 			arrange(c->mon);
 		}
@@ -815,7 +828,7 @@ static int enternotify(xcb_generic_event_t *_e)
 
 	c = client_get(e->event);
 
-	if ((c && !c->mon->layouts[c->mon->tag]->arrange) ||
+	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || c->floating)) ||
 			((e->mode != XCB_NOTIFY_MODE_NORMAL ||
 			e->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
 			e->event != root))
