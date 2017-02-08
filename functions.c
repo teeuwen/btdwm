@@ -176,6 +176,16 @@ void togglefloating(const Arg *arg)
 	arrange(selmon);
 }
 
+void togglesticky(const Arg *arg)
+{
+	if (!selmon->client)
+		return;
+
+	selmon->client->sticky ^= 1;
+
+	arrange(selmon);
+}
+
 void viewtag(const Arg *arg)
 {
 	if (selmon->tags == (1 << arg->i))

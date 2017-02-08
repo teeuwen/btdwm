@@ -510,7 +510,8 @@ struct monitor *dirtomon(int dir)
 
 struct client *nexttiled(struct client *c)
 {
-	for (; c && (c->floating || !ISVISIBLE(c)); c = c->next);
+	while (c && (!ISVISIBLE(c) || c->floating || c->fullscreen))
+		c = c->next;
 
 	return c;
 }
@@ -569,7 +570,8 @@ void restack(struct monitor *m) {
 	if (!m->client)
 		return;
 
-	if (m->client->floating || !m->layouts[m->tag]->arrange) {
+	if (!m->layouts[m->tag]->arrange || m->client->floating ||
+			m->client->fullscreen) {
 		uint32_t values[] = { XCB_STACK_MODE_ABOVE };
 		xcb_configure_window(conn, m->client->win,
 				XCB_CONFIG_WINDOW_STACK_MODE, values);
@@ -577,14 +579,15 @@ void restack(struct monitor *m) {
 
 	if (m->layouts[m->tag]->arrange) {
 		uint32_t values[] = { m->barwin, XCB_STACK_MODE_BELOW };
-		for (c = m->stack; c; c = c->next)
-			if (!c->floating && ISVISIBLE(c)) {
+		for (c = m->stack; c; c = c->next) {
+			if (ISVISIBLE(c) && !c->floating && !c->fullscreen) {
 				xcb_configure_window(conn, c->win,
 						XCB_CONFIG_WINDOW_SIBLING |
 						XCB_CONFIG_WINDOW_STACK_MODE,
 						values);
 				values[0] = c->win;
 			}
+		}
 	}
 
 	xcb_flush(conn);
@@ -618,6 +621,7 @@ void atom_init(void)
 	atoms[ATOM_TYPE_DIALOG] = atom_add("_NET_WM_WINDOW_TYPE_DIALOG");
 	atoms[ATOM_TYPE_SPLASH] = atom_add("_NET_WM_WINDOW_TYPE_SPLASH");
 	atoms[ATOM_FULLSCREEN] = atom_add("_NET_WM_STATE_FULLSCREEN");
+	atoms[ATOM_MODAL] = atom_add("_NET_WM_STATE_MODAL");
 
 	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root, atoms[ATOM_NET],
 			XCB_ATOM, 32, ATOM_MAX - ATOM_NET,
@@ -659,8 +663,10 @@ void showhide(struct client *c)
 		xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_X |
 				XCB_CONFIG_WINDOW_Y, values);
 
-		if (!c->mon->layouts[c->mon->tag]->arrange || c->floating)
+		if (!c->mon->layouts[c->mon->tag]->arrange || c->floating ||
+				c->fullscreen)
 			resize(c, c->x, c->y, c->w, c->h, 0);
+
 		showhide(c->next);
 	} else {
 		showhide(c->next);
@@ -686,7 +692,8 @@ void windowtype_update(struct client *c)
 {
 	if (atom_check(c->win, atoms[ATOM_TYPE], atoms[ATOM_TYPE_DIALOG]) ||
 			atom_check(c->win, atoms[ATOM_TYPE],
-			atoms[ATOM_TYPE_SPLASH]))
+			atoms[ATOM_TYPE_SPLASH]) || atom_check(c->win,
+			atoms[ATOM_NETSTATE], atoms[ATOM_MODAL]))
 		c->floating = 1;
 }
 

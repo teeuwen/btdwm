@@ -41,7 +41,7 @@
 
 /* FIXME */
 #define INRECT(x,y,rx,ry,rw,rh)	((x) >= (rx) && (x) < (rx) + (rw) && (y) >= (ry) && (y) < (ry) + (rh))
-#define ISVISIBLE(c)		((c->tags & c->mon->tags))
+#define ISVISIBLE(c)		(((c->tags & c->mon->tags) | c->sticky))
 #define LENGTH(x)		(sizeof(x) / sizeof(x[0]))
 #ifndef MAX
 #   define MAX(a, b)		((a) > (b) ? (a) : (b))
@@ -62,7 +62,8 @@
 #define ATOM_TYPE_DIALOG	8
 #define ATOM_TYPE_SPLASH	9
 #define ATOM_FULLSCREEN		10
-#define ATOM_MAX		11
+#define ATOM_MODAL		11
+#define ATOM_MAX		12
 
 #define CLICK_TAGS	1
 #define CLICK_CLIENT	2
@@ -131,7 +132,7 @@ struct client {
 
 	int		x, y, w, h;
 	int		oldx, oldy, oldw, oldh;
-	int		fixed, floating, urgent, oldstate;
+	int		fullscreen, fixed, floating, sticky, urgent;
 
 	double		mina, maxa;
 	int		basew, baseh, incw, inch, maxw, maxh, minw, minh;
