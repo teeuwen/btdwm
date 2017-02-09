@@ -570,17 +570,10 @@ void restack(struct monitor *m) {
 	if (!m->client)
 		return;
 
-	if (!m->layouts[m->tag]->arrange || m->client->floating ||
-			m->client->fullscreen) {
-		uint32_t values[] = { XCB_STACK_MODE_ABOVE };
-		xcb_configure_window(conn, m->client->win,
-				XCB_CONFIG_WINDOW_STACK_MODE, values);
-	}
-
 	if (m->layouts[m->tag]->arrange) {
 		uint32_t values[] = { m->barwin, XCB_STACK_MODE_BELOW };
 		for (c = m->stack; c; c = c->next) {
-			if (ISVISIBLE(c) && !c->floating && !c->fullscreen) {
+			if (ISVISIBLE(c) && c != m->client) {
 				xcb_configure_window(conn, c->win,
 						XCB_CONFIG_WINDOW_SIBLING |
 						XCB_CONFIG_WINDOW_STACK_MODE,
@@ -589,6 +582,10 @@ void restack(struct monitor *m) {
 			}
 		}
 	}
+
+	uint32_t values[] = { XCB_STACK_MODE_ABOVE };
+	xcb_configure_window(conn, m->client->win,
+			XCB_CONFIG_WINDOW_STACK_MODE, values);
 
 	xcb_flush(conn);
 }

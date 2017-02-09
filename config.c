@@ -72,8 +72,9 @@ static const char *tags[] = {
  */
 
 const struct rule rules[] = {
-	/* Class	Instance	Title	Mask	Float	Monitor */
-	{ NULL,		NULL,		"QEMU",	0,	1,	-1 }
+	/* Class	Instance	Title		Mask	Float	Monitor */
+	{ NULL,		NULL,		"QEMU",		0,	1,	-1 },
+	{ NULL,		NULL,		"pinentry",	0,	1,	-1 }
 };
 const int rules_len = sizeof(rules) / sizeof(rules[0]);
 
