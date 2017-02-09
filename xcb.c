@@ -539,8 +539,15 @@ void buttons_grab(struct client *c, int focused)
 
 	xcb_ungrab_button(conn, XCB_BUTTON_INDEX_ANY, c->win, XCB_GRAB_ANY);
 
-	if (!focused)
+	if (!focused) {
+		if (c->mon->layouts[c->mon->tag]->arrange && !c->floating)
+			return;
+
+		xcb_grab_button(conn, 0, c->win, XCB_EVENT_MASK_BUTTON_PRESS,
+				XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC, 0, 0,
+				B_LEFT, 0);
 		return;
+	}
 
 	for (i = 0; i < buttons_len; i++) {
 		if (buttons[i].click != CLICK_CLIENT)
@@ -650,7 +657,6 @@ static int buttonpress(xcb_generic_event_t *_e)
 			arg.i = i;
 		}
 	} else if ((c = client_get(e->event))) {
-		/* if (c->floating || !selmon->layouts[selmon->tag]->arrange) */
 		focus(c);
 		restack(c->mon);
 
@@ -660,14 +666,22 @@ static int buttonpress(xcb_generic_event_t *_e)
 	if (!click)
 		return 0;
 
-	for (i = 0; i < buttons_len; i++)
+	for (i = 0; i < buttons_len; i++) {
 		if (click == buttons[i].click && buttons[i].func &&
 				buttons[i].button == e->detail &&
 				CLEANMASK(buttons[i].mask) ==
-				CLEANMASK(e->state))
+				CLEANMASK(e->state)) {
 			buttons[i].func(click == CLICK_TAGS &&
 					buttons[i].arg.i == 0 ?
 					&arg : &buttons[i].arg);
+			return 0;
+		}
+	}
+
+	/* FIXME */
+	/* if (c)
+		xcb_send_event(conn, 0, c->win, XCB_EVENT_MASK_BUTTON_PRESS,
+				(const char *) &_e); */
 
 	return 0;
 }
@@ -825,8 +839,10 @@ static int enternotify(xcb_generic_event_t *_e)
 	xcb_enter_notify_event_t *e = (xcb_enter_notify_event_t *) _e;
 	struct monitor *m;
 	struct client *c;
+	/* struct client *oc; */
 
 	c = client_get(e->event);
+	/* oc = (c ? c->mon->client : NULL); */
 
 	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || c->floating)) ||
 			((e->mode != XCB_NOTIFY_MODE_NORMAL ||
@@ -840,8 +856,11 @@ static int enternotify(xcb_generic_event_t *_e)
 	}
 
 	/* FIXME Don't do after switching to tag */
-	focus(c);
-	/* TODO Restack after this without everything glitching out */
+	if (c)
+		focus(c);
+
+	/* if (oc)
+		restack(m); */
 
 	return 0;
 }
