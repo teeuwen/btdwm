@@ -39,6 +39,9 @@
 
 #include <cairo/cairo-xcb.h>
 
+/* TODO Move to config.h */
+#define BAR_HEIGHT	16
+
 /* FIXME */
 #define INRECT(x,y,rx,ry,rw,rh)	((x) >= (rx) && (x) < (rx) + (rw) && (y) >= (ry) && (y) < (ry) + (rh))
 #define ISVISIBLE(c)		(((c->tags & c->mon->tags) | c->sticky))
@@ -49,7 +52,6 @@
 #ifndef MIN
 #   define MIN(a, b)		((a) < (b) ? (a) : (b))
 #endif
-#define TEXTW(c, x)		(textnw(c, x, strlen(x)) + 8)
 
 #define ATOM_WM			0
 #define ATOM_DELETE		1
@@ -105,6 +107,9 @@ typedef union {
 struct monitor {
 	int		id;
 	int		x, y, w, h;
+
+	xcb_pixmap_t	bgpix;
+	xcb_gcontext_t	gc;
 
 	xcb_window_t	barwin;
 	cairo_surface_t	*barsur;
@@ -208,7 +213,7 @@ extern const int buttons_len;
 extern const unsigned int tdelay;
 
 extern xcb_connection_t *conn;
-extern xcb_window_t root;
+extern xcb_screen_t *screen;
 
 extern xcb_atom_t atoms[];
 
@@ -238,9 +243,9 @@ struct client *client_get(xcb_window_t w);
 void client_kill(void);
 void client_move_mouse(const Arg *arg, int move);
 
+
 void bar_draw(struct monitor *m);
 void bars_draw(void);
-void bars_update(void);
 
 void gradient_draw(cairo_t *cr, int x, int y, int w, int h,
 		int palette1, int palette2);
@@ -265,6 +270,7 @@ void atom_init(void);
 
 void urgent_clear(struct client *c);
 
+void bar_init(void);
 void cur_init(void);
 void events_init(void);
 void font_init(void);
@@ -290,7 +296,7 @@ struct client *nexttiled(struct client *c);
 struct monitor *ptrtomon(int x, int y);
 void setclientstate(struct client *c, long state);
 void showhide(struct client *c);
-int textnw(cairo_t *cr, const char *text, unsigned int len);
+int textw(cairo_t *cr, const char *text);
 void unfocus(struct client *c, int setfocus);
 
 void windowtype_update(struct client *c);

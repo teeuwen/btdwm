@@ -44,9 +44,10 @@ static void rgb_set(int index, const char *col)
 	colors[index][2] = strtol(b, 0, 16) / 255.0f;
 }
 
-static void rgb_get(cairo_t *cr, int palette, int status, int bg,
-		double *r, double *g, double *b)
+static void rgba_get(cairo_t *cr, int palette, int status, int bg,
+		double *r, double *g, double *b, double *a)
 {
+	*a = 1.0;
 	switch (palette) {
 	case PLT_CENTER:
 		if (!bg) {
@@ -60,6 +61,7 @@ static void rgb_get(cairo_t *cr, int palette, int status, int bg,
 			*r = colors[COLOR_BGCENTER][0];
 			*g = colors[COLOR_BGCENTER][1];
 			*b = colors[COLOR_BGCENTER][2];
+			*a = 0.75;
 			break;
 		}
 	case PLT_ACTIVE:
@@ -103,77 +105,7 @@ static void rgb_get(cairo_t *cr, int palette, int status, int bg,
 	}
 }
 
-/* FIXME This is a hack for now */
-void gradient_draw(cairo_t *cr, int x, int y, int w, int h,
-		int palette1, int palette2)
-{
-	cairo_pattern_t *grad;
-	double r, g, b;
-
-	grad = cairo_pattern_create_linear(x, y, x + w, y);
-
-	rgb_get(cr, palette1, 0, 1, &r, &g, &b);
-	cairo_pattern_add_color_stop_rgb(grad, 0.0, r, g, b);
-	rgb_get(cr, palette2, 0, 1, &r, &g, &b);
-	cairo_pattern_add_color_stop_rgb(grad, 1.0, r, g, b);
-
-	cairo_set_source(cr, grad);
-
-	cairo_rectangle(cr, x, y, w, h);
-	cairo_fill(cr);
-
-	cairo_pattern_destroy(grad);
-}
-
-void rectangle_draw(cairo_t *cr, int x, int y, int w, int h, int palette)
-{
-	double r, g, b;
-
-	rgb_get(cr, palette, 0, 1, &r, &g, &b);
-	cairo_set_source_rgb(cr, r, g, b);
-
-	cairo_rectangle(cr, x, y, w, h);
-	cairo_fill(cr);
-}
-
-void status_draw(cairo_t *cr, int x, int y, int w, int palette)
-{
-	double r, g, b;
-
-	rgb_get(cr, palette, 1, 1, &r, &g, &b);
-	cairo_set_source_rgb(cr, r, g, b);
-
-	cairo_rectangle(cr, x, y, w, 1);
-	cairo_fill(cr);
-}
-
-void text_draw(cairo_t *cr, int x, int y, int w, int h,
-		const char *text, int palette)
-{
-	PangoLayout *layout;
-	double r, g, b;
-
-	layout = pango_cairo_create_layout(cr);
-
-	rectangle_draw(cr, x, y, w, h, palette);
-
-	/* FIXME TODO XXX */
-	cairo_move_to(cr, x + 4, y + 5);
-
-	rgb_get(cr, palette, 0, 0, &r, &g, &b);
-	cairo_set_source_rgb(cr, r, g, b);
-
-	pango_layout_set_font_description(layout, font);
-	pango_layout_set_text(layout, text, -1);
-
-	pango_cairo_update_layout(cr, layout);
-	pango_cairo_show_layout(cr, layout);
-
-	g_object_unref(G_OBJECT(layout));
-}
-
-/* TODO Use dummy cairo cr */
-int textnw(cairo_t *cr, const char *text, unsigned int len)
+int textw(cairo_t *cr, const char *text)
 {
 	PangoLayout *layout;
 	int w;
@@ -185,11 +117,96 @@ int textnw(cairo_t *cr, const char *text, unsigned int len)
 
 	pango_cairo_update_layout(cr, layout);
 
-	pango_layout_get_pixel_size(layout, &w, 0);
+	pango_layout_get_pixel_size(layout, &w, NULL);
 
 	g_object_unref(G_OBJECT(layout));
 
 	return w;
+}
+
+static int texth(cairo_t *cr, const char *text)
+{
+	PangoLayout *layout;
+	int h;
+
+	layout = pango_cairo_create_layout(cr);
+
+	pango_layout_set_font_description(layout, font);
+	pango_layout_set_text(layout, text, strlen(text));
+
+	pango_cairo_update_layout(cr, layout);
+
+	pango_layout_get_pixel_size(layout, NULL, &h);
+
+	g_object_unref(G_OBJECT(layout));
+
+	return h;
+}
+
+/* FIXME This is a hack for now */
+void gradient_draw(cairo_t *cr, int x, int y, int w, int h,
+		int palette1, int palette2)
+{
+	cairo_pattern_t *grad;
+	double r, g, b, a;
+
+	grad = cairo_pattern_create_linear(x, y, x + w, y);
+
+	rgba_get(cr, palette1, 0, 1, &r, &g, &b, &a);
+	cairo_pattern_add_color_stop_rgba(grad, 0.0, r, g, b, a);
+	rgba_get(cr, palette2, 0, 1, &r, &g, &b, &a);
+	cairo_pattern_add_color_stop_rgba(grad, 1.0, r, g, b, a);
+
+	cairo_set_source(cr, grad);
+
+	cairo_rectangle(cr, x, y, w, h);
+	cairo_fill(cr);
+
+	cairo_pattern_destroy(grad);
+}
+
+void rectangle_draw(cairo_t *cr, int x, int y, int w, int h, int palette)
+{
+	double r, g, b, a;
+
+	rgba_get(cr, palette, 0, 1, &r, &g, &b, &a);
+	cairo_set_source_rgba(cr, r, g, b, a);
+
+	cairo_rectangle(cr, x, y, w, h);
+	cairo_fill(cr);
+}
+
+void status_draw(cairo_t *cr, int x, int y, int w, int palette)
+{
+	double r, g, b, a;
+
+	rgba_get(cr, palette, 1, 1, &r, &g, &b, &a);
+	cairo_set_source_rgba(cr, r, g, b, a);
+
+	cairo_rectangle(cr, x, y, w, 1);
+	cairo_fill(cr);
+}
+
+void text_draw(cairo_t *cr, int x, int y, int w, int h,
+		const char *text, int palette)
+{
+	PangoLayout *layout;
+	double r, g, b, a;
+
+	layout = pango_cairo_create_layout(cr);
+
+	cairo_move_to(cr, x + 4, y + (h / 2) - (texth(cr, text) / 2));
+
+	rgba_get(cr, palette, 0, 0, &r, &g, &b, &a);
+	cairo_set_source_rgba(cr, r, g, b, a);
+
+	pango_layout_set_font_description(layout, font);
+	pango_layout_set_text(layout, text, -1);
+
+	pango_cairo_update_layout(cr, layout);
+	pango_cairo_show_layout(cr, layout);
+
+	g_object_unref(G_OBJECT(layout));
 }
 
 void font_init(void)

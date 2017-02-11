@@ -189,10 +189,10 @@ void resize(struct client *c, int x, int y, int w, int h, int interact)
 			y = m->y;
 	}
 
-	if (h < 16)
-		h = 16;
-	if (w < 16)
-		w = 16;
+	if (h < BAR_HEIGHT)
+		h = BAR_HEIGHT;
+	if (w < BAR_HEIGHT)
+		w = BAR_HEIGHT;
 
 	if (c->floating || !c->mon->layouts[c->mon->tag]->arrange) {
 		baseismin = c->basew == c->minw && c->baseh == c->minh;
@@ -265,7 +265,7 @@ struct monitor *mon_get(xcb_window_t w)
 
 	curpos_get(0, &x, &y);
 
-	if (w == root)
+	if (w == screen->root)
 		return ptrtomon(x, y);
 
 	for (m = mons; m; m = m->next)
@@ -337,14 +337,14 @@ void focus(struct client *c)
 
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
 				c->win, XCB_CURRENT_TIME);
-		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
+		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
 				atoms[ATOM_ACTIVE], XCB_ATOM,
 				32, 1, (const void *) &c->win);
 
 	} else {
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
-				root, XCB_CURRENT_TIME);
-		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root,
+				screen->root, XCB_CURRENT_TIME);
+		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
 				atoms[ATOM_ACTIVE], XCB_ATOM,
 				32, 0, (const void *) 0);
 	}
@@ -358,7 +358,7 @@ void bar_draw(struct monitor *m)
 {
 	struct client *c;
 	unsigned int i, ca = 0, cu = 0;
-	int x, w, cx;
+	int x = 0, w, cx;
 
 	for (c = m->clients; c; c = c->next) {
 		ca |= c->tags;
@@ -367,12 +367,15 @@ void bar_draw(struct monitor *m)
 			cu |= c->tags;
 	}
 
-	x = 0;
+	xcb_copy_area(conn, m->bgpix, m->barwin, m->gc, 0, 0, 0, 0,
+			m->w, BAR_HEIGHT);
 
 	for (i = 0; i < tags_len; i++) {
-		w = TEXTW(m->barcr, tags[i].name);
+		w = textw(m->barcr, tags[i].name) + 8;
 
-		text_draw(m->barcr, x, 0, w, 16, tags[i].name,
+		rectangle_draw(m->barcr, x, 0, w, BAR_HEIGHT,
+				(m->tags & 1 << i) ? PLT_FOCUS : PLT_INACTIVE);
+		text_draw(m->barcr, x, 0, w, BAR_HEIGHT, tags[i].name,
 				(m->tags & 1 << i) ? PLT_FOCUS : PLT_INACTIVE);
 
 		if ((m == selmon && selmon->client &&
@@ -392,27 +395,28 @@ void bar_draw(struct monitor *m)
 	cx = x;
 
 	if (m == selmon) {
-		w = TEXTW(m->barcr, "Unavail.");
+		w = textw(m->barcr, "Unavail.") + 8;
 		x = m->w - w - 15;
 
-		gradient_draw(m->barcr, x, 0, 15, 16, PLT_CENTER, PLT_INACTIVE);
-		text_draw(m->barcr, x + 15, 0, w, 16, "Unavail.", PLT_INACTIVE);
+		gradient_draw(m->barcr, x, 0, 15, BAR_HEIGHT, PLT_CENTER, PLT_INACTIVE);
+		rectangle_draw(m->barcr, x + 15, 0, w, BAR_HEIGHT, PLT_INACTIVE);
+		text_draw(m->barcr, x + 15, 0, w, BAR_HEIGHT, "Unavail.", PLT_INACTIVE);
 
 		w = x - cx - 15;
 	} else {
 		w = m->w - x;
 	}
 
-	gradient_draw(m->barcr, cx, 0, 15, 16, PLT_INACTIVE, PLT_CENTER);
-	rectangle_draw(m->barcr, cx + 15, 0, w, 16, PLT_CENTER);
+	gradient_draw(m->barcr, cx, 0, 15, BAR_HEIGHT, PLT_INACTIVE, PLT_CENTER);
+	rectangle_draw(m->barcr, cx + 15, 0, w, BAR_HEIGHT, PLT_CENTER);
 
-	w = TEXTW(m->barcr, tdate);
-	x = m->w / 2 - (w + TEXTW(m->barcr, ttime)) / 2;
-	text_draw(m->barcr, x, 0, w, 16, tdate, PLT_CENLIGHT);
+	w = textw(m->barcr, tdate) + 8;
+	x = m->w / 2 - (w + textw(m->barcr, ttime) + 8) / 2;
+	text_draw(m->barcr, x, 0, w, BAR_HEIGHT, tdate, PLT_CENLIGHT);
 
-	x += w - textnw(m->barcr, " ", 1) - 2;
-	w = TEXTW(m->barcr, ttime);
-	text_draw(m->barcr, x, 0, w, 16, ttime, PLT_CENTER);
+	x += w - textw(m->barcr, " ") - 2;
+	w = textw(m->barcr, ttime) + 8;
+	text_draw(m->barcr, x, 0, w, BAR_HEIGHT, ttime, PLT_CENTER);
 
 	xcb_flush(conn);
 }
@@ -457,7 +461,7 @@ int geom_update(int w, int h) {
 
 	if (res) {
 		selmon = mons;
-		selmon = mon_get(root);
+		selmon = mon_get(screen->root);
 	}
 
 	return res;
@@ -521,8 +525,8 @@ struct monitor *ptrtomon(int x, int y)
 	struct monitor *m;
 
 	for (m = mons; m; m = m->next)
-		if (INRECT(x, y, m->x, m->y + ((m->showbar) ? 16 : 0),
-				m->w, m->h - ((m->showbar) ? 16 : 0)))
+		if (INRECT(x, y, m->x, m->y + ((m->showbar) ? BAR_HEIGHT : 0),
+				m->w, m->h - ((m->showbar) ? BAR_HEIGHT : 0)))
 			return m;
 	return selmon;
 }
@@ -530,7 +534,7 @@ struct monitor *ptrtomon(int x, int y)
 int curpos_get(xcb_window_t w, int *x, int *y)
 {
 	if (!w)
-		w = root;
+		w = screen->root;
 
 	xcb_query_pointer_reply_t *reply;
 
@@ -620,8 +624,8 @@ void atom_init(void)
 	atoms[ATOM_FULLSCREEN] = atom_add("_NET_WM_STATE_FULLSCREEN");
 	atoms[ATOM_MODAL] = atom_add("_NET_WM_STATE_MODAL");
 
-	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, root, atoms[ATOM_NET],
-			XCB_ATOM, 32, ATOM_MAX - ATOM_NET,
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
+			atoms[ATOM_NET], XCB_ATOM, 32, ATOM_MAX - ATOM_NET,
 			(const void *) &atoms[ATOM_NET]);
 }
 
@@ -764,7 +768,7 @@ void updatewmhints(struct client *c)
 void setup(void)
 {
 	time_update(0);
-	bars_update();
+	bar_init();
 
 	events_init();
 	keys_grab();
