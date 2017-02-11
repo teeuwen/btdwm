@@ -51,11 +51,12 @@
 #include "btdwm.h"
 #include "keysym.h"
 
+#include <limits.h>
+
 #define CLEANMASK(m)	(m & ~(numlockmask | XCB_MOD_MASK_LOCK))
 
 xcb_connection_t *conn;
-static xcb_screen_t *screen;
-xcb_window_t root;
+xcb_screen_t *screen;
 
 static xcb_generic_error_t *err;
 
@@ -90,7 +91,7 @@ static inline void _testcookie(xcb_void_cookie_t cookie,
 }
 #define testcookie(cookie) _testcookie(cookie, __FILE__, __LINE__);
 
-void bars_update(void)
+void bar_init(void)
 {
 	xcb_visualtype_t *visual;
 	xcb_depth_iterator_t di;
@@ -117,18 +118,34 @@ void bars_update(void)
 	if (!visual)
 		die("unable to retrieve visual type\n");
 
+	/* XXX XXX This is absolutely terrible XXX XXX */
+	/* Wait for compositor */
+	/* unsigned int i;
+	for (i = 0; i < INT_MAX - 100; i++); */
+
 	for (m = mons; m; m = m->next) {
+		m->bgpix = xcb_generate_id(conn);
+		xcb_create_pixmap(conn, screen->root_depth, m->bgpix,
+				screen->root, m->w, BAR_HEIGHT);
+
+		m->gc = xcb_generate_id(conn);
+		xcb_create_gc(conn, m->gc, m->bgpix, 0, NULL);
+
 		m->barwin = xcb_generate_id(conn);
-		xcb_create_window(conn, XCB_COPY_FROM_PARENT, m->barwin, root,
-				m->x, (m->showbar) ? 0 : -16, m->w, 16, 0,
-				XCB_WINDOW_CLASS_INPUT_OUTPUT,
+		xcb_create_window(conn, screen->root_depth, m->barwin,
+				screen->root, m->x,
+				(m->showbar) ? 0 : -BAR_HEIGHT, m->w,
+				BAR_HEIGHT, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
 				screen->root_visual, XCB_CW_OVERRIDE_REDIRECT |
 				XCB_CW_EVENT_MASK | XCB_CW_CURSOR, values);
 		xcb_map_window(conn, m->barwin);
 
+		xcb_copy_area(conn, screen->root, m->bgpix, m->gc, 0, 0, 0, 0,
+				m->w, BAR_HEIGHT);
+
 		/* TODO Configure bar height in config.h */
 		m->barsur = cairo_xcb_surface_create(conn, m->barwin, visual,
-				m->w, 16);
+				m->w, BAR_HEIGHT);
 		if (cairo_surface_status(m->barsur) != 0)
 			die("unable to create cairo surface\n");
 		m->barcr = cairo_create(m->barsur);
@@ -196,8 +213,8 @@ void scan(void)
 	xcb_window_t *wins, trans_reply = 0;
 	unsigned int i, num;
 
-	query_reply =
-		xcb_query_tree_reply(conn, xcb_query_tree(conn, root), &err);
+	query_reply = xcb_query_tree_reply(conn,
+			xcb_query_tree(conn, screen->root), &err);
 	num = query_reply->children_len;
 	wins = xcb_query_tree_children(query_reply);
 
@@ -326,7 +343,7 @@ void manage(xcb_window_t w)
 
 	c->x = c->oldx = geom_reply->x + c->mon->x;
 	c->y = c->oldy =
-		geom_reply->y + c->mon->y + (c->mon->showbar ? 16 : 0);
+		geom_reply->y + c->mon->y + (c->mon->showbar ? BAR_HEIGHT : 0);
 	c->w = c->oldw = geom_reply->width;
 	c->h = c->oldh = geom_reply->height;
 
@@ -345,7 +362,7 @@ void manage(xcb_window_t w)
 		c->y = MAX(c->y, (c->mon->showbar &&
 				(c->x + (c->w / 2) >= c->mon->x) &&
 				(c->x + (c->w / 2) < c->mon->x + c->mon->w)) ?
-				16 : c->mon->y);
+				BAR_HEIGHT : c->mon->y);
 	}
 
 	uint32_t cw_values[] = {
@@ -467,8 +484,8 @@ void client_move_mouse(const Arg *arg, int move)
 				x ? 0 : ow - 1, y ? 0 : oh - 1);
 	}
 
-	free(xcb_grab_pointer_reply(conn, xcb_grab_pointer(conn, 0, root,
-			XCB_EVENT_MASK_BUTTON_PRESS |
+	free(xcb_grab_pointer_reply(conn, xcb_grab_pointer(conn, 0,
+			screen->root, XCB_EVENT_MASK_BUTTON_PRESS |
 			XCB_EVENT_MASK_BUTTON_RELEASE |
 			XCB_EVENT_MASK_POINTER_MOTION,
 			XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC, 0,
@@ -578,7 +595,7 @@ void keys_grab(void)
 	if (!syms)
 		syms = xcb_key_symbols_alloc(conn);
 
-	xcb_ungrab_key(conn, XCB_GRAB_ANY, root, XCB_MOD_MASK_ANY);
+	xcb_ungrab_key(conn, XCB_GRAB_ANY, screen->root, XCB_MOD_MASK_ANY);
 
 	for (i = 0; i < keys_len; i++) {
 		code = xcb_key_symbols_get_keycode(syms, keys[i].keysym);
@@ -586,7 +603,8 @@ void keys_grab(void)
 			continue;
 
 		for (j = 0; j < LENGTH(val); j++)
-			xcb_grab_key(conn, 1, root, keys[i].mod | val[j], *code,
+			xcb_grab_key(conn, 1, screen->root,
+					keys[i].mod | val[j], *code,
 					XCB_GRAB_MODE_ASYNC,
 					XCB_GRAB_MODE_ASYNC);
 		free(code);
@@ -649,7 +667,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 
 	if (e->event == selmon->barwin) {
 		do {
-			x += TEXTW(selmon->barcr, tags[i].name);
+			x += textw(selmon->barcr, tags[i].name) + 8;
 		} while (e->event_x >= x && ++i < tags_len);
 
 		if (i < tags_len) {
@@ -812,7 +830,7 @@ static int configurenotify(xcb_generic_event_t *_e)
 {
 	xcb_configure_notify_event_t *e = (xcb_configure_notify_event_t *) _e;
 
-	if (e->window != root)
+	if (e->window != screen->root)
 		return 0;
 
 	if (geom_update(e->width, e->height))
@@ -847,7 +865,7 @@ static int enternotify(xcb_generic_event_t *_e)
 	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || c->floating)) ||
 			((e->mode != XCB_NOTIFY_MODE_NORMAL ||
 			e->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
-			e->event != root))
+			e->event != screen->root))
 		return 0;
 
 	if ((m = mon_get(e->event)) && m != selmon) {
@@ -856,8 +874,7 @@ static int enternotify(xcb_generic_event_t *_e)
 	}
 
 	/* FIXME Don't do after switching to tag */
-	if (c)
-		focus(c);
+	focus(c);
 
 	/* if (oc)
 		restack(m); */
@@ -1017,7 +1034,7 @@ void events_init(void)
 		cursor[CUR_NORMAL]
 	};
 
-	testcookie(xcb_change_window_attributes_checked(conn, root,
+	testcookie(xcb_change_window_attributes_checked(conn, screen->root,
 			XCB_CW_EVENT_MASK | XCB_CW_CURSOR, cw_values));
 }
 
@@ -1157,10 +1174,9 @@ void xcb_init(void)
 	screen = xcb_setup_roots_iterator(xcb_get_setup(conn)).data;
 	if (!screen)
 		die("unable to open screen\n");
-	root = screen->root;
 
 	err = xcb_request_check(conn, xcb_change_window_attributes_checked(conn,
-			root, XCB_CW_EVENT_MASK, values));
+			screen->root, XCB_CW_EVENT_MASK, values));
 	if (err) {
 		free(err);
 		die("another window manager is already running\n");
@@ -1169,7 +1185,7 @@ void xcb_init(void)
 
 void xcb_quit(void)
 {
-	xcb_ungrab_key(conn, XCB_GRAB_ANY, root, XCB_MOD_MASK_ANY);
+	xcb_ungrab_key(conn, XCB_GRAB_ANY, screen->root, XCB_MOD_MASK_ANY);
 	xcb_free_cursor(conn, cursor[CUR_NORMAL]);
 	xcb_free_cursor(conn, cursor[CUR_MOVE]);
 	xcb_free_cursor(conn, cursor[CUR_RESIZE_TL]);

@@ -68,7 +68,7 @@ void focusmon(const Arg *arg)
 
 	curpos_get(0, &x, &y);
 
-	xcb_warp_pointer(conn, 0, root, 0, 0, 0, 0,
+	xcb_warp_pointer(conn, 0, screen->root, 0, 0, 0, 0,
 			m->x + (((double) (x - selmon->x) / selmon->w) * m->w),
 			m->y + (((double) (y - selmon->y) / selmon->h) * m->h));
 
@@ -150,8 +150,8 @@ void togglebar(const Arg *arg)
 
 	uint32_t values[] = {
 		selmon->x,
-		(selmon->showbar) ? 0 : -16,
-		selmon->w, 16
+		(selmon->showbar) ? 0 : -BAR_HEIGHT,
+		selmon->w, BAR_HEIGHT
 	};
 
 	xcb_configure_window(conn, selmon->barwin, XCB_CONFIG_WINDOW_X |

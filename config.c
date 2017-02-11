@@ -17,7 +17,7 @@ const char font_desc[]		= "Broad 5.8";
 
 const char bg_normal[]		= "#222222";
 const char bg_focus[]		= "#1D1D1D";
-const char bg_center[]		= "#444444";
+const char bg_center[]		= "#000000";
 
 const char fg_normal[]		= "#ECECEC";
 const char fg_light[]		= "#AAAAAA";
@@ -46,13 +46,13 @@ const int layouts_len = sizeof(layouts) / sizeof(layouts[0]);
 
 const struct tag tags[] = {
 	/* Name		Layout */
-	{ "λ",		&layouts[1] },
-	{ "α",		&layouts[2] },
-	{ "β",		&layouts[0] },
-	{ "γ",		&layouts[0] },
-	{ "δ",		&layouts[0] },
-	{ "μ",		&layouts[2] },
-	{ "π",		&layouts[1] },
+	{ "완",		&layouts[1] },
+	{ "투",		&layouts[2] },
+	{ "티",		&layouts[0] },
+	{ "포",		&layouts[0] },
+	{ "핍",		&layouts[0] },
+	{ "싯",		&layouts[2] },
+	{ "센",		&layouts[1] }
 };
 const int tags_len = sizeof(tags) / sizeof(tags[0]);
 
