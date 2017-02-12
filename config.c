@@ -15,11 +15,9 @@
 
 const char font_desc[]		= "Broad 5.8";
 
-const char bg_normal[]		= "#222222";
-const char bg_focus[]		= "#1D1D1D";
-const char bg_center[]		= "#000000";
+const char bg[]			= "#1C1C1C";
 
-const char fg_normal[]		= "#ECECEC";
+const char fg[]			= "#ECECEC";
 const char fg_light[]		= "#AAAAAA";
 
 const char status_active[]	= "#83A598";
@@ -33,9 +31,9 @@ const char status_urgent[]	= "#FFA500";
 
 struct layout layouts[] = {
 	/* Symbol	Name		Layout	mfact */
-/* 0 */	{ "[F]",	"Floating",	NULL,	0.0f },
-/* 1 */	{ "[T]",	"Tile",		&tile,	0.5f },
-/* 2 */	{ "[M]",	"Max",		&max,	0.0f }
+/* 0 */	{ "[F]",	"Floating",	NULL,	0.0 },
+/* 1 */	{ "[T]",	"Tile",		&tile,	0.5 },
+/* 2 */	{ "[M]",	"Max",		&max,	0.0 }
 };
 const int layouts_len = sizeof(layouts) / sizeof(layouts[0]);
 
@@ -72,9 +70,10 @@ static const char *tags[] = {
  */
 
 const struct rule rules[] = {
-	/* Class	Instance	Title		Mask	Float	Monitor */
-	{ NULL,		NULL,		"QEMU",		0,	1,	-1 },
-	{ NULL,		NULL,		"pinentry",	0,	1,	-1 }
+	/* Class	Instance	Title		Monitor	Tags	Float.	Transparent */
+	{ NULL,		NULL,		"QEMU",		-1,	0,	1,	0 },
+	{ NULL,		NULL,		"pinentry",	-1,	0,	1,	0 },
+	{ "st-256color",NULL,		NULL,		-1,	0,	0,	1 }
 };
 const int rules_len = sizeof(rules) / sizeof(rules[0]);
 

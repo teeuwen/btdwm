@@ -33,37 +33,40 @@
 PangoFontDescription *font;
 double colors[COLOR_MAX][3];
 
+/* TODO There's a CPP for this kind of stuff */
 static void rgb_set(int index, const char *col)
 {
 	char r[] = { col[1], col[2], '\0' };
 	char g[] = { col[3], col[4], '\0' };
 	char b[] = { col[5], col[6], '\0' };
 
-	colors[index][0] = strtol(r, 0, 16) / 255.0f;
-	colors[index][1] = strtol(g, 0, 16) / 255.0f;
-	colors[index][2] = strtol(b, 0, 16) / 255.0f;
+	colors[index][0] = strtol(r, 0, 16) / 255.0;
+	colors[index][1] = strtol(g, 0, 16) / 255.0;
+	colors[index][2] = strtol(b, 0, 16) / 255.0;
 }
 
 static void rgba_get(cairo_t *cr, int palette, int status, int bg,
 		double *r, double *g, double *b, double *a)
 {
-	*a = 1.0;
-	switch (palette) {
-	case PLT_CENTER:
-		if (!bg) {
-			*r = colors[COLOR_FGNORMAL][0];
-			*g = colors[COLOR_FGNORMAL][1];
-			*b = colors[COLOR_FGNORMAL][2];
-			break;
-		}
-	case PLT_CENLIGHT:
-		if (bg) {
-			*r = colors[COLOR_BGCENTER][0];
-			*g = colors[COLOR_BGCENTER][1];
-			*b = colors[COLOR_BGCENTER][2];
+	if (bg) {
+		if (!selmon->layouts[selmon->tag]->arrange || !selmon->client ||
+				selmon->client->floating ||
+				selmon->client->trans) {
+			*r = *g = *b = 0.0;
 			*a = 0.75;
-			break;
+		} else {
+			*r = colors[COLOR_BG][0];
+			*g = colors[COLOR_BG][1];
+			*b = colors[COLOR_BG][2];
+			*a = 1.0;
 		}
+
+		return;
+	}
+
+	*a = 1.0;
+
+	switch (palette) {
 	case PLT_ACTIVE:
 		if (status) {
 			*r = colors[COLOR_STACTIVE][0];
@@ -71,36 +74,28 @@ static void rgba_get(cairo_t *cr, int palette, int status, int bg,
 			*b = colors[COLOR_STACTIVE][2];
 			break;
 		}
+	case PLT_CENLIGHT:
 	case PLT_INACTIVE:
-		if (bg) {
-			*r = colors[COLOR_BGNORMAL][0];
-			*g = colors[COLOR_BGNORMAL][1];
-			*b = colors[COLOR_BGNORMAL][2];
-		} else {
-			*r = colors[COLOR_FGLIGHT][0];
-			*g = colors[COLOR_FGLIGHT][1];
-			*b = colors[COLOR_FGLIGHT][2];
-		}
+		*r = colors[COLOR_FGLIGHT][0];
+		*g = colors[COLOR_FGLIGHT][1];
+		*b = colors[COLOR_FGLIGHT][2];
 		break;
+	case PLT_CENTER:
 	case PLT_FOCUS:
 		if (status) {
 			*r = colors[COLOR_STFOCUS][0];
 			*g = colors[COLOR_STFOCUS][1];
 			*b = colors[COLOR_STFOCUS][2];
-		} else if (bg) {
-			*r = colors[COLOR_BGFOCUS][0];
-			*g = colors[COLOR_BGFOCUS][1];
-			*b = colors[COLOR_BGFOCUS][2];
 		} else {
-			*r = colors[COLOR_FGNORMAL][0];
-			*g = colors[COLOR_FGNORMAL][1];
-			*b = colors[COLOR_FGNORMAL][2];
+			*r = colors[COLOR_FG][0];
+			*g = colors[COLOR_FG][1];
+			*b = colors[COLOR_FG][2];
 		}
 		break;
 	case PLT_URGENT:
-			*r = colors[COLOR_STURGENT][0];
-			*g = colors[COLOR_STURGENT][1];
-			*b = colors[COLOR_STURGENT][2];
+		*r = colors[COLOR_STURGENT][0];
+		*g = colors[COLOR_STURGENT][1];
+		*b = colors[COLOR_STURGENT][2];
 		break;
 	}
 }
@@ -141,28 +136,6 @@ static int texth(cairo_t *cr, const char *text)
 	g_object_unref(G_OBJECT(layout));
 
 	return h;
-}
-
-/* FIXME This is a hack for now */
-void gradient_draw(cairo_t *cr, int x, int y, int w, int h,
-		int palette1, int palette2)
-{
-	cairo_pattern_t *grad;
-	double r, g, b, a;
-
-	grad = cairo_pattern_create_linear(x, y, x + w, y);
-
-	rgba_get(cr, palette1, 0, 1, &r, &g, &b, &a);
-	cairo_pattern_add_color_stop_rgba(grad, 0.0, r, g, b, a);
-	rgba_get(cr, palette2, 0, 1, &r, &g, &b, &a);
-	cairo_pattern_add_color_stop_rgba(grad, 1.0, r, g, b, a);
-
-	cairo_set_source(cr, grad);
-
-	cairo_rectangle(cr, x, y, w, h);
-	cairo_fill(cr);
-
-	cairo_pattern_destroy(grad);
 }
 
 void rectangle_draw(cairo_t *cr, int x, int y, int w, int h, int palette)
@@ -215,10 +188,8 @@ void font_init(void)
 	if (!font)
 		die("invalid font: %s\n", font);
 
-	rgb_set(COLOR_BGCENTER, bg_center);
-	rgb_set(COLOR_BGNORMAL, bg_normal);
-	rgb_set(COLOR_BGFOCUS, bg_focus);
-	rgb_set(COLOR_FGNORMAL, fg_normal);
+	rgb_set(COLOR_BG, bg);
+	rgb_set(COLOR_FG, fg);
 	rgb_set(COLOR_FGLIGHT, fg_light);
 	rgb_set(COLOR_STACTIVE, status_active);
 	rgb_set(COLOR_STFOCUS, status_focus);

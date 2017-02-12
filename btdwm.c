@@ -370,11 +370,11 @@ void bar_draw(struct monitor *m)
 	xcb_copy_area(conn, m->bgpix, m->barwin, m->gc, 0, 0, 0, 0,
 			m->w, BAR_HEIGHT);
 
+	rectangle_draw(m->barcr, x, 0, m->w, BAR_HEIGHT, PLT_CENTER);
+
 	for (i = 0; i < tags_len; i++) {
 		w = textw(m->barcr, tags[i].name) + 8;
 
-		rectangle_draw(m->barcr, x, 0, w, BAR_HEIGHT,
-				(m->tags & 1 << i) ? PLT_FOCUS : PLT_INACTIVE);
 		text_draw(m->barcr, x, 0, w, BAR_HEIGHT, tags[i].name,
 				(m->tags & 1 << i) ? PLT_FOCUS : PLT_INACTIVE);
 
@@ -396,19 +396,14 @@ void bar_draw(struct monitor *m)
 
 	if (m == selmon) {
 		w = textw(m->barcr, "Unavail.") + 8;
-		x = m->w - w - 15;
+		x = m->w - w;
 
-		gradient_draw(m->barcr, x, 0, 15, BAR_HEIGHT, PLT_CENTER, PLT_INACTIVE);
-		rectangle_draw(m->barcr, x + 15, 0, w, BAR_HEIGHT, PLT_INACTIVE);
-		text_draw(m->barcr, x + 15, 0, w, BAR_HEIGHT, "Unavail.", PLT_INACTIVE);
+		text_draw(m->barcr, x, 0, w, BAR_HEIGHT, "Unavail.", PLT_INACTIVE);
 
-		w = x - cx - 15;
+		w = x - cx;
 	} else {
 		w = m->w - x;
 	}
-
-	gradient_draw(m->barcr, cx, 0, 15, BAR_HEIGHT, PLT_INACTIVE, PLT_CENTER);
-	rectangle_draw(m->barcr, cx + 15, 0, w, BAR_HEIGHT, PLT_CENTER);
 
 	w = textw(m->barcr, tdate) + 8;
 	x = m->w / 2 - (w + textw(m->barcr, ttime) + 8) / 2;

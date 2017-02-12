@@ -289,8 +289,9 @@ static void rules_apply(struct client *c)
 					(!rules[i].instance ||
 					strstr(ch.instance_name,
 					rules[i].instance))) {
-				c->floating = rules[i].floating;
 				c->tags |= rules[i].tags;
+				c->floating = rules[i].floating;
+				c->trans = rules[i].transparent;
 
 				for (m = mons; m && m->id != rules[i].monitor;
 						m = m->next);
