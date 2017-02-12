@@ -245,9 +245,10 @@ void client_move_mouse(const Arg *arg, int move);
 void bar_draw(struct monitor *m);
 void bars_draw(void);
 
-void rectangle_draw(cairo_t *cr, int x, int y, int w, int h, int palette);
-void status_draw(cairo_t *cr, int x, int y, int w, int palette);
-void text_draw(cairo_t *cr, int x, int y, int w, int h,
+void rectangle_draw(struct monitor *m, cairo_t *cr, int x, int y, int w, int h,
+		int palette);
+void status_draw(struct monitor *m, int x, int y, int w, int palette);
+void text_draw(struct monitor *m, cairo_t *cr, int x, int y, int w, int h,
 		const char *text, int palette);
 
 int geom_update(int w, int h);

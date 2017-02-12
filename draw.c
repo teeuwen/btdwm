@@ -45,13 +45,13 @@ static void rgb_set(int index, const char *col)
 	colors[index][2] = strtol(b, 0, 16) / 255.0;
 }
 
-static void rgba_get(cairo_t *cr, int palette, int status, int bg,
-		double *r, double *g, double *b, double *a)
+static void rgba_get(struct monitor *m, cairo_t *cr, int palette, int status,
+		int bg, double *r, double *g, double *b, double *a)
 {
 	if (bg) {
-		if (!selmon->layouts[selmon->tag]->arrange || !selmon->client ||
-				selmon->client->floating ||
-				selmon->client->trans) {
+		if (m->barcr == cr && (!m->layouts[m->tag]->arrange ||
+				!m->client || m->client->floating ||
+				m->client->trans)) {
 			*r = *g = *b = 0.0;
 			*a = 0.75;
 		} else {
@@ -138,29 +138,19 @@ static int texth(cairo_t *cr, const char *text)
 	return h;
 }
 
-void rectangle_draw(cairo_t *cr, int x, int y, int w, int h, int palette)
+void rectangle_draw(struct monitor *m, cairo_t *cr, int x, int y, int w, int h,
+		int palette)
 {
 	double r, g, b, a;
 
-	rgba_get(cr, palette, 0, 1, &r, &g, &b, &a);
+	rgba_get(m, cr, palette, 0, 1, &r, &g, &b, &a);
 	cairo_set_source_rgba(cr, r, g, b, a);
 
 	cairo_rectangle(cr, x, y, w, h);
 	cairo_fill(cr);
 }
 
-void status_draw(cairo_t *cr, int x, int y, int w, int palette)
-{
-	double r, g, b, a;
-
-	rgba_get(cr, palette, 1, 0, &r, &g, &b, &a);
-	cairo_set_source_rgba(cr, r, g, b, a);
-
-	cairo_rectangle(cr, x, y, w, 1);
-	cairo_fill(cr);
-}
-
-void text_draw(cairo_t *cr, int x, int y, int w, int h,
+void text_draw(struct monitor *m, cairo_t *cr, int x, int y, int w, int h,
 		const char *text, int palette)
 {
 	PangoLayout *layout;
@@ -170,7 +160,7 @@ void text_draw(cairo_t *cr, int x, int y, int w, int h,
 
 	cairo_move_to(cr, x + 4, y + (h / 2) - (texth(cr, text) / 2));
 
-	rgba_get(cr, palette, 0, 0, &r, &g, &b, &a);
+	rgba_get(m, cr, palette, 0, 0, &r, &g, &b, &a);
 	cairo_set_source_rgba(cr, r, g, b, a);
 
 	pango_layout_set_font_description(layout, font);
@@ -180,6 +170,17 @@ void text_draw(cairo_t *cr, int x, int y, int w, int h,
 	pango_cairo_show_layout(cr, layout);
 
 	g_object_unref(G_OBJECT(layout));
+}
+
+void status_draw(struct monitor *m, int x, int y, int w, int palette)
+{
+	double r, g, b, a;
+
+	rgba_get(m, m->barcr, palette, 1, 0, &r, &g, &b, &a);
+	cairo_set_source_rgba(m->barcr, r, g, b, a);
+
+	cairo_rectangle(m->barcr, x, y, w, 1);
+	cairo_fill(m->barcr);
 }
 
 void font_init(void)
