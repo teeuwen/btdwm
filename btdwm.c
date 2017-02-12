@@ -465,7 +465,7 @@ int geom_update(int w, int h) {
 
 static void time_update(int sig)
 {
-	/* xcb_generic_event_t e; */
+	xcb_generic_event_t e;
 	time_t t;
 	struct tm *lt;
 
@@ -481,9 +481,9 @@ static void time_update(int sig)
 
 	selmon->redrawbar = 1;
 
-	/* FIXME Not working */
-	/* e.response_type = 1;
-	xcb_send_event(conn, 0, selmon->barwin, 0, (const char *) &e); */
+	e.response_type = 0;
+	xcb_send_event(conn, 0, selmon->barwin, 0, (const char *) &e);
+	xcb_flush(conn);
 
 	signal(SIGALRM, &time_update);
 	alarm(tdelay);

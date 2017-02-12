@@ -1149,14 +1149,13 @@ void run(void)
 	xcb_generic_event_t *e;
 	
 	while ((e = xcb_wait_for_event(conn))) {
-		if (e->response_type & ~0x80) {
-			if ((e->response_type & ~0x80) == XCB_NONE &&
-					selmon->redrawbar) {
-				selmon->redrawbar = 0;
-				bar_draw(selmon);
-			} else if (xcb_handlers[e->response_type & ~0x80]) {
+		if ((e->response_type & ~0x80) == XCB_NONE &&
+				selmon->redrawbar) {
+			selmon->redrawbar = 0;
+			bar_draw(selmon);
+		} else if (e->response_type & ~0x80) {
+			if (xcb_handlers[e->response_type & ~0x80])
 				xcb_handlers[e->response_type & ~0x80](e);
-			}
 		} else {
 			xcb_error((xcb_generic_error_t *) e);
 		}
