@@ -153,7 +153,7 @@ void status_draw(cairo_t *cr, int x, int y, int w, int palette)
 {
 	double r, g, b, a;
 
-	rgba_get(cr, palette, 1, 1, &r, &g, &b, &a);
+	rgba_get(cr, palette, 1, 0, &r, &g, &b, &a);
 	cairo_set_source_rgba(cr, r, g, b, a);
 
 	cairo_rectangle(cr, x, y, w, 1);
