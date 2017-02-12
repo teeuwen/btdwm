@@ -583,7 +583,10 @@ void restack(struct monitor *m) {
 	}
 
 	uint32_t values[] = { XCB_STACK_MODE_ABOVE };
+
 	xcb_configure_window(conn, m->client->win,
+			XCB_CONFIG_WINDOW_STACK_MODE, values);
+	xcb_configure_window(conn, m->barwin,
 			XCB_CONFIG_WINDOW_STACK_MODE, values);
 
 	xcb_flush(conn);
