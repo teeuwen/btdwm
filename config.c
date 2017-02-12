@@ -44,13 +44,13 @@ const int layouts_len = sizeof(layouts) / sizeof(layouts[0]);
 
 const struct tag tags[] = {
 	/* Name		Layout */
-	{ "완",		&layouts[1] },
-	{ "투",		&layouts[2] },
-	{ "티",		&layouts[0] },
-	{ "포",		&layouts[0] },
-	{ "핍",		&layouts[0] },
-	{ "싯",		&layouts[2] },
-	{ "센",		&layouts[1] }
+	{ "主",		&layouts[1] },
+	{ "次",		&layouts[2] },
+	{ "造",		&layouts[0] },
+	{ "声",		&layouts[0] },
+	{ "像",		&layouts[0] },
+	{ "全",		&layouts[2] },
+	{ "媕",		&layouts[1] }
 };
 const int tags_len = sizeof(tags) / sizeof(tags[0]);
 
@@ -91,7 +91,7 @@ static const char *cmd_halt[] = { SHCMD("systemctl halt"), 0 };
 
 static const char *cmd_lock[] = { SHCMD("~/Documents/cs/scripts/lock/lock.sh"), 0 };
 
-static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Noto Sans Mono-8' -nb '#333333' -nf '#ECECEC'"), 0 };
+static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Noto Sans Mono-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
 static const char *cmd_term[]  = { "st", 0 };
 
 static const char *cmd_w[] = { SHCMD("WINEARCH=win32 WINEPREFIX=~/.office2010 wine ~/.office2010/drive_c/Program\\ Files/Microsoft\\ Office/Office14/WINWORD.EXE"), 0 };
