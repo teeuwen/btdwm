@@ -80,20 +80,18 @@
 
 #define PLT_INACTIVE	0
 #define PLT_ACTIVE	1
-#define PLT_FOCUS	2
-#define PLT_URGENT	3
+#define PLT_URGENT	2
+#define PLT_FOCUS	3
 #define PLT_CENLIGHT	4
 #define PLT_CENTER	5
 
-#define COLOR_BGNORMAL	0
-#define COLOR_BGFOCUS	1
-#define COLOR_BGCENTER	2
-#define COLOR_FGNORMAL	3
-#define COLOR_FGLIGHT	4
-#define COLOR_STACTIVE	5
-#define COLOR_STFOCUS	6
-#define COLOR_STURGENT	7
-#define COLOR_MAX	8
+#define COLOR_BG	0
+#define COLOR_FG	1
+#define COLOR_FGLIGHT	2
+#define COLOR_STACTIVE	3
+#define COLOR_STFOCUS	4
+#define COLOR_STURGENT	5
+#define COLOR_MAX	6
 
 /* To avoid conflicts with limits.h */
 #define MAX_NAME	256
@@ -137,7 +135,7 @@ struct client {
 
 	int		x, y, w, h;
 	int		oldx, oldy, oldw, oldh;
-	int		fullscreen, fixed, floating, sticky, urgent;
+	int		fullscreen, fixed, floating, sticky, urgent, trans;
 
 	double		mina, maxa;
 	int		basew, baseh, incw, inch, maxw, maxh, minw, minh;
@@ -164,9 +162,11 @@ struct rule {
 	const char	*instance;
 	const char	*title;
 
-	unsigned int	tags;
-	int		floating;
 	int		monitor;
+	unsigned int	tags;
+
+	int		floating;
+	int		transparent;
 };
 
 #define TAGKEYS(k,t) \
@@ -192,10 +192,8 @@ struct button {
 };
 
 extern const char font_desc[];
-extern const char bg_normal[];
-extern const char bg_focus[];
-extern const char bg_center[];
-extern const char fg_normal[];
+extern const char bg[];
+extern const char fg[];
 extern const char fg_light[];
 extern const char status_active[];
 extern const char status_focus[];
@@ -247,8 +245,6 @@ void client_move_mouse(const Arg *arg, int move);
 void bar_draw(struct monitor *m);
 void bars_draw(void);
 
-void gradient_draw(cairo_t *cr, int x, int y, int w, int h,
-		int palette1, int palette2);
 void rectangle_draw(cairo_t *cr, int x, int y, int w, int h, int palette);
 void status_draw(cairo_t *cr, int x, int y, int w, int palette);
 void text_draw(cairo_t *cr, int x, int y, int w, int h,
