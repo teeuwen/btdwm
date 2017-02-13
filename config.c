@@ -20,9 +20,9 @@ const char bg[]			= "#1C1C1C";
 const char fg[]			= "#ECECEC";
 const char fg_light[]		= "#AAAAAA";
 
-const char status_active[]	= "#83A598";
+const char status_active[]	= "#C0D890";
 const char status_focus[]	= "#DFDFDF";
-const char status_urgent[]	= "#FFA500";
+const char status_urgent[]	= "#F0C674";
 
 
 /*
@@ -219,7 +219,8 @@ const struct key keys[] = {
 	{ K_SUPER,		K_Q,	killclient,	{ 0 } },
 
 	{ K_SUPER | K_CTRL,	K_SPACE,togglefloating,	{ 0 } },
-	{ K_SUPER,		K_T,	togglesticky,	{ 0 } },
+	{ K_SUPER,		K_T,	toggleontop,	{ 0 } },
+	{ K_SUPER,		K_Y,	togglesticky,	{ 0 } },
 
 	{ K_SUPER | K_SHIFT,	K_LEFT,	setmfact,	{ .f = -0.05 } },
 	{ K_SUPER | K_SHIFT,	K_RIGHT,setmfact,	{ .f = +0.05 } },

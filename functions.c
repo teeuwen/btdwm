@@ -180,6 +180,16 @@ void togglefloating(const Arg *arg)
 	arrange(selmon);
 }
 
+void toggleontop(const Arg *arg)
+{
+	if (!selmon->client)
+		return;
+
+	selmon->client->flags ^= F_ONTOP;
+
+	arrange(selmon);
+}
+
 void togglesticky(const Arg *arg)
 {
 	if (!selmon->client)
