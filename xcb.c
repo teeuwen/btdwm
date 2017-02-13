@@ -356,7 +356,7 @@ static void unmanage(struct client *c, int destroyed)
 	if (!destroyed) {
 		xcb_grab_server(conn);
 		xcb_ungrab_button_checked(conn, XCB_BUTTON_INDEX_ANY, c->win,
-			XCB_GRAB_ANY);
+				XCB_GRAB_ANY);
 		setclientstate(c, XCB_ICCCM_WM_STATE_WITHDRAWN);
 		xcb_flush(conn);
 		xcb_ungrab_server(conn);
@@ -870,6 +870,7 @@ static int enternotify(xcb_generic_event_t *_e)
 	c = client_get(e->event);
 	/* oc = (c ? c->mon->client : NULL); */
 
+	/* FIXME Return if new window */
 	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || ISFLOATING(c) ||
 			(c->mon == selmon && selmon->client &&
 			ISFLOATING(selmon->client)))) ||
