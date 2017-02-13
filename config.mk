@@ -6,5 +6,5 @@ PKGLIST		= xcb-aux xcb-cursor xcb-ewmh xcb-icccm xcb-keysyms xcb-xinerama xcb pa
 
 MAKEFLAGS	:= -s
 
-CFLAGS		:= -Wall -std=gnu89 `pkg-config --cflags $(PKGLIST)` -g #-Wextra #-Os
-LDFLAGS		:= `pkg-config --libs $(PKGLIST)` -g
+CFLAGS		:= -Wall -Wextra -Wno-unused-parameter -std=gnu89 `pkg-config --cflags $(PKGLIST)` -Os #-g
+LDFLAGS		:= `pkg-config --libs $(PKGLIST)` -Os -s #-g

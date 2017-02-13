@@ -192,7 +192,7 @@ void togglesticky(const Arg *arg)
 
 void viewtag(const Arg *arg)
 {
-	if (selmon->tags == (1 << arg->i))
+	if (selmon->tags == (unsigned int) (1 << arg->i))
 		return;
 
 	selmon->tags = 1 << arg->i;

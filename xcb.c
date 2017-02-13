@@ -93,7 +93,7 @@ static inline void _testcookie(xcb_void_cookie_t cookie,
 
 void bar_init(void)
 {
-	xcb_visualtype_t *visual;
+	xcb_visualtype_t *visual = NULL;
 	xcb_depth_iterator_t di;
 	xcb_visualtype_iterator_t vi;
 	struct monitor *m;
@@ -186,7 +186,7 @@ static void rules_apply(struct client *c)
 {
 	xcb_icccm_get_wm_class_reply_t ch;
 	struct monitor *m;
-	unsigned int i;
+	int i;
 
 	c->tags = 0;
 	c->flags &= ~F_FLOATING;
@@ -546,6 +546,9 @@ void client_move_mouse(const Arg *arg, int move)
 
 void buttons_grab(struct client *c, int focused)
 {
+	int i;
+	unsigned int j;
+
 	numlockmask_update();
 	uint32_t val[] = {
 		0,
@@ -553,8 +556,6 @@ void buttons_grab(struct client *c, int focused)
 		numlockmask,
 		numlockmask | XCB_MOD_MASK_LOCK
 	};
-
-	unsigned int i, j;
 
 	xcb_ungrab_button(conn, XCB_BUTTON_INDEX_ANY, c->win, XCB_GRAB_ANY);
 
@@ -581,7 +582,8 @@ void buttons_grab(struct client *c, int focused)
 void keys_grab(void)
 {
 	xcb_keycode_t *code;
-	unsigned int i, j;
+	int i;
+	unsigned int j;
 
 	numlockmask_update();
 	uint32_t val[] = {
@@ -655,7 +657,8 @@ static int buttonpress(xcb_generic_event_t *_e)
 	xcb_button_press_event_t *e = (xcb_button_press_event_t *) _e;
 	struct monitor *m;
 	struct client *c;
-	unsigned int i = 0, x = 0, click = 0;
+	int i = 0, j = 0;
+	unsigned int click = 0;
 	Arg arg = { 0 };
 
 	if ((m = mon_get(e->event)) && m != selmon) {
@@ -666,8 +669,8 @@ static int buttonpress(xcb_generic_event_t *_e)
 
 	if (e->event == selmon->barwin) {
 		do {
-			x += textw(selmon->barcr, tags[i].name) + 8;
-		} while (e->event_x >= x && ++i < tags_len);
+			j += textw(selmon->barcr, tags[i].name) + 8;
+		} while (e->event_x >= j && ++i < tags_len);
 
 		if (i < tags_len) {
 			click = CLICK_TAGS;
@@ -914,7 +917,7 @@ static int keypress(xcb_generic_event_t *_e)
 {
 	xcb_key_press_event_t *e = (xcb_key_press_event_t *) _e;;
 	xcb_keysym_t keysym;
-	unsigned int i;
+	int i;
 
 	keysym = xcb_key_press_lookup_keysym(syms, e, 0);
 

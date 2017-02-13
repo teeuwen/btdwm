@@ -243,7 +243,7 @@ void resize(struct client *c, int x, int y, int w, int h, int interact)
 struct monitor *mon_alloc(void)
 {
 	struct monitor *m;
-	int i;
+	unsigned int i;
 
 	m = calloc(1, sizeof(struct monitor));
 	if (!m)
@@ -357,8 +357,8 @@ void focus(struct client *c)
 void bar_draw(struct monitor *m)
 {
 	struct client *c;
-	unsigned int i, ca = 0, cu = 0;
-	int x = 0, w;
+	int i;
+	int x = 0, w, ca = 0, cu = 0;
 
 	for (c = m->clients; c; c = c->next) {
 		ca |= c->tags;
@@ -370,13 +370,13 @@ void bar_draw(struct monitor *m)
 	xcb_copy_area(conn, m->bgpix, m->barwin, m->gc, 0, 0, 0, 0,
 			m->w, BAR_HEIGHT);
 
-	rectangle_draw(m, m->barcr, x, 0, m->w, BAR_HEIGHT, PLT_CENTER);
+	rectangle_draw(m, m->barcr, x, 0, m->w, BAR_HEIGHT, PLT_NORMAL);
 
 	for (i = 0; i < tags_len; i++) {
 		w = textw(m->barcr, tags[i].name) + 8;
 
 		text_draw(m, m->barcr, x, 0, w, BAR_HEIGHT, tags[i].name,
-				(m->tags & 1 << i) ? PLT_FOCUS : PLT_INACTIVE);
+				(m->tags & 1 << i) ? PLT_NORMAL : PLT_LIGHT);
 
 		if ((m == selmon && m->client && m->client->tags & 1 << i) ||
 				ca & 1 << i) {
@@ -384,7 +384,7 @@ void bar_draw(struct monitor *m)
 				status_draw(m, x, 0, w, PLT_URGENT);
 			else if (m == selmon && m->client &&
 					m->client->tags & 1 << i)
-				status_draw(m, x, 0, w, PLT_FOCUS);
+				status_draw(m, x, 0, w, PLT_NORMAL);
 			else if (ca & 1 << i)
 				status_draw(m, x, 0, w, PLT_ACTIVE);
 		}
@@ -394,11 +394,11 @@ void bar_draw(struct monitor *m)
 
 	w = textw(m->barcr, tdate) + 8;
 	x = m->w / 2 - (w + textw(m->barcr, ttime) + 8) / 2;
-	text_draw(m, m->barcr, x, 0, w, BAR_HEIGHT, tdate, PLT_CENLIGHT);
+	text_draw(m, m->barcr, x, 0, w, BAR_HEIGHT, tdate, PLT_LIGHT);
 
 	x += w - textw(m->barcr, " ") - 2;
 	w = textw(m->barcr, ttime) + 8;
-	text_draw(m, m->barcr, x, 0, w, BAR_HEIGHT, ttime, PLT_CENTER);
+	text_draw(m, m->barcr, x, 0, w, BAR_HEIGHT, ttime, PLT_NORMAL);
 
 	xcb_flush(conn);
 }
@@ -533,7 +533,8 @@ int curpos_get(xcb_window_t w, int *x, int *y)
 int isprotodel(struct client *c)
 {
 	xcb_icccm_get_wm_protocols_reply_t proto_reply;
-	int i, ret = 0;
+	unsigned int i;
+	int ret = 0;
 
 	if (xcb_icccm_get_wm_protocols_reply(conn,
 			xcb_icccm_get_wm_protocols_unchecked(conn,
@@ -624,7 +625,8 @@ int atom_check(xcb_window_t w, xcb_atom_t prop, xcb_atom_t target)
 {
 	xcb_get_property_reply_t *reply;
 	xcb_atom_t *atom;
-	int res = 0, i;
+	unsigned int i;
+	int res = 0;
 
 	reply = xcb_get_property_reply(conn, xcb_get_property(conn, 0, w, prop,
 			XCB_ATOM_ATOM, 0, UINT32_MAX), 0);

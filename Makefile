@@ -8,28 +8,29 @@ all: btdwm
 
 %.o: %.c
 	echo -e "  CC      $<"
-	@$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< -o $@
 
 PHONY += btdwm
 btdwm: $(objects)
 	echo -e "  LD      $<"
-	@$(CC) $(LDFLAGS) -o $@ $(objects)
+	$(CC) $(LDFLAGS) -o $@ $(objects)
 
 PHONY += clean
 clean:
-	@echo cleaning
-	@rm -f btdwm $(objects)
+	echo -e "  RM      btdwm"
+	rm -f btdwm
+	find . -type f -name '*.o' -delete -exec echo "  RM      {}" \;
 
 PHONY += install
 install: btdwm
-	@echo Installing executable file to $(DESTDIR)$(PREFIX)/bin
-	@mkdir -p $(DESTDIR)$(PREFIX)/bin
-	@cp -f btdwm $(DESTDIR)$(PREFIX)/bin
-	@chmod 755 $(DESTDIR)$(PREFIX)/bin/btdwm
+	echo Installing executable file to $(DESTDIR)$(PREFIX)/bin
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp -f btdwm $(DESTDIR)$(PREFIX)/bin
+	chmod 755 $(DESTDIR)$(PREFIX)/bin/btdwm
 
 PHONY += uninstall
 uninstall:
-	@echo Removing executable file from $(DESTDIR)$(PREFIX)/bin
-	@rm -f $(DESTDIR)$(PREFIX)/bin/btdwm
+	echo Removing executable file from $(DESTDIR)$(PREFIX)/bin
+	rm -f $(DESTDIR)$(PREFIX)/bin/btdwm
 
 .PHONY: $(PHONY)
