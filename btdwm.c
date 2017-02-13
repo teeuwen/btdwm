@@ -563,7 +563,7 @@ int isprotodel(struct client *c)
 }
 
 void restack(struct monitor *m) {
-	uint32_t normal[] = { XCB_STACK_MODE_BELOW, 0 };
+	uint32_t normal[] = { 0, XCB_STACK_MODE_BELOW };
 	uint32_t ontop[] = { XCB_STACK_MODE_ABOVE };
 	struct client *c;
 
@@ -572,25 +572,24 @@ void restack(struct monitor *m) {
 	if (!m->client)
 		return;
 
-	if (m->layouts[m->tag]->arrange) {
-		normal[1] = m->barwin;
+	normal[0] = m->barwin;
 
-		for (c = m->stack; c; c = c->next) {
-			if (!ISVISIBLE(c))
-				continue;
+	for (c = m->stack; c; c = c->snext) {
+		if (!ISVISIBLE(c))
+			continue;
 
-			if (ISONTOP(c)) {
-				xcb_configure_window(conn, c->win,
-						XCB_CONFIG_WINDOW_STACK_MODE,
-						ontop);
-			} else {
-				xcb_configure_window(conn, c->win,
-						XCB_CONFIG_WINDOW_STACK_MODE |
-						XCB_CONFIG_WINDOW_SIBLING,
-						normal);
-				normal[1] = c->win;
-			}
+		if (ISONTOP(c)) {
+			xcb_configure_window(conn, c->win,
+					XCB_CONFIG_WINDOW_STACK_MODE,
+					ontop);
+		} else {
+			xcb_configure_window(conn, c->win,
+					XCB_CONFIG_WINDOW_SIBLING |
+					XCB_CONFIG_WINDOW_STACK_MODE,
+					normal);
 		}
+
+		normal[0] = c->win;
 	}
 
 	xcb_configure_window(conn, m->barwin,
@@ -704,10 +703,8 @@ void windowtype_update(struct client *c)
 		c->flags |= F_FLOATING;
 
 	if (atom_check(c->win, atoms[ATOM_NETSTATE],
-			atoms[ATOM_NETSTATE_ONTOP])) {
+			atoms[ATOM_NETSTATE_ONTOP]))
 		c->flags |= F_ONTOP;
-		fprintf(stderr, "called");
-	}
 }
 
 void updatesizehints(struct client *c)

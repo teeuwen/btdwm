@@ -325,8 +325,8 @@ static void manage(xcb_window_t w)
 	buttons_grab(c, 0);
 
 	if (!ISFLOATING(c))
-		c->flags = (trans != 0 || ISFIXED(c)) ?
-				c->flags | F_FLOATING : c->flags & ~F_FLOATING;
+		c->flags = ((trans != 0 || ISFIXED(c)) ?
+				c->flags | F_FLOATING : c->flags & ~F_FLOATING);
 
 	uint32_t config_values[] = {
 		c->x + 2 * screen->width_in_pixels,
@@ -564,9 +564,6 @@ void buttons_grab(struct client *c, int focused)
 	xcb_ungrab_button(conn, XCB_BUTTON_INDEX_ANY, c->win, XCB_GRAB_ANY);
 
 	if (!focused) {
-		if (c->mon->layouts[c->mon->tag]->arrange && !ISFLOATING(c))
-			return;
-
 		xcb_grab_button(conn, 0, c->win, XCB_EVENT_MASK_BUTTON_PRESS,
 				XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC, 0, 0,
 				B_LEFT, 0);
@@ -749,7 +746,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 				c->h = c->oldh;
 
 				client_resize(c, c->x, c->y, c->w, c->h);
-				arrange(c->mon);
+				arrange(c->mon); /* XXX Or restack? */
 			}
 		} else if (e->data.data32[1] == atoms[ATOM_NETSTATE_ONTOP]) {
 			c->flags |= F_ONTOP;
@@ -759,7 +756,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 			c->flags |= F_FLOATING;
 
 			client_resize(c, c->x, c->y, c->w, c->h);
-			arrange(c->mon);
+			arrange(c->mon); /* XXX Or restack? */
 		}
 	} else if (e->type == atoms[ATOM_ACTIVE]) {
 		if (!ISVISIBLE(c)) /* XXX Set urgent or something maybe? */
@@ -872,7 +869,9 @@ static int enternotify(xcb_generic_event_t *_e)
 	c = client_get(e->event);
 	/* oc = (c ? c->mon->client : NULL); */
 
-	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || ISFLOATING(c))) ||
+	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || ISFLOATING(c) ||
+			(c->mon == selmon && selmon->client &&
+			ISFLOATING(selmon->client)))) ||
 			((e->mode != XCB_NOTIFY_MODE_NORMAL ||
 			e->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
 			e->event != screen->root))
@@ -883,9 +882,9 @@ static int enternotify(xcb_generic_event_t *_e)
 		selmon = m;
 	}
 
-	/* FIXME Don't do after switching to tag */
 	focus(c);
 
+	/* FIXME */
 	/* if (oc)
 		restack(m); */
 
