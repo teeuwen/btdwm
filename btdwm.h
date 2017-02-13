@@ -100,7 +100,7 @@
 #define F_URGENT	0x40
 
 #define ISFIXED(c)	(c->flags & F_FIXED)
-#define ISFLOATING(c)	(c->flags & F_FLOATING)
+#define ISFLOATING(c)	(((c->flags & F_FLOATING) || (c->flags & F_STICKY)))
 #define ISFULLSCREEN(c)	(c->flags & F_FULLSCREEN)
 #define ISONTOP(c)	(c->flags & F_ONTOP)
 #define ISSTICKY(c)	(c->flags & F_STICKY)
