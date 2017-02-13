@@ -48,7 +48,24 @@ static void rgb_set(int index, const char *col)
 static void rgba_get(struct monitor *m, cairo_t *cr, int palette, int status,
 		int bg, double *r, double *g, double *b, double *a)
 {
+	struct client *c;
+
 	if (bg) {
+		if (m->layouts[m->tag]->arrange) {
+			for (c = m->clients; c; c = c->next) {
+				if (!ISVISIBLE(c) || ISFLOATING(c) ||
+						ISTRANS(c))
+					continue;
+
+				*r = colors[COLOR_BG][0];
+				*g = colors[COLOR_BG][1];
+				*b = colors[COLOR_BG][2];
+				*a = 1.0;
+
+				return;
+			}
+		}
+
 		if (m->barcr == cr && (!m->layouts[m->tag]->arrange ||
 				!m->client || ISFLOATING(m->client) ||
 				ISTRANS(m->client))) {
