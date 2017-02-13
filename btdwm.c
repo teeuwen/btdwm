@@ -579,8 +579,10 @@ void restack(struct monitor *m) {
 		normal[0] = c->win;
 	}
 
-	xcb_configure_window(conn, m->barwin,
-			XCB_CONFIG_WINDOW_STACK_MODE, ontop);
+	/* FIXME */
+	if (!ISFULLSCREEN(m->client))
+		xcb_configure_window(conn, m->barwin,
+				XCB_CONFIG_WINDOW_STACK_MODE, ontop);
 
 	xcb_flush(conn);
 }
