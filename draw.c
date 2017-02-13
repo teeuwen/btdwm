@@ -51,7 +51,7 @@ static void rgba_get(struct monitor *m, cairo_t *cr, int palette, int status,
 	if (bg) {
 		if (m->barcr == cr && (!m->layouts[m->tag]->arrange ||
 				!m->client || ISFLOATING(m->client) ||
-				ISTRANSPARENT(m->client))) {
+				ISTRANS(m->client))) {
 			*r = *g = *b = 0.0;
 			*a = 0.75;
 		} else {
@@ -74,14 +74,18 @@ static void rgba_get(struct monitor *m, cairo_t *cr, int palette, int status,
 			*b = colors[COLOR_STACTIVE][2];
 			break;
 		}
-	case PLT_CENLIGHT:
-	case PLT_INACTIVE:
+	case PLT_LIGHT:
 		*r = colors[COLOR_FGLIGHT][0];
 		*g = colors[COLOR_FGLIGHT][1];
 		*b = colors[COLOR_FGLIGHT][2];
 		break;
-	case PLT_CENTER:
-	case PLT_FOCUS:
+	case PLT_URGENT:
+		*r = colors[COLOR_STURGENT][0];
+		*g = colors[COLOR_STURGENT][1];
+		*b = colors[COLOR_STURGENT][2];
+		break;
+	case PLT_NORMAL:
+	default:
 		if (status) {
 			*r = colors[COLOR_STFOCUS][0];
 			*g = colors[COLOR_STFOCUS][1];
@@ -91,11 +95,7 @@ static void rgba_get(struct monitor *m, cairo_t *cr, int palette, int status,
 			*g = colors[COLOR_FG][1];
 			*b = colors[COLOR_FG][2];
 		}
-		break;
-	case PLT_URGENT:
-		*r = colors[COLOR_STURGENT][0];
-		*g = colors[COLOR_STURGENT][1];
-		*b = colors[COLOR_STURGENT][2];
+
 		break;
 	}
 }

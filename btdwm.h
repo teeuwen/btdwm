@@ -78,12 +78,10 @@
 #define CUR_RESIZE_BR	5
 #define CUR_MAX		6
 
-#define PLT_INACTIVE	0
-#define PLT_ACTIVE	1
-#define PLT_URGENT	2
-#define PLT_FOCUS	3
-#define PLT_CENLIGHT	4
-#define PLT_CENTER	5
+#define PLT_NORMAL	0
+#define PLT_LIGHT	1
+#define PLT_ACTIVE	2
+#define PLT_URGENT	3
 
 #define COLOR_BG	0
 #define COLOR_FG	1
@@ -93,22 +91,22 @@
 #define COLOR_STURGENT	5
 #define COLOR_MAX	6
 
-#define F_FIXED			0x01
-#define F_FLOATING		0x02
-#define F_FULLSCREEN		0x04
-#define F_ONTOP			0x08
-#define F_STICKY		0x10
-#define F_TRANS			0x20
-#define F_URGENT		0x40
+#define F_FIXED		0x01
+#define F_FLOATING	0x02
+#define F_FULLSCREEN	0x04
+#define F_ONTOP		0x08
+#define F_STICKY	0x10
+#define F_TRANS		0x20
+#define F_URGENT	0x40
 
-#define ISFIXED(c)		(c->flags & F_FIXED)
-#define ISFLOATING(c)		(c->flags & F_FLOATING)
-#define ISFULLSCREEN(c)		(c->flags & F_FULLSCREEN)
-#define ISONTOP(c)		(c->flags & F_ONTOP)
-#define ISSTICKY(c)		(c->flags & F_STICKY)
-#define ISTRANSPARENT(c)	(c->flags & F_TRANS)
-#define ISURGENT(c)		(c->flags & F_URGENT)
-#define ISVISIBLE(c)		(((c->tags & c->mon->tags) | ISSTICKY(c)))
+#define ISFIXED(c)	(c->flags & F_FIXED)
+#define ISFLOATING(c)	(c->flags & F_FLOATING)
+#define ISFULLSCREEN(c)	(c->flags & F_FULLSCREEN)
+#define ISONTOP(c)	(c->flags & F_ONTOP)
+#define ISSTICKY(c)	(c->flags & F_STICKY)
+#define ISTRANS(c)	(c->flags & F_TRANS)
+#define ISURGENT(c)	(c->flags & F_URGENT)
+#define ISVISIBLE(c)	(((c->tags & c->mon->tags) | ISSTICKY(c)))
 
 /* To avoid conflicts with limits.h */
 #define MAX_NAME	256
