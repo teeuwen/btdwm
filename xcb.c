@@ -801,11 +801,12 @@ static int configurerequest(xcb_generic_event_t *_e)
 
 			if (ISVISIBLE(c)) {
 				uint32_t values[] = { c->x, c->y, c->w, c->h };
-				testcookie(xcb_configure_window_checked(conn,
-					c->win, XCB_CONFIG_WINDOW_X |
-					XCB_CONFIG_WINDOW_Y |
-					XCB_CONFIG_WINDOW_WIDTH |
-					XCB_CONFIG_WINDOW_HEIGHT, values));
+				xcb_configure_window(conn, c->win,
+						XCB_CONFIG_WINDOW_X |
+						XCB_CONFIG_WINDOW_Y |
+						XCB_CONFIG_WINDOW_WIDTH |
+						XCB_CONFIG_WINDOW_HEIGHT,
+						values);
 			}
 		} else {
 			configure(c);
