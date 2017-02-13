@@ -118,11 +118,6 @@ void bar_init(void)
 	if (!visual)
 		die("unable to retrieve visual type\n");
 
-	/* XXX XXX This is absolutely terrible XXX XXX */
-	/* Wait for compositor */
-	/* unsigned int i;
-	for (i = 0; i < INT_MAX - 100; i++); */
-
 	for (m = mons; m; m = m->next) {
 		m->bgpix = xcb_generate_id(conn);
 		xcb_create_pixmap(conn, screen->root_depth, m->bgpix,
