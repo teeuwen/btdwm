@@ -778,6 +778,7 @@ void updatewmhints(struct client *c)
 
 void setup(void)
 {
+	time_update(-1);
 	bar_init();
 
 	events_init();
