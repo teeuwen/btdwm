@@ -99,6 +99,8 @@ void focusstack(const Arg *arg)
 		} else if (arg->i > 1) {
 			for (c = selmon->clients; c && !ISVISIBLE(c);
 					c = c->next);
+		} else {
+			return;
 		}
 	}
 
@@ -108,7 +110,7 @@ void focusstack(const Arg *arg)
 			msg = msg_update(msg, c->name, NULL, 500);
 
 		focus(c);
-		restack(selmon);
+		restack(c->mon);
 	}
 }
 
