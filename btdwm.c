@@ -358,7 +358,7 @@ void bar_draw(struct monitor *m)
 {
 	struct client *c;
 	unsigned int i, ca = 0, cu = 0;
-	int x = 0, w, cx;
+	int x = 0, w;
 
 	for (c = m->clients; c; c = c->next) {
 		ca |= c->tags;
@@ -390,20 +390,6 @@ void bar_draw(struct monitor *m)
 		}
 
 		x += w;
-	}
-
-	cx = x;
-
-	if (m == selmon) {
-		w = textw(m->barcr, "Unavail.") + 8;
-		x = m->w - w;
-
-		text_draw(m, m->barcr, x, 0, w, BAR_HEIGHT, "Unavail.",
-				PLT_INACTIVE);
-
-		w = x - cx;
-	} else {
-		w = m->w - x;
 	}
 
 	w = textw(m->barcr, tdate) + 8;
