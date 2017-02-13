@@ -166,10 +166,12 @@ void togglefloating(const Arg *arg)
 	if (!selmon->client)
 		return;
 
-	selmon->client->floating =
-		!selmon->client->floating || selmon->client->fixed;
+	selmon->client->flags =
+		(!ISFLOATING(selmon->client) || ISFIXED(selmon->client)) ?
+				selmon->client->flags | F_FLOATING :
+				selmon->client->flags & ~F_FLOATING;
 
-	if (selmon->client->floating)
+	if (ISFLOATING(selmon->client))
 		resize(selmon->client, selmon->client->x, selmon->client->y,
 				selmon->client->w, selmon->client->h, 0);
 
@@ -181,7 +183,7 @@ void togglesticky(const Arg *arg)
 	if (!selmon->client)
 		return;
 
-	selmon->client->sticky ^= 1;
+	selmon->client->flags ^= F_STICKY;
 
 	arrange(selmon);
 }

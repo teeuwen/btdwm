@@ -58,15 +58,15 @@
 xcb_connection_t *conn;
 xcb_screen_t *screen;
 
-static xcb_generic_error_t *err;
-
-static unsigned int numlockmask;
-
 xcb_atom_t atoms[ATOM_MAX];
 static xcb_cursor_t cursor[CUR_MAX];
 static xcb_key_symbols_t *syms;
 
 static int (*xcb_handlers[XCB_NO_OPERATION]) (xcb_generic_event_t *);
+static xcb_generic_error_t *err;
+
+static unsigned int numlockmask;
+int redrawbar = 0;
 
 static void _testerr(const char* file, const int line)
 {
@@ -187,6 +187,52 @@ static void title_update(struct client *c)
 			strcpy(c->name, "broken");
 }
 
+static void rules_apply(struct client *c)
+{
+	xcb_icccm_get_wm_class_reply_t ch;
+	struct monitor *m;
+	unsigned int i;
+
+	c->tags = 0;
+	c->flags &= ~F_FLOATING;
+
+	if (xcb_icccm_get_wm_class_reply(conn, xcb_icccm_get_wm_class(conn,
+			c->win), &ch, 0)) {
+		if (!ch.class_name || !ch.instance_name)
+			return;
+
+		for (i = 0; i < rules_len; i++) {
+			if ((!rules[i].title ||
+					strstr(c->name, rules[i].title)) &&
+					(!rules[i].class ||
+					strstr(ch.class_name,
+					rules[i].class)) &&
+					(!rules[i].instance ||
+					strstr(ch.instance_name,
+					rules[i].instance))) {
+				c->tags |= rules[i].tags;
+				c->flags = rules[i].floating ?
+						c->flags | F_FLOATING :
+						c->flags & ~F_FLOATING;
+				c->flags = rules[i].transparent ?
+						c->flags | F_TRANS :
+						c->flags & ~F_TRANS;
+
+				for (m = mons; m && m->id != rules[i].monitor;
+						m = m->next);
+
+				if (m)
+					c->mon = m;
+			}
+		}
+
+		xcb_icccm_get_wm_class_reply_wipe(&ch);
+	}
+
+	if (!c->tags)
+		c->tags = c->mon->tags;
+}
+
 void configure(struct client *c)
 {
 	xcb_configure_notify_event_t ce;
@@ -206,109 +252,7 @@ void configure(struct client *c)
 			(const char *) &ce);
 }
 
-void scan(void)
-{
-	xcb_get_window_attributes_reply_t *ga_reply;
-	xcb_query_tree_reply_t *query_reply;
-	xcb_window_t *wins, trans_reply = 0;
-	unsigned int i, num;
-
-	query_reply = xcb_query_tree_reply(conn,
-			xcb_query_tree(conn, screen->root), &err);
-	num = query_reply->children_len;
-	wins = xcb_query_tree_children(query_reply);
-
-	for (i = 0; i < num; i++) {
-		ga_reply = xcb_get_window_attributes_reply(conn,
-				xcb_get_window_attributes(conn, wins[i]), &err);
-		testerr();
-
-		if (ga_reply->override_redirect)
-			continue;
-
-		xcb_icccm_get_wm_transient_for_reply(conn,
-				xcb_icccm_get_wm_transient_for(conn, wins[i]),
-				&trans_reply, &err);
-		testerr();
-		
-		if (trans_reply != 0)
-			continue;
-
-		if (ga_reply->map_state == XCB_MAP_STATE_VIEWABLE ||
-				atom_check(wins[i], atoms[ATOM_STATE],
-				XCB_ICCCM_WM_STATE_ICONIC))
-			manage(wins[i]);
-
-		free(ga_reply);
-	}
-
-	for (i = 0; i < num; i++) {
-		ga_reply = xcb_get_window_attributes_reply(conn,
-				xcb_get_window_attributes(conn, wins[i]), &err);
-		testerr();
-
-		xcb_icccm_get_wm_transient_for_reply(conn,
-				xcb_icccm_get_wm_transient_for(conn,
-				wins[i]), &trans_reply, &err);
-		testerr();
-
-		if (trans_reply && (ga_reply->map_state ==
-				XCB_MAP_STATE_VIEWABLE ||
-				atom_check(wins[i], atoms[ATOM_STATE],
-				XCB_ICCCM_WM_STATE_ICONIC)))
-			manage(wins[i]);
-
-		free(ga_reply);
-	}
-
-	if (query_reply)
-		free(query_reply);
-
-	xcb_flush(conn);
-}
-
-static void rules_apply(struct client *c)
-{
-	xcb_icccm_get_wm_class_reply_t ch;
-	struct monitor *m;
-	unsigned int i;
-
-	c->tags = c->floating = 0;
-
-	if (xcb_icccm_get_wm_class_reply(conn, xcb_icccm_get_wm_class(conn,
-			c->win), &ch, 0)) {
-		if (!ch.class_name || !ch.instance_name)
-			return;
-
-		for (i = 0; i < rules_len; i++) {
-			if ((!rules[i].title ||
-					strstr(c->name, rules[i].title)) &&
-					(!rules[i].class ||
-					strstr(ch.class_name,
-					rules[i].class)) &&
-					(!rules[i].instance ||
-					strstr(ch.instance_name,
-					rules[i].instance))) {
-				c->tags |= rules[i].tags;
-				c->floating = rules[i].floating;
-				c->trans = rules[i].transparent;
-
-				for (m = mons; m && m->id != rules[i].monitor;
-						m = m->next);
-
-				if (m)
-					c->mon = m;
-			}
-		}
-
-		xcb_icccm_get_wm_class_reply_wipe(&ch);
-	}
-
-	if (!c->tags)
-		c->tags = c->mon->tags;
-}
-
-void manage(xcb_window_t w)
+static void manage(xcb_window_t w)
 {
 	struct client *c, *t = NULL;
 	xcb_window_t trans_reply = 0;
@@ -349,7 +293,7 @@ void manage(xcb_window_t w)
 	c->h = c->oldh = geom_reply->height;
 
 	if (c->w == c->mon->w && c->h == c->mon->h) {
-		c->floating = 1;
+		c->flags |= F_FLOATING;
 
 		c->x = c->mon->x;
 		c->y = c->mon->y;
@@ -380,8 +324,9 @@ void manage(xcb_window_t w)
 	updatesizehints(c);
 	buttons_grab(c, 0);
 
-	if (!c->floating)
-		c->floating = trans != 0 || c->fixed;
+	if (!ISFLOATING(c))
+		c->flags = (trans != 0 || ISFIXED(c)) ?
+				c->flags | F_FLOATING : c->flags & ~F_FLOATING;
 
 	uint32_t config_values[] = {
 		c->x + 2 * screen->width_in_pixels,
@@ -393,7 +338,7 @@ void manage(xcb_window_t w)
 
 	xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_X |
 			XCB_CONFIG_WINDOW_Y | XCB_CONFIG_WINDOW_WIDTH |
-			XCB_CONFIG_WINDOW_HEIGHT | (c->floating ?
+			XCB_CONFIG_WINDOW_HEIGHT | (ISFLOATING(c) ?
 			XCB_CONFIG_WINDOW_STACK_MODE : 0), config_values);
 	xcb_map_window(conn, c->win);
 
@@ -402,7 +347,7 @@ void manage(xcb_window_t w)
 	arrange(c->mon);
 }
 
-void unmanage(struct client *c, int destroyed)
+static void unmanage(struct client *c, int destroyed)
 {
 	struct monitor *m = c->mon;
 
@@ -420,6 +365,67 @@ void unmanage(struct client *c, int destroyed)
 	free(c);
 	focus(NULL);
 	arrange(m);
+}
+
+void scan(void)
+{
+	xcb_get_window_attributes_reply_t *ga_reply;
+	xcb_query_tree_reply_t *query_reply;
+	xcb_window_t *wins, trans_reply = 0;
+	unsigned int i, num;
+
+	query_reply = xcb_query_tree_reply(conn,
+			xcb_query_tree(conn, screen->root), &err);
+	num = query_reply->children_len;
+	wins = xcb_query_tree_children(query_reply);
+
+	for (i = 0; i < num; i++) {
+		ga_reply = xcb_get_window_attributes_reply(conn,
+				xcb_get_window_attributes(conn, wins[i]), &err);
+		testerr();
+
+		if (ga_reply->override_redirect)
+			continue;
+
+		xcb_icccm_get_wm_transient_for_reply(conn,
+				xcb_icccm_get_wm_transient_for(conn, wins[i]),
+				&trans_reply, &err);
+		testerr();
+
+		if (trans_reply != 0)
+			continue;
+
+		if (ga_reply->map_state == XCB_MAP_STATE_VIEWABLE ||
+				atom_check(wins[i], atoms[ATOM_STATE],
+				XCB_ICCCM_WM_STATE_ICONIC))
+			manage(wins[i]);
+
+		free(ga_reply);
+	}
+
+	for (i = 0; i < num; i++) {
+		ga_reply = xcb_get_window_attributes_reply(conn,
+				xcb_get_window_attributes(conn, wins[i]), &err);
+		testerr();
+
+		xcb_icccm_get_wm_transient_for_reply(conn,
+				xcb_icccm_get_wm_transient_for(conn,
+				wins[i]), &trans_reply, &err);
+		testerr();
+
+		if (trans_reply && (ga_reply->map_state ==
+				XCB_MAP_STATE_VIEWABLE ||
+				atom_check(wins[i], atoms[ATOM_STATE],
+				XCB_ICCCM_WM_STATE_ICONIC)))
+			manage(wins[i]);
+
+		free(ga_reply);
+	}
+
+	if (query_reply)
+		free(query_reply);
+
+	xcb_flush(conn);
 }
 
 void client_kill(void)
@@ -511,7 +517,7 @@ void client_move_mouse(const Arg *arg, int move)
 			active = 0;
 		case XCB_MOTION_NOTIFY:
 			/* FIXME Check at the very start */
-			if (c->fullscreen || (!c->floating &&
+			if (ISFULLSCREEN(c) || (!ISFLOATING(c) &&
 					selmon->layouts[selmon->tag]->arrange))
 				break;
 
@@ -558,7 +564,7 @@ void buttons_grab(struct client *c, int focused)
 	xcb_ungrab_button(conn, XCB_BUTTON_INDEX_ANY, c->win, XCB_GRAB_ANY);
 
 	if (!focused) {
-		if (c->mon->layouts[c->mon->tag]->arrange && !c->floating)
+		if (c->mon->layouts[c->mon->tag]->arrange && !ISFLOATING(c))
 			return;
 
 		xcb_grab_button(conn, 0, c->win, XCB_EVENT_MASK_BUTTON_PRESS,
@@ -641,12 +647,12 @@ void urgent_clear(struct client *c)
 {
 	xcb_icccm_wm_hints_t wmh;
 
-	if (!c->urgent || !xcb_icccm_get_wm_hints_reply(conn,
+	if (!ISURGENT(c) || !xcb_icccm_get_wm_hints_reply(conn,
 			xcb_icccm_get_wm_hints_unchecked(conn, c->win),
 			&wmh, 0))
 		return;
 
-	c->urgent = 0;
+	c->flags &= ~F_URGENT;
 
 	wmh.flags &= ~XCB_ICCCM_WM_HINT_X_URGENCY;
 	xcb_icccm_set_wm_hints(conn, c->win, &wmh);
@@ -715,14 +721,14 @@ static int clientmessage(xcb_generic_event_t *_e)
 		return 0;
 
 	if (e->type == atoms[ATOM_NETSTATE]) {
-		if (e->data.data32[1] == atoms[ATOM_FULLSCREEN]) {
+		if (e->data.data32[1] == atoms[ATOM_NETSTATE_FULLSCR]) {
 			if (e->data.data32[0]) {
 				xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
 						e->window, atoms[ATOM_NETSTATE],
 						XCB_ATOM, 32, 1, (const void *)
-						&atoms[ATOM_FULLSCREEN]);
+						&atoms[ATOM_NETSTATE_FULLSCR]);
 
-				c->fullscreen = 1;
+				c->flags |= F_FULLSCREEN;
 
 				client_resize(c, c->mon->x, c->mon->y,
 						c->mon->w, c->mon->h);
@@ -736,7 +742,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 						XCB_ATOM, 32, 0,
 						(const void *) 0);
 
-				c->fullscreen = 0;
+				c->flags &= ~F_FULLSCREEN;
 				c->x = c->oldx;
 				c->y = c->oldy;
 				c->w = c->oldw;
@@ -745,9 +751,12 @@ static int clientmessage(xcb_generic_event_t *_e)
 				client_resize(c, c->x, c->y, c->w, c->h);
 				arrange(c->mon);
 			}
-		} else if (e->data.data32[1] == atoms[ATOM_MODAL]) {
-			fprintf(stderr, "!\n");
-			c->floating = 1;
+		} else if (e->data.data32[1] == atoms[ATOM_NETSTATE_ONTOP]) {
+			c->flags |= F_ONTOP;
+
+			restack(c->mon); /* XXX Sure? */
+		} else if (e->data.data32[1] == atoms[ATOM_NETSTATE_MODAL]) {
+			c->flags |= F_FLOATING;
 
 			client_resize(c, c->x, c->y, c->w, c->h);
 			arrange(c->mon);
@@ -771,7 +780,7 @@ static int configurerequest(xcb_generic_event_t *_e)
 	struct client *c;
 
 	if ((c = client_get(e->window))) {
-		if (c->floating || !selmon->layouts[selmon->tag]->arrange) {
+		if (ISFLOATING(c) || !selmon->layouts[selmon->tag]->arrange) {
 			m = c->mon;
 			if (e->value_mask & XCB_CONFIG_WINDOW_X)
 			       c->x = m->x + e->x;
@@ -781,9 +790,9 @@ static int configurerequest(xcb_generic_event_t *_e)
 			       c->w = e->width;
 			if (e->value_mask & XCB_CONFIG_WINDOW_HEIGHT)
 				c->h = e->height;
-			if ((c->x + c->w) > m->x + m->w && c->floating)
+			if ((c->x + c->w) > m->x + m->w && ISFLOATING(c))
 				c->x = m->x + (m->w / 2 - c->w / 2);
-			if ((c->y + c->h) > m->y + m->h && c->floating)
+			if ((c->y + c->h) > m->y + m->h && ISFLOATING(c))
 				c->y = m->y + (m->h / 2 - c->h / 2);
 
 			if ((e->value_mask & (XCB_CONFIG_WINDOW_X |
@@ -863,7 +872,7 @@ static int enternotify(xcb_generic_event_t *_e)
 	c = client_get(e->event);
 	/* oc = (c ? c->mon->client : NULL); */
 
-	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || c->floating)) ||
+	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || ISFLOATING(c))) ||
 			((e->mode != XCB_NOTIFY_MODE_NORMAL ||
 			e->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
 			e->event != screen->root))
@@ -997,9 +1006,13 @@ static int propertynotify(xcb_generic_event_t *_e)
 
 		xcb_icccm_get_wm_transient_for_from_reply(&trans, reply);
 
-		if (trans && !c->floating &&
-				(c->floating = (client_get(trans) != NULL)))
-			arrange(c->mon);
+		if (trans && !ISFLOATING(c)) {
+			c->flags = (client_get(trans) != NULL) ?
+					c->flags | F_FLOATING :
+					c->flags & ~F_FLOATING;
+			if (ISFLOATING(c))
+				arrange(c->mon);
+		}
 	}
 
 	return 0;
@@ -1149,10 +1162,9 @@ void run(void)
 	xcb_generic_event_t *e;
 	
 	while ((e = xcb_wait_for_event(conn))) {
-		if ((e->response_type & ~0x80) == XCB_NONE &&
-				selmon->redrawbar) {
-			selmon->redrawbar = 0;
-			bar_draw(selmon);
+		if ((e->response_type & ~0x80) == XCB_NONE && redrawbar) {
+			redrawbar = 0;
+			bars_draw();
 		} else if (e->response_type & ~0x80) {
 			if (xcb_handlers[e->response_type & ~0x80])
 				xcb_handlers[e->response_type & ~0x80](e);
