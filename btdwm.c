@@ -194,7 +194,7 @@ void resize(struct client *c, int x, int y, int w, int h, int interact)
 	if (w < BAR_HEIGHT)
 		w = BAR_HEIGHT;
 
-	if (c->floating || !c->mon->layouts[c->mon->tag]->arrange) {
+	if (ISFLOATING(c) || !c->mon->layouts[c->mon->tag]->arrange) {
 		baseismin = c->basew == c->minw && c->baseh == c->minh;
 
 		/* Temporarily remove base dimensions */
@@ -363,7 +363,7 @@ void bar_draw(struct monitor *m)
 	for (c = m->clients; c; c = c->next) {
 		ca |= c->tags;
 
-		if (c->urgent)
+		if (ISURGENT(c))
 			cu |= c->tags;
 	}
 
@@ -378,12 +378,12 @@ void bar_draw(struct monitor *m)
 		text_draw(m, m->barcr, x, 0, w, BAR_HEIGHT, tags[i].name,
 				(m->tags & 1 << i) ? PLT_FOCUS : PLT_INACTIVE);
 
-		if ((m == selmon && selmon->client &&
-				selmon->client->tags & 1 << i) || ca & 1 << i) {
+		if ((m == selmon && m->client && m->client->tags & 1 << i) ||
+				ca & 1 << i) {
 			if (cu & 1 << i)
 				status_draw(m, x, 0, w, PLT_URGENT);
-			else if (m == selmon && selmon->client &&
-					selmon->client->tags & 1 << i)
+			else if (m == selmon && m->client &&
+					m->client->tags & 1 << i)
 				status_draw(m, x, 0, w, PLT_FOCUS);
 			else if (ca & 1 << i)
 				status_draw(m, x, 0, w, PLT_ACTIVE);
@@ -479,7 +479,7 @@ static void time_update(int sig)
 			lt->tm_hour - (lt->tm_hour > 12 ? 12 : 0), lt->tm_min,
 			(lt->tm_hour > 12 ? "PM" : "AM"));
 
-	selmon->redrawbar = 1;
+	redrawbar = 1;
 
 	e.response_type = 0;
 	xcb_send_event(conn, 0, selmon->barwin, 0, (const char *) &e);
@@ -510,7 +510,7 @@ struct monitor *dirtomon(int dir)
 
 struct client *nexttiled(struct client *c)
 {
-	while (c && (!ISVISIBLE(c) || c->floating || c->fullscreen))
+	while (c && (!ISVISIBLE(c) || ISFLOATING(c) || ISFULLSCREEN(c)))
 		c = c->next;
 
 	return c;
@@ -563,6 +563,8 @@ int isprotodel(struct client *c)
 }
 
 void restack(struct monitor *m) {
+	uint32_t normal[] = { XCB_STACK_MODE_BELOW, 0 };
+	uint32_t ontop[] = { XCB_STACK_MODE_ABOVE };
 	struct client *c;
 
 	bar_draw(m);
@@ -571,24 +573,28 @@ void restack(struct monitor *m) {
 		return;
 
 	if (m->layouts[m->tag]->arrange) {
-		uint32_t values[] = { m->barwin, XCB_STACK_MODE_BELOW };
+		normal[1] = m->barwin;
+
 		for (c = m->stack; c; c = c->next) {
-			if (ISVISIBLE(c) && c != m->client) {
+			if (!ISVISIBLE(c))
+				continue;
+
+			if (ISONTOP(c)) {
 				xcb_configure_window(conn, c->win,
-						XCB_CONFIG_WINDOW_SIBLING |
 						XCB_CONFIG_WINDOW_STACK_MODE,
-						values);
-				values[0] = c->win;
+						ontop);
+			} else {
+				xcb_configure_window(conn, c->win,
+						XCB_CONFIG_WINDOW_STACK_MODE |
+						XCB_CONFIG_WINDOW_SIBLING,
+						normal);
+				normal[1] = c->win;
 			}
 		}
 	}
 
-	uint32_t values[] = { XCB_STACK_MODE_ABOVE };
-
-	xcb_configure_window(conn, m->client->win,
-			XCB_CONFIG_WINDOW_STACK_MODE, values);
 	xcb_configure_window(conn, m->barwin,
-			XCB_CONFIG_WINDOW_STACK_MODE, values);
+			XCB_CONFIG_WINDOW_STACK_MODE, ontop);
 
 	xcb_flush(conn);
 }
@@ -616,12 +622,13 @@ void atom_init(void)
 	atoms[ATOM_NET] = atom_add("_NET_WM_SUPPORTED");
 	atoms[ATOM_NAME] = atom_add("_NET_WM_NAME");
 	atoms[ATOM_NETSTATE] = atom_add("_NET_WM_STATE");
+	atoms[ATOM_NETSTATE_FULLSCR] = atom_add("_NET_WM_STATE_FULLSCREEN");
+	atoms[ATOM_NETSTATE_ONTOP] = atom_add("_NET_WM_STATE_ABOVE");
+	atoms[ATOM_NETSTATE_MODAL] = atom_add("_NET_WM_STATE_MODAL");
 	atoms[ATOM_ACTIVE] = atom_add("_NET_ACTIVE_WINDOW");
 	atoms[ATOM_TYPE] = atom_add("_NET_WM_WINDOW_TYPE");
 	atoms[ATOM_TYPE_DIALOG] = atom_add("_NET_WM_WINDOW_TYPE_DIALOG");
 	atoms[ATOM_TYPE_SPLASH] = atom_add("_NET_WM_WINDOW_TYPE_SPLASH");
-	atoms[ATOM_FULLSCREEN] = atom_add("_NET_WM_STATE_FULLSCREEN");
-	atoms[ATOM_MODAL] = atom_add("_NET_WM_STATE_MODAL");
 
 	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
 			atoms[ATOM_NET], XCB_ATOM, 32, ATOM_MAX - ATOM_NET,
@@ -663,8 +670,8 @@ void showhide(struct client *c)
 		xcb_configure_window(conn, c->win, XCB_CONFIG_WINDOW_X |
 				XCB_CONFIG_WINDOW_Y, values);
 
-		if (!c->mon->layouts[c->mon->tag]->arrange || c->floating ||
-				c->fullscreen)
+		if (!c->mon->layouts[c->mon->tag]->arrange || ISFLOATING(c) ||
+				ISFULLSCREEN(c))
 			resize(c, c->x, c->y, c->w, c->h, 0);
 
 		showhide(c->next);
@@ -693,8 +700,14 @@ void windowtype_update(struct client *c)
 	if (atom_check(c->win, atoms[ATOM_TYPE], atoms[ATOM_TYPE_DIALOG]) ||
 			atom_check(c->win, atoms[ATOM_TYPE],
 			atoms[ATOM_TYPE_SPLASH]) || atom_check(c->win,
-			atoms[ATOM_NETSTATE], atoms[ATOM_MODAL]))
-		c->floating = 1;
+			atoms[ATOM_NETSTATE], atoms[ATOM_NETSTATE_MODAL]))
+		c->flags |= F_FLOATING;
+
+	if (atom_check(c->win, atoms[ATOM_NETSTATE],
+			atoms[ATOM_NETSTATE_ONTOP])) {
+		c->flags |= F_ONTOP;
+		fprintf(stderr, "called");
+	}
 }
 
 void updatesizehints(struct client *c)
@@ -744,8 +757,9 @@ void updatesizehints(struct client *c)
 		c->mina = c->maxa = 0.0;
 	}
 
-	c->fixed = c->minw && c->maxw && c->minh && c->maxh &&
-			c->minw == c->maxw && c->minh == c->maxh;
+	c->flags = (c->minw && c->maxw && c->minh && c->maxh &&
+			c->minw == c->maxw && c->minh == c->maxh) ?
+			c->flags | F_FIXED : c->flags & ~F_FIXED;
 }
 
 void updatewmhints(struct client *c)
@@ -760,13 +774,13 @@ void updatewmhints(struct client *c)
 		wmh.flags &= ~XCB_ICCCM_WM_HINT_X_URGENCY;
 		xcb_icccm_set_wm_hints(conn, c->win, &wmh);
 	} else {
-		c->urgent = (wmh.flags & XCB_ICCCM_WM_HINT_X_URGENCY) ? 1 : 0;
+		c->flags = (wmh.flags & XCB_ICCCM_WM_HINT_X_URGENCY) ?
+				c->flags | F_URGENT : c->flags & ~F_URGENT;
 	}
 }
 
 void setup(void)
 {
-	time_update(0);
 	bar_init();
 
 	events_init();

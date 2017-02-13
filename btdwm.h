@@ -44,7 +44,6 @@
 
 /* FIXME */
 #define INRECT(x,y,rx,ry,rw,rh)	((x) >= (rx) && (x) < (rx) + (rw) && (y) >= (ry) && (y) < (ry) + (rh))
-#define ISVISIBLE(c)		(((c->tags & c->mon->tags) | c->sticky))
 #define LENGTH(x)		(sizeof(x) / sizeof(x[0]))
 #ifndef MAX
 #   define MAX(a, b)		((a) > (b) ? (a) : (b))
@@ -59,13 +58,14 @@
 #define ATOM_NET		3
 #define ATOM_NAME		4
 #define ATOM_NETSTATE		5
-#define ATOM_ACTIVE		6
-#define ATOM_TYPE		7
-#define ATOM_TYPE_DIALOG	8
-#define ATOM_TYPE_SPLASH	9
-#define ATOM_FULLSCREEN		10
-#define ATOM_MODAL		11
-#define ATOM_MAX		12
+#define ATOM_NETSTATE_FULLSCR	6
+#define ATOM_NETSTATE_ONTOP	7
+#define ATOM_NETSTATE_MODAL	8
+#define ATOM_ACTIVE		9
+#define ATOM_TYPE		10
+#define ATOM_TYPE_DIALOG	11
+#define ATOM_TYPE_SPLASH	12
+#define ATOM_MAX		13
 
 #define CLICK_TAGS	1
 #define CLICK_CLIENT	2
@@ -93,6 +93,23 @@
 #define COLOR_STURGENT	5
 #define COLOR_MAX	6
 
+#define F_FIXED			0x01
+#define F_FLOATING		0x02
+#define F_FULLSCREEN		0x04
+#define F_ONTOP			0x08
+#define F_STICKY		0x10
+#define F_TRANS			0x20
+#define F_URGENT		0x40
+
+#define ISFIXED(c)		(c->flags & F_FIXED)
+#define ISFLOATING(c)		(c->flags & F_FLOATING)
+#define ISFULLSCREEN(c)		(c->flags & F_FULLSCREEN)
+#define ISONTOP(c)		(c->flags & F_ONTOP)
+#define ISSTICKY(c)		(c->flags & F_STICKY)
+#define ISTRANSPARENT(c)	(c->flags & F_TRANS)
+#define ISURGENT(c)		(c->flags & F_URGENT)
+#define ISVISIBLE(c)		(((c->tags & c->mon->tags) | ISSTICKY(c)))
+
 /* To avoid conflicts with limits.h */
 #define MAX_NAME	256
 
@@ -112,7 +129,7 @@ struct monitor {
 	xcb_window_t	barwin;
 	cairo_surface_t	*barsur;
 	cairo_t		*barcr;
-	int		showbar, redrawbar;
+	int		showbar;
 
 	unsigned int	tags;
 	unsigned int	tag;
@@ -132,13 +149,12 @@ struct client {
 
 	char		name[MAX_NAME];
 	unsigned int	tags;
+	unsigned char	flags;
 
 	int		x, y, w, h;
 	int		oldx, oldy, oldw, oldh;
-	int		fullscreen, fixed, floating, sticky, urgent, trans;
-
-	double		mina, maxa;
 	int		basew, baseh, incw, inch, maxw, maxh, minw, minh;
+	double		mina, maxa;
 
 	struct client	*prev, *sprev;
 	struct client	*next, *snext;
@@ -215,6 +231,8 @@ extern xcb_screen_t *screen;
 
 extern xcb_atom_t atoms[];
 
+extern int redrawbar;
+
 extern struct monitor *mons;
 extern struct monitor *selmon;
 
@@ -234,8 +252,6 @@ void mon_send(struct client *c, struct monitor *m);
 
 void configure(struct client *c);
 void scan(void);
-void manage(xcb_window_t w);
-void unmanage(struct client *c, int destroyed);
 
 struct client *client_get(xcb_window_t w);
 void client_kill(void);

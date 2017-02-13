@@ -44,13 +44,13 @@ const int layouts_len = sizeof(layouts) / sizeof(layouts[0]);
 
 const struct tag tags[] = {
 	/* Name		Layout */
-	{ "主",		&layouts[1] },
-	{ "次",		&layouts[2] },
-	{ "造",		&layouts[0] },
-	{ "声",		&layouts[0] },
-	{ "像",		&layouts[0] },
-	{ "全",		&layouts[2] },
-	{ "媕",		&layouts[1] }
+	{ "α",		&layouts[1] },
+	{ "β",		&layouts[2] },
+	{ "γ",		&layouts[0] },
+	{ "δ",		&layouts[0] },
+	{ "ε",		&layouts[0] },
+	{ "ζ",		&layouts[2] },
+	{ "η",		&layouts[1] }
 };
 const int tags_len = sizeof(tags) / sizeof(tags[0]);
 

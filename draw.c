@@ -50,8 +50,8 @@ static void rgba_get(struct monitor *m, cairo_t *cr, int palette, int status,
 {
 	if (bg) {
 		if (m->barcr == cr && (!m->layouts[m->tag]->arrange ||
-				!m->client || m->client->floating ||
-				m->client->trans)) {
+				!m->client || ISFLOATING(m->client) ||
+				ISTRANSPARENT(m->client))) {
 			*r = *g = *b = 0.0;
 			*a = 0.75;
 		} else {
