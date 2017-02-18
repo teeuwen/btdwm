@@ -34,8 +34,6 @@
  *
  */
 
-/* Redo includes */
-
 #include <xcb/xcb.h>
 #include <xcb/xcb_icccm.h>
 
@@ -52,12 +50,10 @@
 #include "btdwm.h"
 #include "msg.h"
 
-static char ttime[MAX_NAME];
-static char tdate[MAX_NAME];
-
-static int screen_w, screen_h;
 struct monitor *mons;
 struct monitor *selmon;
+
+static int screen_w, screen_h;
 
 /* TODO Show __FILE__ as well */
 void die(const char *errstr, ...)
@@ -357,8 +353,7 @@ void focus(struct client *c)
 void bar_draw(struct monitor *m)
 {
 	struct client *c;
-	int i;
-	int x = 0, w, ca = 0, cu = 0;
+	int i, x = 0, w, ca = 0, cu = 0;
 
 	for (c = m->clients; c; c = c->next) {
 		ca |= c->tags;
@@ -371,6 +366,11 @@ void bar_draw(struct monitor *m)
 			m->w, BAR_HEIGHT);
 
 	rectangle_draw(m, m->barcr, x, 0, m->w, BAR_HEIGHT, PLT_NORMAL);
+
+	for (i = 0; i < tags_len; i++)
+		x += textw(m->barcr, tags[i].name) + 8;
+
+	x = m->w / 2 - x / 2;
 
 	for (i = 0; i < tags_len; i++) {
 		w = textw(m->barcr, tags[i].name) + 8;
@@ -391,14 +391,6 @@ void bar_draw(struct monitor *m)
 
 		x += w;
 	}
-
-	w = textw(m->barcr, tdate) + 8;
-	x = m->w / 2 - (w + textw(m->barcr, ttime) + 8) / 2;
-	text_draw(m, m->barcr, x, 0, w, BAR_HEIGHT, tdate, PLT_LIGHT);
-
-	x += w - textw(m->barcr, " ") - 2;
-	w = textw(m->barcr, ttime) + 8;
-	text_draw(m, m->barcr, x, 0, w, BAR_HEIGHT, ttime, PLT_NORMAL);
 
 	xcb_flush(conn);
 }
@@ -447,32 +439,6 @@ int geom_update(int w, int h) {
 	}
 
 	return res;
-}
-
-static void time_update(int sig)
-{
-	xcb_generic_event_t e;
-	time_t t;
-	struct tm *lt;
-
-	time(&t);
-	lt = localtime(&t);
-
-	snprintf(tdate, MAX_NAME, "%04d-%02d-%02d",
-			1900 + lt->tm_year, 1 + lt->tm_mon, lt->tm_mday);
-
-	snprintf(ttime, MAX_NAME, "%02d:%02d %s",
-			lt->tm_hour - (lt->tm_hour > 12 ? 12 : 0), lt->tm_min,
-			(lt->tm_hour > 12 ? "PM" : "AM"));
-
-	redrawbar = 1;
-
-	e.response_type = 0;
-	xcb_send_event(conn, 0, selmon->barwin, 0, (const char *) &e);
-	xcb_flush(conn);
-
-	signal(SIGALRM, &time_update);
-	alarm(tdelay);
 }
 
 /* ************************************************************************** */
@@ -768,7 +734,6 @@ void updatewmhints(struct client *c)
 
 void setup(void)
 {
-	time_update(-1);
 	bar_init();
 
 	events_init();

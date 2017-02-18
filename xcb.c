@@ -66,7 +66,6 @@ static int (*xcb_handlers[XCB_NO_OPERATION]) (xcb_generic_event_t *);
 static xcb_generic_error_t *err;
 
 static unsigned int numlockmask;
-int redrawbar = 0;
 
 static void _testerr(const char* file, const int line)
 {
@@ -657,7 +656,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 	xcb_button_press_event_t *e = (xcb_button_press_event_t *) _e;
 	struct monitor *m;
 	struct client *c;
-	int i = 0, j = 0;
+	int i, x = 0;
 	unsigned int click = 0;
 	Arg arg = { 0 };
 
@@ -668,9 +667,18 @@ static int buttonpress(xcb_generic_event_t *_e)
 	}
 
 	if (e->event == selmon->barwin) {
+		for (i = 0; i < tags_len; i++)
+			x += textw(m->barcr, tags[i].name) + 8;
+
+		i = 0;
+		x = m->w / 2 - x / 2;
+
+		if (e->event_x < x)
+			return 0;
+
 		do {
-			j += textw(selmon->barcr, tags[i].name) + 8;
-		} while (e->event_x >= j && ++i < tags_len);
+			x += textw(selmon->barcr, tags[i].name) + 8;
+		} while (e->event_x >= x && ++i < tags_len);
 
 		if (i < tags_len) {
 			click = CLICK_TAGS;
@@ -1162,10 +1170,7 @@ void run(void)
 	xcb_generic_event_t *e;
 	
 	while ((e = xcb_wait_for_event(conn))) {
-		if ((e->response_type & ~0x80) == XCB_NONE && redrawbar) {
-			redrawbar = 0;
-			bars_draw();
-		} else if (e->response_type & ~0x80) {
+		if (e->response_type & ~0x80) {
 			if (xcb_handlers[e->response_type & ~0x80])
 				xcb_handlers[e->response_type & ~0x80](e);
 		} else {

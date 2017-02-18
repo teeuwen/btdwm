@@ -1,7 +1,6 @@
 /*
  * TODO
  * Relocate in header file
- * Set NET_ACTIVE_WINDOW
  */
 
 #include "btdwm.h"
@@ -13,14 +12,14 @@
  * Appearance
  */
 
-const char font_desc[]		= "Broad 5.8";
+const char font_desc[]		= "sans-serif 5.8";
 
 const char bg[]			= "#1C1C1C";
 
 const char fg[]			= "#ECECEC";
 const char fg_light[]		= "#AAAAAA";
 
-const char status_active[]	= "#C0D890";
+const char status_active[]	= "#83A598";
 const char status_focus[]	= "#DFDFDF";
 const char status_urgent[]	= "#F0C674";
 
@@ -89,7 +88,7 @@ static const char *cmd_reboot[] = { SHCMD("systemctl reboot"), 0 };
 static const char *cmd_suspend[] = { SHCMD("systemctl suspend"), 0 };
 static const char *cmd_halt[] = { SHCMD("systemctl halt"), 0 };
 
-static const char *cmd_lock[] = { SHCMD("~/Documents/cs/scripts/lock/lock.sh"), 0 };
+static const char *cmd_lock[] = { SHCMD("~/Documents/cs/scripts/wm/lock/lock.sh"), 0 };
 
 static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Noto Sans Mono-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
 static const char *cmd_term[]  = { "st", 0 };
@@ -110,21 +109,19 @@ static const char *cmd_n[] = { SHCMD("chromium -incognito"), 0 };
 
 static const char *cmd_scrot[] = { SHCMD("scrot"), 0 };
 
-/* TODO OSD */
-static const char *cmd_cur[] = { SHCMD("mpc | head -1 | tr -d '\n' | xargs -0 notify-send"), 0 };
-static const char *cmd_play[] = { SHCMD("mpc toggle && [[ `mpc` == *'playing'* ]] && mpc | head -1 | tr -d '\n' | xargs -0 notify-send"), 0 };
-static const char *cmd_stop[] = { SHCMD("mpc stop"), 0 };
-static const char *cmd_prev[] = { SHCMD("mpc prev && mpc | head -1 | tr -d '\n' | xargs -0 notify-send"), 0 };
-static const char *cmd_next[] = { SHCMD("mpc next && mpc | head -1 | tr -d '\n' | xargs -0 notify-send"), 0 };
+static const char *cmd_toggle[] = { SHCMD("~/Documents/cs/scripts/wm/mpd.sh toggle"), 0 };
+static const char *cmd_stop[] = { SHCMD("~/Documents/cs/scripts/wm/mpd.sh stop"), 0 };
+static const char *cmd_prev[] = { SHCMD("~/Documents/cs/scripts/wm/mpd.sh prev"), 0 };
+static const char *cmd_next[] = { SHCMD("~/Documents/cs/scripts/wm/mpd.sh next"), 0 };
 
-/* TODO OSD */
-static const char *cmd_vdec[] = { SHCMD("amixer set Master 5%-"), 0 };
-static const char *cmd_vinc[] = { SHCMD("amixer set Master 5%+"), 0 };
-static const char *cmd_mute[] = { SHCMD("amixer set Master toggle"), 0 };
+static const char *cmd_mute[] = { SHCMD("~/Documents/cs/scripts/wm/vol.sh mute"), 0 };
+static const char *cmd_vdec[] = { SHCMD("~/Documents/cs/scripts/wm/vol.sh dec"), 0 };
+static const char *cmd_vinc[] = { SHCMD("~/Documents/cs/scripts/wm/vol.sh inc"), 0 };
 
-/* TODO OSD */
-static const char *cmd_bdec[] = { SHCMD("xbacklight -dec 5"), 0 };
-static const char *cmd_binc[] = { SHCMD("xbacklight -inc 5"), 0 };
+static const char *cmd_bdec[] = { SHCMD("~/Documents/cs/scripts/wm/blt.sh dec"), 0 };
+static const char *cmd_binc[] = { SHCMD("~/Documents/cs/scripts/wm/blt.sh inc"), 0 };
+
+static const char *cmd_status[] = { SHCMD("~/Documents/cs/scripts/wm/status.sh"), 0 };
 
 const struct key keys[] = {
 	/* Modifier		Key	Function	Arguments */
@@ -163,29 +160,29 @@ const struct key keys[] = {
 	{ K_SUPER,		K_PRINT,spawn,		{ .v = cmd_scrot } },
 
 	/* Media keys */
-	{ 0,			K_PLAY,	spawn,		{ .v = cmd_play } },
+	{ 0,			K_PLAY,	spawn,		{ .v = cmd_toggle } },
 	{ 0,			K_STOP,	spawn,		{ .v = cmd_stop } },
 	{ 0,			K_PREV,	spawn,		{ .v = cmd_prev } },
 	{ 0,			K_NEXT,	spawn,		{ .v = cmd_next } },
-	{ K_SUPER,		K_E,	spawn,		{ .v = cmd_cur } },
-	{ K_SUPER,		K_S,	spawn,		{ .v = cmd_play } },
+	{ K_SUPER,		K_S,	spawn,		{ .v = cmd_toggle } },
 	{ K_SUPER,		K_W,	spawn,		{ .v = cmd_stop } },
 	{ K_SUPER,		K_A,	spawn,		{ .v = cmd_prev } },
 	{ K_SUPER,		K_D,	spawn,		{ .v = cmd_next } },
 
 	/* Volume control */
+	{ 0,			K_MUTE,	spawn,		{ .v = cmd_mute } },
 	{ 0,			K_VDEC,	spawn,		{ .v = cmd_vdec } },
 	{ 0,			K_VINC,	spawn,		{ .v = cmd_vinc } },
-	{ 0,			K_MUTE,	spawn,		{ .v = cmd_mute } },
+	{ K_SUPER,		K_M,	spawn,		{ .v = cmd_mute } },
 	{ K_SUPER,		K_COM,	spawn,		{ .v = cmd_vdec } },
 	{ K_SUPER,		K_PER,	spawn,		{ .v = cmd_vinc } },
-	{ K_SUPER,		K_M,	spawn,		{ .v = cmd_mute } },
 
 	/* Backlight control */
 	{ 0,			K_BDEC,	spawn,		{ .v = cmd_bdec } },
 	{ 0,			K_BINC,	spawn,		{ .v = cmd_binc } },
 
-	/* TODO Battery status */
+	/* Status */
+	{ K_SUPER,		K_Z,	spawn,		{ .v = cmd_status } },
 
 	/* Global */
 	{ K_SUPER,		K_F,	togglebar,	{ 0 } },
