@@ -752,9 +752,8 @@ static int clientmessage(xcb_generic_event_t *_e)
 				c->h = c->oldh;
 
 				client_resize(c, c->x, c->y, c->w, c->h);
+				arrange(c->mon); /* XXX Or just restack? */
 			}
-
-			arrange(c->mon); /* XXX Or just restack? */
 		} else if (e->data.data32[1] == atoms[ATOM_NETSTATE_ONTOP]) {
 			c->flags |= F_ONTOP;
 
