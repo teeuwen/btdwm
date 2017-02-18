@@ -229,8 +229,6 @@ extern xcb_screen_t *screen;
 
 extern xcb_atom_t atoms[];
 
-extern int redrawbar;
-
 extern struct monitor *mons;
 extern struct monitor *selmon;
 
