@@ -531,7 +531,7 @@ void restack(struct monitor *m) {
 		if (!ISVISIBLE(c))
 			continue;
 
-		if (ISONTOP(c)) {
+		if (ISONTOP(c) || ISFULLSCREEN(c)) {
 			xcb_configure_window(conn, c->win,
 					XCB_CONFIG_WINDOW_STACK_MODE,
 					ontop);
