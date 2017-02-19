@@ -118,8 +118,8 @@ static const char *cmd_mute[] = { SHCMD("~/Documents/cs/scripts/wm/vol.sh mute")
 static const char *cmd_vdec[] = { SHCMD("~/Documents/cs/scripts/wm/vol.sh dec"), 0 };
 static const char *cmd_vinc[] = { SHCMD("~/Documents/cs/scripts/wm/vol.sh inc"), 0 };
 
-static const char *cmd_bdec[] = { SHCMD("~/Documents/cs/scripts/wm/blt.sh dec"), 0 };
-static const char *cmd_binc[] = { SHCMD("~/Documents/cs/scripts/wm/blt.sh inc"), 0 };
+static const char *cmd_bdec[] = { SHCMD("~/Documents/cs/scripts/wm/bri.sh dec"), 0 };
+static const char *cmd_binc[] = { SHCMD("~/Documents/cs/scripts/wm/bri.sh inc"), 0 };
 
 static const char *cmd_status[] = { SHCMD("~/Documents/cs/scripts/wm/status.sh"), 0 };
 
