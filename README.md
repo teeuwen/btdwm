@@ -2,25 +2,21 @@
 btdwm is a fork of dwm-xcb which again is a fork of dwm, an extremely fast, small, and dynamic window manager for X (see LICENSE file).
 btdwm contains a number of (in my eyes) enhancements over dwm and dwm-xcb.
 
-Enhancements over dwm:
+Changes/enhancements over dwm:
 
-	* libnotify notifications
 	* Per tag layout
+	* The status area has been removed
+	* libnotify notifications to display the active client
 	* Probably more, I should've put this on version control earlier on...
 
-Enhancements over dwm-xcb:
+Changes/enhancements over dwm-xcb:
 
-	* Drawing is done using Cairo instead of XCB
+	* (Almost all) drawing is done using Cairo instead of XCB
+	* Proper mouse cursors
 	* Text drawing is done using Pango instead of XCB
 	* Xinerama support
 	* Various bug-fixes
-
-Other changes:
-
-	* The default colorscheme had been adjusted to my likings
-	* The clock is now baked in to the center of the statusbar
-	* More color palettes
-	* ...
+	* Probably more, have a look for yourself
 
 
 ## Requirements
