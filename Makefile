@@ -13,7 +13,7 @@ all: btdwm
 PHONY += btdwm
 btdwm: $(objects)
 	echo -e "  LD      $<"
-	$(CC) $(LDFLAGS) -o $@ $(objects)
+	$(CC) -o $@ $(objects) $(LDFLAGS)
 
 PHONY += clean
 clean:
