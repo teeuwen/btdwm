@@ -34,10 +34,11 @@ clean:
 PHONY += btdwm
 btdwm: $(objects)
 	echo -e "  LD      $<"
-	$(LD) -Os -s -o $@ $(objects) $(LDFLAGS)
+	$(LD) -o $@ $(objects) $(LDFLAGS)
 
 PHONY += release
 release: CFLAGS+=-Os
+release: LDFLAGS+=-Os -s
 release: btdwm
 
 PHONY += debug
