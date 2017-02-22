@@ -111,11 +111,11 @@
 /* To avoid conflicts with limits.h */
 #define MAX_NAME	256
 
-typedef union {
+union arg {
 	int		i, b;
 	double		f;
 	const void	*v;
-} Arg;
+};
 
 struct monitor {
 	int		id;
@@ -193,16 +193,16 @@ struct rule {
 struct key {
 	unsigned int	mod;
 	xcb_keysym_t	keysym;
-	void		(*func) (const Arg *);
-	const Arg	arg;
+	void		(*func) (const union arg *);
+	const union arg	arg;
 };
 
 struct button {
 	unsigned int	click;
 	unsigned int	mask;
 	unsigned int	button;
-	void		(*func) (const Arg *arg);
-	const Arg	arg;
+	void		(*func) (const union arg *arg);
+	const union arg	arg;
 };
 
 extern const char font_desc[];
@@ -251,7 +251,7 @@ void scan(void);
 
 struct client *client_get(xcb_window_t w);
 void client_kill(void);
-void client_move_mouse(const Arg *arg, int move);
+void client_move_mouse(const union arg *arg, int move);
 
 
 void bar_draw(struct monitor *m);
@@ -294,7 +294,7 @@ void xcb_quit(void);
 void setup(void);
 void run(void);
 
-void quit(const Arg *arg);
+void quit(const union arg *arg);
 void die(const char *errstr, ...);
 
 /* **** */

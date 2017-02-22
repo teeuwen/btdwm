@@ -448,7 +448,7 @@ void client_kill(void)
 	}
 }
 
-void client_move_mouse(const Arg *arg, int move)
+void client_move_mouse(const union arg *arg, int move)
 {
 	xcb_motion_notify_event_t* e;
 	struct monitor *m;
@@ -658,7 +658,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 	struct client *c;
 	int i, x = 0;
 	unsigned int click = 0;
-	Arg arg = { 0 };
+	union arg arg = { 0 };
 
 	if ((m = mon_get(e->event)) && m != selmon) {
 		unfocus(selmon->client, 1);

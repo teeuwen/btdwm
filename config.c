@@ -124,7 +124,7 @@ static const char *cmd_binc[] = { SHCMD("~/Documents/cs/scripts/wm/bri.sh inc"),
 static const char *cmd_status[] = { SHCMD("~/Documents/cs/scripts/wm/status.sh"), 0 };
 
 const struct key keys[] = {
-	/* Modifier		Key	Function	Arguments */
+	/* Modifier		Key	Function	union arguments */
 	{ K_SUPER | K_CTRL,	K_Q,	quit,		{ 0 } },
 
 	{ 0,			K_PWR,	spawn,		{ .v = cmd_eject } },
@@ -180,6 +180,8 @@ const struct key keys[] = {
 	/* Backlight control */
 	{ 0,			K_BDEC,	spawn,		{ .v = cmd_bdec } },
 	{ 0,			K_BINC,	spawn,		{ .v = cmd_binc } },
+	{ K_SUPER,		K_J,	spawn,		{ .v = cmd_bdec } },
+	{ K_SUPER,		K_K,	spawn,		{ .v = cmd_binc } },
 
 	/* Status */
 	{ K_SUPER,		K_Z,	spawn,		{ .v = cmd_status } },
@@ -245,7 +247,7 @@ const int keys_len = sizeof(keys) / sizeof(keys[0]);
  */
 
 const struct button buttons[] = {
-	/* Event	Mask	Button	Function	Arguments */
+	/* Event	Mask	Button	Function	union arguments */
 	{ CLICK_TAGS,	0,	B_LEFT,	viewtag,	{ 0 } },
 	{ CLICK_TAGS,	0,	B_RIGHT,toggletag,	{ 0 } },
 	{ CLICK_TAGS,	K_SUPER,B_LEFT,	moveclient,	{ 0 } },

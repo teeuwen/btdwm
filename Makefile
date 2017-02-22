@@ -19,7 +19,8 @@ PHONY += clean
 clean:
 	echo -e "  RM      btdwm"
 	rm -f btdwm
-	find . -type f -name '*.o' -delete -exec echo "  RM      {}" \;
+	#find . -type f -name '*.o' -delete -exec sh -c "echo '  RM      `echo '{}' | cut -c 3-`'" \;
+	find . -type f -name '*.o' -delete -exec sh -c "echo '  RM      {}'" \;
 
 PHONY += install
 install: btdwm

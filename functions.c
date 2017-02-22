@@ -45,17 +45,17 @@
 
 static NotifyNotification *msg;
 
-void movemouse(const Arg *arg)
+void movemouse(const union arg *arg)
 {
 	client_move_mouse(arg, 1);
 }
 
-void resizemouse(const Arg *arg)
+void resizemouse(const union arg *arg)
 {
 	client_move_mouse(arg, 0);
 }
 
-void focusmon(const Arg *arg)
+void focusmon(const union arg *arg)
 {
 	struct monitor *m = NULL;
 	int x, y;
@@ -77,7 +77,7 @@ void focusmon(const Arg *arg)
 	focus(NULL);
 }
 
-void focusstack(const Arg *arg)
+void focusstack(const union arg *arg)
 {
 	struct client *c;
 
@@ -114,12 +114,12 @@ void focusstack(const Arg *arg)
 	}
 }
 
-void killclient(const Arg *arg)
+void killclient(const union arg *arg)
 {
 	client_kill();
 }
 
-void spawn(const Arg *arg)
+void spawn(const union arg *arg)
 {
 	if (!arg)
 		return;
@@ -136,7 +136,7 @@ void spawn(const Arg *arg)
 	}
 }
 
-void tagmon(const Arg *arg)
+void tagmon(const union arg *arg)
 {
 	if (!arg || !selmon->client || !mons->next)
 		return;
@@ -146,7 +146,7 @@ void tagmon(const Arg *arg)
 	focusmon(arg);
 }
 
-void togglebar(const Arg *arg)
+void togglebar(const union arg *arg)
 {
 	selmon->showbar ^= 1;
 
@@ -163,7 +163,7 @@ void togglebar(const Arg *arg)
 	arrange(selmon);
 }
 
-void togglefloating(const Arg *arg)
+void togglefloating(const union arg *arg)
 {
 	if (!selmon->client)
 		return;
@@ -180,7 +180,7 @@ void togglefloating(const Arg *arg)
 	arrange(selmon);
 }
 
-void toggleontop(const Arg *arg)
+void toggleontop(const union arg *arg)
 {
 	if (!selmon->client)
 		return;
@@ -190,7 +190,7 @@ void toggleontop(const Arg *arg)
 	arrange(selmon);
 }
 
-void togglesticky(const Arg *arg)
+void togglesticky(const union arg *arg)
 {
 	if (!selmon->client)
 		return;
@@ -200,7 +200,7 @@ void togglesticky(const Arg *arg)
 	arrange(selmon);
 }
 
-void viewtag(const Arg *arg)
+void viewtag(const union arg *arg)
 {
 	if (selmon->tags == (unsigned int) (1 << arg->i))
 		return;
@@ -211,7 +211,7 @@ void viewtag(const Arg *arg)
 	arrange(selmon);
 }
 
-void toggletag(const Arg *arg)
+void toggletag(const union arg *arg)
 {
 	if (!(selmon->tags ^ (1 << arg->i)))
 		return;
@@ -221,7 +221,7 @@ void toggletag(const Arg *arg)
 	arrange(selmon);
 }
 
-void moveclient(const Arg *arg)
+void moveclient(const union arg *arg)
 {
 	if (!selmon->client)
 		return;
@@ -230,7 +230,7 @@ void moveclient(const Arg *arg)
 	arrange(selmon);
 }
 
-void setlayout(const Arg *arg)
+void setlayout(const union arg *arg)
 {
 	int i;
 
@@ -255,7 +255,7 @@ void setlayout(const Arg *arg)
 		bar_draw(selmon);
 }
 
-void setmfact(const Arg *arg)
+void setmfact(const union arg *arg)
 {
 	double f;
 
@@ -272,7 +272,7 @@ void setmfact(const Arg *arg)
 }
 
 #if 0
-void zoom(const Arg *arg)
+void zoom(const union arg *arg)
 {
 	struct client *c = selmon->client;
 

@@ -515,7 +515,8 @@ int isprotodel(struct client *c)
 	return ret;
 }
 
-void restack(struct monitor *m) {
+void restack(struct monitor *m)
+{
 	uint32_t normal[] = { 0, XCB_STACK_MODE_BELOW };
 	uint32_t ontop[] = { XCB_STACK_MODE_ABOVE };
 	struct client *c;
@@ -740,7 +741,7 @@ void setup(void)
 	keys_grab();
 }
 
-void quit(const Arg *arg)
+void quit(const union arg *arg)
 {
 	font_quit();
 	mon_quit();
