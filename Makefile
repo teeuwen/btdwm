@@ -14,7 +14,7 @@ PKGLIST		= xcb-aux xcb-cursor xcb-ewmh xcb-icccm xcb-keysyms xcb-xinerama xcb pa
 MAKEFLAGS	:= -s
 
 CFLAGS		:= -Wall -Wextra -Wno-unused-parameter -std=gnu89 `pkg-config --cflags $(PKGLIST)`
-LDFLAGS		:= `pkg-config --libs $(PKGLIST)` -lm
+LDFLAGS		:= `pkg-config --libs $(PKGLIST)`
 
 objects = btdwm.o config.o draw.o functions.o layouts.o msg.o xcb.o
 
