@@ -1,10 +1,31 @@
-# See LICENSE file for copyright and license details.
+#
+# Makefile
+#
 
-include config.mk
+PREFIX		:= /opt/btdwm
+
+
+CC		:= gcc
+LD		:= gcc
+
+
+PKGLIST		= xcb-aux xcb-cursor xcb-ewmh xcb-icccm xcb-keysyms xcb-xinerama xcb pangocairo pango libnotify xau x11 xdmcp
+
+MAKEFLAGS	:= -s
+
+CFLAGS		:= -Wall -Wextra -Wno-unused-parameter -std=gnu89 `pkg-config --cflags $(PKGLIST)`
+LDFLAGS		:= `pkg-config --libs $(PKGLIST)` -lm
 
 objects = btdwm.o config.o draw.o functions.o layouts.o msg.o xcb.o
 
-all: btdwm
+PHONY += all
+all: release
+
+PHONY += clean
+clean:
+	echo -e "  RM      btdwm"
+	rm -f btdwm
+	find . -type f -name '*.o' -delete -exec sh -c "echo '  RM      {}'" \;
 
 %.o: %.c
 	echo -e "  CC      $<"
@@ -13,25 +34,26 @@ all: btdwm
 PHONY += btdwm
 btdwm: $(objects)
 	echo -e "  LD      $<"
-	$(CC) -o $@ $(objects) $(LDFLAGS)
+	$(LD) -Os -s -o $@ $(objects) $(LDFLAGS)
 
-PHONY += clean
-clean:
-	echo -e "  RM      btdwm"
-	rm -f btdwm
-	#find . -type f -name '*.o' -delete -exec sh -c "echo '  RM      `echo '{}' | cut -c 3-`'" \;
-	find . -type f -name '*.o' -delete -exec sh -c "echo '  RM      {}'" \;
+PHONY += release
+release: CFLAGS+=-Os
+release: btdwm
+
+PHONY += debug
+debug: CFLAGS+=-g
+debug: btdwm
 
 PHONY += install
-install: btdwm
-	echo Installing executable file to $(DESTDIR)$(PREFIX)/bin
-	mkdir -p $(DESTDIR)$(PREFIX)/bin
-	cp -f btdwm $(DESTDIR)$(PREFIX)/bin
-	chmod 755 $(DESTDIR)$(PREFIX)/bin/btdwm
+install: release
+	echo -e "  INSTALL $(PREFIX)/bin/btdwm"
+	mkdir -p $(PREFIX)/bin/
+	cp -f btdwm $(PREFIX)/bin/.
+	chmod 755 $(PREFIX)/bin/btdwm
 
 PHONY += uninstall
 uninstall:
-	echo Removing executable file from $(DESTDIR)$(PREFIX)/bin
-	rm -f $(DESTDIR)$(PREFIX)/bin/btdwm
+	echo -e "  RM      $(PREFIX)/bin/btdwm"
+	rm -f $(PREFIX)/bin/btdwm
 
 .PHONY: $(PHONY)
