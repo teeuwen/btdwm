@@ -70,9 +70,10 @@ static const char *tags[] = {
 
 const struct rule rules[] = {
 	/* Class	Instance	Title		Monitor	Tags	Float.	Transparent */
+	{ "st-256color",NULL,		NULL,		-1,	0,	0,	1 },
+	{ "Firefox",	NULL,		"Library",	-1,	0,	1,	0 },
 	{ NULL,		NULL,		"QEMU",		-1,	0,	1,	0 },
 	{ NULL,		NULL,		"pinentry",	-1,	0,	1,	0 },
-	{ "st-256color",NULL,		NULL,		-1,	0,	0,	1 }
 };
 const int rules_len = sizeof(rules) / sizeof(rules[0]);
 
@@ -99,6 +100,7 @@ static const char *cmd_r[] = { SHCMD("WINEARCH=win32 WINEPREFIX=~/.office2010 wi
 static const char *cmd_y[] = { "lowriter", 0 };
 static const char *cmd_u[] = { "localc", 0 };
 static const char *cmd_i[] = { "loimpress", 0 };
+static const char *cmd_s[] = { "tor-browser-en", 0 };
 static const char *cmd_d[] = { "audacity", 0 };
 static const char *cmd_f[] = { "firefox", 0 };
 static const char *cmd_g[] = { "gimp", 0 };
@@ -148,6 +150,7 @@ const struct key keys[] = {
 	{ K_CTRL | K_SHIFT,	K_Y,	spawn,		{ .v = cmd_y } },
 	{ K_CTRL | K_SHIFT,	K_U,	spawn,		{ .v = cmd_u } },
 	{ K_CTRL | K_SHIFT,	K_I,	spawn,		{ .v = cmd_i } },
+	{ K_CTRL | K_SHIFT,	K_S,	spawn,		{ .v = cmd_s } },
 	{ K_CTRL | K_SHIFT,	K_D,	spawn,		{ .v = cmd_d } },
 	{ K_CTRL | K_SHIFT,	K_F,	spawn,		{ .v = cmd_f } },
 	{ K_CTRL | K_SHIFT,	K_G,	spawn,		{ .v = cmd_g } },

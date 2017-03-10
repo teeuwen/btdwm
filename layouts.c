@@ -48,24 +48,24 @@ void tile(struct monitor *m)
 
 	c = nexttiled(m->clients);
 	mw = m->layouts[m->tag]->mfact * m->w;
-	resize(c, m->x, m->y + ((m->showbar) ? BAR_HEIGHT : 0),
+	resize(c, m->x, m->y + (SHOWBAR(m) ? BAR_HEIGHT : 0),
 			(n == 1 ? m->w : mw),
-			m->h - ((m->showbar) ? BAR_HEIGHT : 0), 0);
+			m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0), 0);
 	if (!--n)
 		return;
 
 	x = (m->x + mw > c->x + c->w) ? c->x + c->w : m->x + mw;
-	y = m->y + ((m->showbar) ? BAR_HEIGHT : 0);
+	y = m->y + (SHOWBAR(m) ? BAR_HEIGHT : 0);
 	w = (m->x + mw > c->x + c->w) ? m->x + m->w - x : m->w - mw;
-	h = (m->h - ((m->showbar) ? BAR_HEIGHT : 0)) / n;
+	h = (m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0)) / n;
 
 	if (h < BAR_HEIGHT)
-		h = m->h - ((m->showbar) ? BAR_HEIGHT : 0);
+		h = m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0);
 
 	for (i = 0, c = nexttiled(c->next); c; c = nexttiled(c->next), i++) {
 		resize(c, x, y, w, ((i + 1 == n) ? m->y + m->h - y : h), 0);
 
-		if (h != m->h - ((m->showbar) ? BAR_HEIGHT : 0))
+		if (h != m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0))
 			y = c->y + c->h;
 	}
 }
@@ -89,6 +89,6 @@ void max(struct monitor *m)
 	struct client *c;
 
 	for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
-		resize(c, m->x, m->y + ((m->showbar) ? BAR_HEIGHT : 0),
-				m->w, m->h - ((m->showbar) ? BAR_HEIGHT : 0), 0);
+		resize(c, m->x, m->y + (SHOWBAR(m) ? BAR_HEIGHT : 0),
+				m->w, m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0), 0);
 }

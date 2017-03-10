@@ -128,7 +128,7 @@ void bar_init(void)
 		m->barwin = xcb_generate_id(conn);
 		xcb_create_window(conn, screen->root_depth, m->barwin,
 				screen->root, m->x,
-				(m->showbar) ? 0 : -BAR_HEIGHT, m->w,
+				SHOWBAR(m) ? 0 : -BAR_HEIGHT, m->w,
 				BAR_HEIGHT, 0, XCB_WINDOW_CLASS_INPUT_OUTPUT,
 				screen->root_visual, XCB_CW_OVERRIDE_REDIRECT |
 				XCB_CW_EVENT_MASK | XCB_CW_CURSOR, values);
@@ -188,7 +188,7 @@ static void rules_apply(struct client *c)
 	int i;
 
 	c->tags = 0;
-	c->flags &= ~F_FLOATING;
+	c->flags &= ~CF_FLOATING;
 
 	if (xcb_icccm_get_wm_class_reply(conn, xcb_icccm_get_wm_class(conn,
 			c->win), &ch, 0)) {
@@ -206,11 +206,11 @@ static void rules_apply(struct client *c)
 					rules[i].instance))) {
 				c->tags |= rules[i].tags;
 				c->flags = rules[i].floating ?
-						c->flags | F_FLOATING :
-						c->flags & ~F_FLOATING;
+						c->flags | CF_FLOATING :
+						c->flags & ~CF_FLOATING;
 				c->flags = rules[i].transparent ?
-						c->flags | F_TRANS :
-						c->flags & ~F_TRANS;
+						c->flags | CF_TRANS :
+						c->flags & ~CF_TRANS;
 
 				for (m = mons; m && m->id != rules[i].monitor;
 						m = m->next);
@@ -259,7 +259,7 @@ static void manage(xcb_window_t w)
 
 	c->win = w;
 	title_update(c);
-	
+
 	xcb_icccm_get_wm_transient_for_reply(conn,
 			xcb_icccm_get_wm_transient_for(conn, w),
 			&trans_reply, &err);
@@ -282,12 +282,12 @@ static void manage(xcb_window_t w)
 
 	c->x = c->oldx = geom_reply->x + c->mon->x;
 	c->y = c->oldy =
-		geom_reply->y + c->mon->y + (c->mon->showbar ? BAR_HEIGHT : 0);
+		geom_reply->y + c->mon->y + (SHOWBAR(c->mon) ? BAR_HEIGHT : 0);
 	c->w = c->oldw = geom_reply->width;
 	c->h = c->oldh = geom_reply->height;
 
 	if (c->w == c->mon->w && c->h == c->mon->h) {
-		c->flags |= F_FLOATING;
+		c->flags |= CF_FLOATING;
 
 		c->x = c->mon->x;
 		c->y = c->mon->y;
@@ -298,7 +298,7 @@ static void manage(xcb_window_t w)
 			c->y = c->mon->y + c->mon->h - c->h;
 
 		c->x = MAX(c->x, c->mon->x);
-		c->y = MAX(c->y, (c->mon->showbar &&
+		c->y = MAX(c->y, (SHOWBAR(c->mon) &&
 				(c->x + (c->w / 2) >= c->mon->x) &&
 				(c->x + (c->w / 2) < c->mon->x + c->mon->w)) ?
 				BAR_HEIGHT : c->mon->y);
@@ -320,7 +320,8 @@ static void manage(xcb_window_t w)
 
 	if (!ISFLOATING(c))
 		c->flags = ((trans != 0 || ISFIXED(c)) ?
-				c->flags | F_FLOATING : c->flags & ~F_FLOATING);
+				c->flags | CF_FLOATING :
+				c->flags & ~CF_FLOATING);
 
 	uint32_t config_values[] = {
 		c->x + 2 * screen->width_in_pixels,
@@ -632,7 +633,7 @@ int textprop_get(xcb_window_t w, xcb_atom_t atom, char *text, unsigned int size)
 	strncpy(text, reply.name, MIN(reply.name_len + 1, size));
 	text[MIN(reply.name_len + 1, size) - 1] = '\0';
 	xcb_icccm_get_text_property_reply_wipe(&reply);
-	
+
 	return 1;
 }
 
@@ -645,7 +646,7 @@ void urgent_clear(struct client *c)
 			&wmh, 0))
 		return;
 
-	c->flags &= ~F_URGENT;
+	c->flags &= ~CF_URGENT;
 
 	wmh.flags &= ~XCB_ICCCM_WM_HINT_X_URGENCY;
 	xcb_icccm_set_wm_hints(conn, c->win, &wmh);
@@ -731,7 +732,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 						XCB_ATOM, 32, 1, (const void *)
 						&atoms[ATOM_NETSTATE_FULLSCR]);
 
-				c->flags |= F_FULLSCREEN;
+				c->flags |= CF_FULLSCREEN;
 
 				client_resize(c, c->mon->x, c->mon->y,
 						c->mon->w, c->mon->h);
@@ -745,7 +746,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 						XCB_ATOM, 32, 0,
 						(const void *) 0);
 
-				c->flags &= ~F_FULLSCREEN;
+				c->flags &= ~CF_FULLSCREEN;
 				c->x = c->oldx;
 				c->y = c->oldy;
 				c->w = c->oldw;
@@ -755,11 +756,11 @@ static int clientmessage(xcb_generic_event_t *_e)
 				arrange(c->mon); /* XXX Or just restack? */
 			}
 		} else if (e->data.data32[1] == atoms[ATOM_NETSTATE_ONTOP]) {
-			c->flags |= F_ONTOP;
+			c->flags |= CF_ONTOP;
 
 			restack(c->mon); /* XXX Sure? */
 		} else if (e->data.data32[1] == atoms[ATOM_NETSTATE_MODAL]) {
-			c->flags |= F_FLOATING;
+			c->flags |= CF_FLOATING;
 
 			client_resize(c, c->x, c->y, c->w, c->h);
 			arrange(c->mon); /* XXX Or restack? */
@@ -875,6 +876,11 @@ static int enternotify(xcb_generic_event_t *_e)
 
 	c = client_get(e->event);
 	/* oc = (c ? c->mon->client : NULL); */
+
+	if (c && NEWFOCUS(c->mon)) {
+		c->mon->flags &= ~MF_NEWFOCUS;
+		return 0;
+	}
 
 	/* FIXME Return if new window */
 	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || ISFLOATING(c) ||
@@ -1015,8 +1021,8 @@ static int propertynotify(xcb_generic_event_t *_e)
 
 		if (trans && !ISFLOATING(c)) {
 			c->flags = (client_get(trans) != NULL) ?
-					c->flags | F_FLOATING :
-					c->flags & ~F_FLOATING;
+					c->flags | CF_FLOATING :
+					c->flags & ~CF_FLOATING;
 			if (ISFLOATING(c))
 				arrange(c->mon);
 		}
@@ -1167,7 +1173,7 @@ static void xcb_error(xcb_generic_error_t *e)
 void run(void)
 {
 	xcb_generic_event_t *e;
-	
+
 	while ((e = xcb_wait_for_event(conn))) {
 		if (e->response_type & ~0x80) {
 			if (xcb_handlers[e->response_type & ~0x80])

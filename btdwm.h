@@ -91,21 +91,27 @@
 #define COLOR_STURGENT	5
 #define COLOR_MAX	6
 
-#define F_FIXED		0x01
-#define F_FLOATING	0x02
-#define F_FULLSCREEN	0x04
-#define F_ONTOP		0x08
-#define F_STICKY	0x10
-#define F_TRANS		0x20
-#define F_URGENT	0x40
+#define MF_SHOWBAR	0x01
+#define MF_NEWFOCUS	0x02
 
-#define ISFIXED(c)	(c->flags & F_FIXED)
-#define ISFLOATING(c)	(((c->flags & F_FLOATING) || (c->flags & F_STICKY)))
-#define ISFULLSCREEN(c)	(c->flags & F_FULLSCREEN)
-#define ISONTOP(c)	(c->flags & F_ONTOP)
-#define ISSTICKY(c)	(c->flags & F_STICKY)
-#define ISTRANS(c)	(c->flags & F_TRANS)
-#define ISURGENT(c)	(c->flags & F_URGENT)
+#define CF_FIXED	0x01
+#define CF_FLOATING	0x02
+#define CF_FULLSCREEN	0x04
+#define CF_ONTOP	0x08
+#define CF_STICKY	0x10
+#define CF_TRANS	0x20
+#define CF_URGENT	0x40
+
+#define SHOWBAR(m)	(m->flags & MF_SHOWBAR)
+#define NEWFOCUS(m)	(m->flags & MF_NEWFOCUS)
+
+#define ISFIXED(c)	(c->flags & CF_FIXED)
+#define ISFLOATING(c)	(((c->flags & CF_FLOATING) || (c->flags & CF_STICKY)))
+#define ISFULLSCREEN(c)	(c->flags & CF_FULLSCREEN)
+#define ISONTOP(c)	(c->flags & CF_ONTOP)
+#define ISSTICKY(c)	(c->flags & CF_STICKY)
+#define ISTRANS(c)	(c->flags & CF_TRANS)
+#define ISURGENT(c)	(c->flags & CF_URGENT)
 #define ISVISIBLE(c)	(((c->tags & c->mon->tags) | ISSTICKY(c)))
 
 /* To avoid conflicts with limits.h */
@@ -120,6 +126,7 @@ union arg {
 struct monitor {
 	int		id;
 	int		x, y, w, h;
+	int		flags;
 
 	xcb_pixmap_t	bgpix;
 	xcb_gcontext_t	gc;
@@ -127,7 +134,6 @@ struct monitor {
 	xcb_window_t	barwin;
 	cairo_surface_t	*barsur;
 	cairo_t		*barcr;
-	int		showbar;
 
 	unsigned int	tags;
 	unsigned int	tag;

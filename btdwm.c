@@ -248,7 +248,7 @@ struct monitor *mon_alloc(void)
 	m->tags = 1;
 	for (i = 0; i < LENGTH(m->layouts); i++)
 		m->layouts[i] = tags[i].layout;
-	m->showbar = 1;
+	m->flags |= MF_SHOWBAR;
 
 	return m;
 }
@@ -473,8 +473,8 @@ struct monitor *ptrtomon(int x, int y)
 	struct monitor *m;
 
 	for (m = mons; m; m = m->next)
-		if (INRECT(x, y, m->x, m->y + ((m->showbar) ? BAR_HEIGHT : 0),
-				m->w, m->h - ((m->showbar) ? BAR_HEIGHT : 0)))
+		if (INRECT(x, y, m->x, m->y + (SHOWBAR(m) ? BAR_HEIGHT : 0),
+				m->w, m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0)))
 			return m;
 	return selmon;
 }
@@ -657,11 +657,11 @@ void windowtype_update(struct client *c)
 			atom_check(c->win, atoms[ATOM_TYPE],
 			atoms[ATOM_TYPE_SPLASH]) || atom_check(c->win,
 			atoms[ATOM_NETSTATE], atoms[ATOM_NETSTATE_MODAL]))
-		c->flags |= F_FLOATING;
+		c->flags |= CF_FLOATING;
 
 	if (atom_check(c->win, atoms[ATOM_NETSTATE],
 			atoms[ATOM_NETSTATE_ONTOP]))
-		c->flags |= F_ONTOP;
+		c->flags |= CF_ONTOP;
 }
 
 void updatesizehints(struct client *c)
@@ -713,7 +713,7 @@ void updatesizehints(struct client *c)
 
 	c->flags = (c->minw && c->maxw && c->minh && c->maxh &&
 			c->minw == c->maxw && c->minh == c->maxh) ?
-			c->flags | F_FIXED : c->flags & ~F_FIXED;
+			c->flags | CF_FIXED : c->flags & ~CF_FIXED;
 }
 
 void updatewmhints(struct client *c)
@@ -729,7 +729,7 @@ void updatewmhints(struct client *c)
 		xcb_icccm_set_wm_hints(conn, c->win, &wmh);
 	} else {
 		c->flags = (wmh.flags & XCB_ICCCM_WM_HINT_X_URGENCY) ?
-				c->flags | F_URGENT : c->flags & ~F_URGENT;
+				c->flags | CF_URGENT : c->flags & ~CF_URGENT;
 	}
 }
 

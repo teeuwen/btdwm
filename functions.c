@@ -148,11 +148,11 @@ void tagmon(const union arg *arg)
 
 void togglebar(const union arg *arg)
 {
-	selmon->showbar ^= 1;
+	selmon->flags ^= MF_SHOWBAR;
 
 	uint32_t values[] = {
 		selmon->x,
-		(selmon->showbar) ? 0 : -BAR_HEIGHT,
+		SHOWBAR(selmon) ? 0 : -BAR_HEIGHT,
 		selmon->w, BAR_HEIGHT
 	};
 
@@ -170,8 +170,8 @@ void togglefloating(const union arg *arg)
 
 	selmon->client->flags =
 		(!ISFLOATING(selmon->client) || ISFIXED(selmon->client)) ?
-				selmon->client->flags | F_FLOATING :
-				selmon->client->flags & ~F_FLOATING;
+				selmon->client->flags | CF_FLOATING :
+				selmon->client->flags & ~CF_FLOATING;
 
 	if (ISFLOATING(selmon->client))
 		resize(selmon->client, selmon->client->x, selmon->client->y,
@@ -185,7 +185,7 @@ void toggleontop(const union arg *arg)
 	if (!selmon->client)
 		return;
 
-	selmon->client->flags ^= F_ONTOP;
+	selmon->client->flags ^= CF_ONTOP;
 
 	arrange(selmon);
 }
@@ -195,7 +195,7 @@ void togglesticky(const union arg *arg)
 	if (!selmon->client)
 		return;
 
-	selmon->client->flags ^= F_STICKY;
+	selmon->client->flags ^= CF_STICKY;
 
 	arrange(selmon);
 }
@@ -209,6 +209,9 @@ void viewtag(const union arg *arg)
 	selmon->tag = arg->i;
 
 	arrange(selmon);
+
+	if (selmon->client)
+		selmon->flags |= MF_NEWFOCUS;
 }
 
 void toggletag(const union arg *arg)
