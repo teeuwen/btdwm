@@ -1,6 +1,6 @@
 /*
  *
- * © 2016-2017 Bastiaan Teeuwen <bastiaan.teeuwen170@gmail.com>
+ * © 2016-2017 Bastiaan Teeuwen <bastiaan@mkcl.nl>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
  * copy of this software and associated documentation files (the "Software"),
