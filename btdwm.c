@@ -574,7 +574,8 @@ void atom_init(void)
 	atoms[ATOM_WM] = atom_add("WM_PROTOCOLS");
 	atoms[ATOM_DELETE] = atom_add("WM_DELETE_WINDOW");
 	atoms[ATOM_STATE] = atom_add("WM_STATE");
-	atoms[ATOM_NET] = atom_add("_NET_WM_SUPPORTED");
+	atoms[ATOM_NET] = atom_add("_NET_SUPPORTED");
+	atoms[ATOM_WMCHECK] = atom_add("_NET_SUPPORTING_WM_CHECK");
 	atoms[ATOM_NAME] = atom_add("_NET_WM_NAME");
 	atoms[ATOM_NETSTATE] = atom_add("_NET_WM_STATE");
 	atoms[ATOM_NETSTATE_FULLSCR] = atom_add("_NET_WM_STATE_FULLSCREEN");
@@ -586,8 +587,18 @@ void atom_init(void)
 	atoms[ATOM_TYPE_SPLASH] = atom_add("_NET_WM_WINDOW_TYPE_SPLASH");
 
 	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
-			atoms[ATOM_NET], XCB_ATOM, 32, ATOM_MAX - ATOM_NET,
-			(const void *) &atoms[ATOM_NET]);
+			atoms[ATOM_NET], XCB_ATOM_ATOM, 32, ATOM_MAX - ATOM_NET,
+			(const char *) &atoms[ATOM_NET]);
+
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
+			atoms[ATOM_WMCHECK], XCB_ATOM_WINDOW,
+			32, 1, (const char *) &mons->barwin);
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, mons->barwin,
+			atoms[ATOM_WMCHECK], XCB_ATOM_WINDOW,
+			32, 1, (const char *) &mons->barwin);
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, mons->barwin,
+			atoms[ATOM_NAME], atom_add("UTF8_STRING"),
+			8, strlen("btdwm"), (const char *) "btdwm");
 }
 
 int atom_check(xcb_window_t w, xcb_atom_t prop, xcb_atom_t target)
@@ -765,12 +776,13 @@ int main(int argc, char *argv[])
 
 	xcb_init();
 	mon_init();
-	atom_init();
 	font_init();
 	cur_init();
 	msg_init();
 
 	setup();
+	atom_init();
+
 	scan();
 
 	run();

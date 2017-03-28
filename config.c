@@ -82,7 +82,7 @@ const int rules_len = sizeof(rules) / sizeof(rules[0]);
  * Key bindings
  */
 
-static const char *cmd_eject[] = { SHCMD("eject"), 0 };
+static const char *cmd_eject[] = { SHCMD("eject -t"), 0 };
 
 static const char *cmd_poweroff[] = { SHCMD("systemctl poweroff"), 0 };
 static const char *cmd_reboot[] = { SHCMD("systemctl reboot"), 0 };
@@ -104,6 +104,7 @@ static const char *cmd_s[] = { "tor-browser-en", 0 };
 static const char *cmd_d[] = { "audacity", 0 };
 static const char *cmd_f[] = { "firefox", 0 };
 static const char *cmd_g[] = { "gimp", 0 };
+static const char *cmd_j[] = { SHCMD("usermenu -fn 'Noto Sans Mono-8' -nb '#333333' -nf '#ECECEC'"), 0 };
 static const char *cmd_k[] = { SHCMD("passmenu -fn 'Noto Sans Mono-8' -nb '#333333' -nf '#ECECEC'"), 0 };
 static const char *cmd_c[] = { "chromium", 0 };
 static const char *cmd_v[] = { "virtualbox", 0 };
@@ -154,6 +155,7 @@ const struct key keys[] = {
 	{ K_CTRL | K_SHIFT,	K_D,	spawn,		{ .v = cmd_d } },
 	{ K_CTRL | K_SHIFT,	K_F,	spawn,		{ .v = cmd_f } },
 	{ K_CTRL | K_SHIFT,	K_G,	spawn,		{ .v = cmd_g } },
+	{ K_CTRL | K_SHIFT,	K_J,	spawn,		{ .v = cmd_j } },
 	{ K_CTRL | K_SHIFT,	K_K,	spawn,		{ .v = cmd_k } },
 	{ K_CTRL | K_SHIFT,	K_C,	spawn,		{ .v = cmd_c } },
 	{ K_CTRL | K_SHIFT,	K_V,	spawn,		{ .v = cmd_v } },
