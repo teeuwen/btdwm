@@ -458,8 +458,13 @@ void client_move_mouse(const union arg *arg, int move)
 	unsigned int cur;
 	int active = 1;
 
-	if (!(c = selmon->client) || !curpos_get(c->win, &x, &y))
+	if (!(c = selmon->client))
 		return;
+
+	if (move)
+		curpos_get(0, &x, &y);
+	else
+		curpos_get(c->win, &x, &y);
 
 	ox = c->x;
 	oy = c->y;
@@ -469,7 +474,6 @@ void client_move_mouse(const union arg *arg, int move)
 	if (move) {
 		cur = CUR_MOVE;
 	} else {
-		/* FIXME Not always reliable */
 		x = x < (ow / 2);
 		y = y < (oh / 2);
 

@@ -481,15 +481,20 @@ struct monitor *ptrtomon(int x, int y)
 
 int curpos_get(xcb_window_t w, int *x, int *y)
 {
+	xcb_query_pointer_reply_t *reply;
+
 	if (!w)
 		w = screen->root;
 
-	xcb_query_pointer_reply_t *reply;
-
 	reply = xcb_query_pointer_reply(conn, xcb_query_pointer(conn, w), 0);
 
-	*x = reply->root_x;
-	*y = reply->root_y;
+	if (w == screen->root) {
+		*x = reply->root_x;
+		*y = reply->root_y;
+	} else {
+		*x = reply->win_x;
+		*y = reply->win_y;
+	}
 
 	free(reply);
 
