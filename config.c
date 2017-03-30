@@ -84,10 +84,10 @@ const int rules_len = sizeof(rules) / sizeof(rules[0]);
 
 static const char *cmd_eject[] = { SHCMD("eject -t"), 0 };
 
-static const char *cmd_poweroff[] = { SHCMD("systemctl poweroff"), 0 };
-static const char *cmd_reboot[] = { SHCMD("systemctl reboot"), 0 };
+static const char *cmd_poweroff[] = { SHCMD("sudo poweroff"), 0 };
+static const char *cmd_reboot[] = { SHCMD("sudo reboot"), 0 };
 static const char *cmd_suspend[] = { SHCMD("systemctl suspend"), 0 };
-static const char *cmd_halt[] = { SHCMD("systemctl halt"), 0 };
+static const char *cmd_halt[] = { SHCMD("sudo halt"), 0 };
 
 static const char *cmd_lock[] = { SHCMD("~/Documents/cs/scripts/wm/lock/lock.sh"), 0 };
 

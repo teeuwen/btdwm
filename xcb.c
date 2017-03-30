@@ -962,7 +962,6 @@ static int maprequest(xcb_generic_event_t *_e)
 	xcb_get_window_attributes_reply_t *ga_reply =
 			xcb_get_window_attributes_reply(conn,
 			xcb_get_window_attributes(conn, e->window), &err);
-	testerr();
 
 	if (!ga_reply)
 		return 0;
