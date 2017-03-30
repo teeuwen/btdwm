@@ -511,13 +511,11 @@ void client_move_mouse(const union arg *arg, int move)
 		case XCB_BUTTON_RELEASE:
 			active = 0;
 		case XCB_MOTION_NOTIFY:
-			/* FIXME Check at the very start */
+			/* TODO Adhere to incw and inch */
 			if (ISFULLSCREEN(c) || (!ISFLOATING(c) &&
 					selmon->layouts[selmon->tag]->arrange))
-				break;
-
-			/* TODO Adhere to incw and inch */
-			if (move)
+				active = 0;
+			else if (move)
 				resize(c, e->event_x + ox - x,
 						e->event_y + oy - y,
 						c->w, c->h, 1);
