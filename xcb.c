@@ -731,7 +731,8 @@ static int clientmessage(xcb_generic_event_t *_e)
 			if (e->data.data32[0]) {
 				xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
 						e->window, atoms[ATOM_NETSTATE],
-						XCB_ATOM, 32, 1, (const void *)
+						XCB_ATOM_ATOM, 32, 1,
+						(const char *)
 						&atoms[ATOM_NETSTATE_FULLSCR]);
 
 				c->flags |= CF_FULLSCREEN;
@@ -745,8 +746,8 @@ static int clientmessage(xcb_generic_event_t *_e)
 			} else {
 				xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
 						e->window, atoms[ATOM_NETSTATE],
-						XCB_ATOM, 32, 0,
-						(const void *) 0);
+						XCB_ATOM_ATOM, 32, 0,
+						(const char *) 0);
 
 				c->flags &= ~CF_FULLSCREEN;
 				c->x = c->oldx;

@@ -334,15 +334,15 @@ void focus(struct client *c)
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
 				c->win, XCB_CURRENT_TIME);
 		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
-				atoms[ATOM_ACTIVE], XCB_ATOM,
-				32, 1, (const void *) &c->win);
+				atoms[ATOM_ACTIVE], XCB_ATOM_WINDOW,
+				32, 1, (const char *) &c->win);
 
 	} else {
 		xcb_set_input_focus(conn, XCB_INPUT_FOCUS_POINTER_ROOT,
 				screen->root, XCB_CURRENT_TIME);
 		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
-				atoms[ATOM_ACTIVE], XCB_ATOM,
-				32, 0, (const void *) 0);
+				atoms[ATOM_ACTIVE], XCB_ATOM_WINDOW,
+				32, 0, (const char *) 0);
 	}
 
 	selmon->client = c;
@@ -565,7 +565,7 @@ void setclientstate(struct client *c, long state)
 
 	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, c->win,
 			atoms[ATOM_STATE], atoms[ATOM_STATE], 32, 2,
-			(unsigned char*) data);
+			(const char *) data);
 }
 
 xcb_atom_t atom_add(const char *name)
