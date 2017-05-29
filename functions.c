@@ -202,11 +202,29 @@ void togglesticky(const union arg *arg)
 
 void viewtag(const union arg *arg)
 {
-	if (selmon->tags == (unsigned int) (1 << arg->i))
-		return;
+	if (arg->i < 0) {
+		if (arg->i == -2) {
+			if (selmon->tag > 0)
+				selmon->tag--;
+			else
+				selmon->tag = (unsigned int) tags_len - 1;
+		} else if (arg->i == -1) {
+			if (selmon->tag + 1 < (unsigned int) tags_len)
+				selmon->tag++;
+			else
+				selmon->tag = 0;
+		} else {
+			return;
+		}
 
-	selmon->tags = 1 << arg->i;
-	selmon->tag = arg->i;
+		selmon->tags = 1 << selmon->tag;
+	} else {
+		if (selmon->tags == (unsigned int) (1 << arg->i))
+			return;
+
+		selmon->tags = 1 << arg->i;
+		selmon->tag = arg->i;
+	}
 
 	arrange(selmon);
 
