@@ -30,9 +30,9 @@ const char status_urgent[]	= "#F0C674";
 
 struct layout layouts[] = {
 	/* Symbol	Name		Layout	mfact */
-/* 0 */	{ "[F]",	"Floating",	NULL,	0.0 },
-/* 1 */	{ "[T]",	"Tile",		&tile,	0.5 },
-/* 2 */	{ "[M]",	"Max",		&max,	0.0 }
+	{ "[F]",	"Floating",	NULL,	0.0 },
+	{ "[T]",	"Tile",		&tile,	0.5 },
+	{ "[M]",	"Max",		&max,	0.0 }
 };
 const int layouts_len = sizeof(layouts) / sizeof(layouts[0]);
 
@@ -71,7 +71,8 @@ static const char *tags[] = {
 const struct rule rules[] = {
 	/* Class	Instance	Title		Monitor	Tags	Float.	Transparent */
 	{ "st-256color",NULL,		NULL,		-1,	0,	0,	1 },
-	{ "Firefox",	NULL,		"Library",	-1,	0,	1,	0 },
+	{ "st-256color",NULL,		"VIM",		-1,	0,	0,	0 },
+	{ "Firefox",	NULL,		"Page Info",	-1,	0,	1,	0 },
 	{ NULL,		NULL,		"QEMU",		-1,	0,	1,	0 },
 	{ NULL,		NULL,		"pinentry",	-1,	0,	1,	0 },
 };
@@ -84,10 +85,10 @@ const int rules_len = sizeof(rules) / sizeof(rules[0]);
 
 static const char *cmd_eject[] = { SHCMD("eject -t"), 0 };
 
-static const char *cmd_poweroff[] = { SHCMD("sudo poweroff"), 0 };
-static const char *cmd_reboot[] = { SHCMD("sudo reboot"), 0 };
+static const char *cmd_poweroff[] = { SHCMD("systemctl poweroff"), 0 };
+static const char *cmd_reboot[] = { SHCMD("systemctl reboot"), 0 };
 static const char *cmd_suspend[] = { SHCMD("systemctl suspend"), 0 };
-static const char *cmd_halt[] = { SHCMD("sudo halt"), 0 };
+static const char *cmd_halt[] = { SHCMD("halt"), 0 };
 
 static const char *cmd_lock[] = { SHCMD("~/Documents/cs/scripts/wm/lock/lock.sh"), 0 };
 
@@ -100,15 +101,14 @@ static const char *cmd_r[] = { SHCMD("WINEARCH=win32 WINEPREFIX=~/.office2010 wi
 static const char *cmd_y[] = { "lowriter", 0 };
 static const char *cmd_u[] = { "localc", 0 };
 static const char *cmd_i[] = { "loimpress", 0 };
+static const char *cmd_p[] = { SHCMD("firefox-nightly --private-window about:privatebrowsing"), 0 };
 static const char *cmd_s[] = { "tor-browser-en", 0 };
 static const char *cmd_d[] = { "audacity", 0 };
-static const char *cmd_f[] = { "firefox", 0 };
+static const char *cmd_f[] = { "firefox-nightly", 0 };
 static const char *cmd_g[] = { "gimp", 0 };
-static const char *cmd_j[] = { SHCMD("usermenu -fn 'Noto Sans Mono-8' -nb '#333333' -nf '#ECECEC'"), 0 };
-static const char *cmd_k[] = { SHCMD("passmenu -fn 'Noto Sans Mono-8' -nb '#333333' -nf '#ECECEC'"), 0 };
-static const char *cmd_c[] = { "chromium", 0 };
+static const char *cmd_j[] = { SHCMD("usermenu -fn 'Noto Sans Mono-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
+static const char *cmd_k[] = { SHCMD("passmenu -fn 'Noto Sans Mono-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
 static const char *cmd_v[] = { "virtualbox", 0 };
-static const char *cmd_n[] = { SHCMD("chromium -incognito"), 0 };
 
 static const char *cmd_scrot[] = { SHCMD("scrot"), 0 };
 
@@ -151,15 +151,14 @@ const struct key keys[] = {
 	{ K_CTRL | K_SHIFT,	K_Y,	spawn,		{ .v = cmd_y } },
 	{ K_CTRL | K_SHIFT,	K_U,	spawn,		{ .v = cmd_u } },
 	{ K_CTRL | K_SHIFT,	K_I,	spawn,		{ .v = cmd_i } },
+	{ K_CTRL | K_SHIFT,	K_P,	spawn,		{ .v = cmd_p } },
 	{ K_CTRL | K_SHIFT,	K_S,	spawn,		{ .v = cmd_s } },
 	{ K_CTRL | K_SHIFT,	K_D,	spawn,		{ .v = cmd_d } },
 	{ K_CTRL | K_SHIFT,	K_F,	spawn,		{ .v = cmd_f } },
 	{ K_CTRL | K_SHIFT,	K_G,	spawn,		{ .v = cmd_g } },
 	{ K_CTRL | K_SHIFT,	K_J,	spawn,		{ .v = cmd_j } },
 	{ K_CTRL | K_SHIFT,	K_K,	spawn,		{ .v = cmd_k } },
-	{ K_CTRL | K_SHIFT,	K_C,	spawn,		{ .v = cmd_c } },
 	{ K_CTRL | K_SHIFT,	K_V,	spawn,		{ .v = cmd_v } },
-	{ K_CTRL | K_SHIFT,	K_N,	spawn,		{ .v = cmd_n } },
 
 	/* Screenshot */
 	{ K_SUPER,		K_PRINT,spawn,		{ .v = cmd_scrot } },
@@ -194,8 +193,8 @@ const struct key keys[] = {
 	/* Global */
 	{ K_SUPER,		K_F,	togglebar,	{ 0 } },
 
-	{ K_SUPER | K_SHIFT,	K_SPACE,setlayout,	{ .i = -1 } },
-	{ K_SUPER,		K_SPACE,setlayout,	{ .i = +1 } },
+	{ K_SUPER | K_SHIFT,	K_SPACE,setlayout,	{ .i = -2 } },
+	{ K_SUPER,		K_SPACE,setlayout,	{ .i = -1 } },
 
 	/* { K_SUPER | K_SHIFT,	K_TAB,	viewtag,	{ .i = -1 } }, FIXME */
 	/* { K_SUPER,		K_TAB,	viewtag,	{ .i = +1 } }, FIXME */
@@ -233,16 +232,6 @@ const struct key keys[] = {
 	{ K_SUPER,		K_BL,	focusmon,	{ .i = -1 } },
 	{ K_SUPER,		K_BR,	focusmon,	{ .i = +1 } },
 	{ K_SUPER,		K_O,	tagmon,		{ .i = +1 } }
-
-#if 0
-	/* Notifications */
-	{ K_SUPER,		K_C,	msg_close,	{ 0 } },
-	{ K_SUPER,		K_X,	msg_closeall,	{ 0 } },
-	{ K_SUPER,		K_V,	msg_history,	{ 0 } },
-	{ K_SUPER,		K_B,	msg_context,	{ 0 } },
-#endif
-
-	/* TODO */
 };
 const int keys_len = sizeof(keys) / sizeof(keys[0]);
 

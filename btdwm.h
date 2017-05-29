@@ -208,7 +208,7 @@ struct button {
 	unsigned int	click;
 	unsigned int	mask;
 	unsigned int	button;
-	void		(*func) (const union arg *arg);
+	void		(*func) (const union arg *);
 	const union arg	arg;
 };
 

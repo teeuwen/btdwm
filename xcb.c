@@ -562,6 +562,7 @@ void buttons_grab(struct client *c, int focused)
 	xcb_ungrab_button(conn, XCB_BUTTON_INDEX_ANY, c->win, XCB_GRAB_ANY);
 
 	if (!focused) {
+		/* XXX Maybe other buttons as well? */
 		xcb_grab_button(conn, 0, c->win, XCB_EVENT_MASK_BUTTON_PRESS,
 				XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_SYNC, 0, 0,
 				B_LEFT, 0);
@@ -1008,6 +1009,7 @@ static int propertynotify(xcb_generic_event_t *_e)
 		bars_draw();
 	} else if (e->atom == XCB_ATOM_WM_NAME || atoms[ATOM_NAME]) {
 		title_update(c);
+		rules_apply(c);
 
 		if (c == c->mon->client)
 			bar_draw(c->mon);
