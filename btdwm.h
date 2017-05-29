@@ -138,8 +138,7 @@ struct monitor {
 
 	unsigned int	tags;
 	unsigned int	tag;
-	struct layout	*layouts[7];
-	/* unsigned int	tags[LENGTH(tags)]; FIXME FIXME FIXME FIXME FIXME */
+	struct layout	*layouts[7];/* [LENGTH(tags)]; FIXME FIXME FIXME FIXME FIXME */
 
 	struct client	*clients;
 	struct client	*stack;
@@ -229,7 +228,6 @@ extern const struct key keys[];
 extern const int keys_len;
 extern const struct button buttons[];
 extern const int buttons_len;
-extern const unsigned int tdelay;
 
 extern xcb_connection_t *conn;
 extern xcb_screen_t *screen;

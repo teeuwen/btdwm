@@ -42,26 +42,23 @@ const int layouts_len = sizeof(layouts) / sizeof(layouts[0]);
  */
 
 const struct tag tags[] = {
-	/* Name		Layout */
-	{ "α",		&layouts[1] },
-	{ "β",		&layouts[2] },
-	{ "γ",		&layouts[0] },
-	{ "δ",		&layouts[0] },
-	{ "ε",		&layouts[0] },
-	{ "ζ",		&layouts[2] },
-	{ "η",		&layouts[1] }
+	/* Name				Layout */
+	{ /* "A", */ /* "α", */ /* "1", */ /* "一", */ "일",
+					&layouts[1] },
+	{ /* "B", */ /* "β", */ /* "2", */ /* "二", */ "이",
+					&layouts[2] },
+	{ /* "C", */ /* "γ", */ /* "3", */ /* "三", */ "삼",
+					&layouts[0] },
+	{ /* "D", */ /* "δ", */ /* "4", */ /* "四", */ "사",
+					&layouts[0] },
+	{ /* "E", */ /* "ε", */ /* "5", */ /* "五", */ "오",
+					&layouts[0] },
+	{ /* "F", */ /* "ζ", */ /* "6", */ /* "六", */ "육",
+					&layouts[2] },
+	{ /* "G", */ /* "η", */ /* "7", */ /* "七", */ "칠",
+					&layouts[1] }
 };
 const int tags_len = sizeof(tags) / sizeof(tags[0]);
-
-#if 0
-static const char *tags[] = {
-	/* "A", "B", "C", "D", "E", "F", "G" */
-	"1", "2", "3", "4", "5", "6", "7"
-	/* "λ", "α", "β", "γ", "δ", "μ", "π" */
-	/* "主", "次", "造", "声", "像", "全", "媕" */
-	/* "완", "투", "티", "포", "핍", "싯", "센" */
-};
-#endif
 
 
 /*
@@ -197,9 +194,6 @@ const struct key keys[] = {
 	{ K_SUPER | K_SHIFT,	K_SPACE,setlayout,	{ .i = -1 } },
 	{ K_SUPER,		K_SPACE,setlayout,	{ .i = +1 } },
 
-	{ K_SUPER | K_SHIFT,	K_TAB,	viewtag,	{ .i = -2 } },
-	{ K_SUPER,		K_TAB,	viewtag,	{ .i = -1 } },
-
 	{ K_SUPER,		K_UP,	focusstack,	{ .i = -1 } },
 	{ K_SUPER,		K_DOWN,	focusstack,	{ .i = +1 } },
 	{ K_SUPER,		K_LEFT,	focusstack,	{ .i = -1 } },
@@ -216,8 +210,8 @@ const struct key keys[] = {
 	{ TAGKEYS(K_6, 5) },
 	{ TAGKEYS(K_7, 6) },
 
-	/* { K_SUPER | K_SHIFT,	K_TAB,	focusstack,	{ .i = -1 } },
-	{ K_SUPER,		K_TAB,	focusstack,	{ .i = +1 } }, */
+	{ K_SUPER | K_SHIFT,	K_TAB,	viewtag,	{ .i = -2 } },
+	{ K_SUPER,		K_TAB,	viewtag,	{ .i = -1 } },
 
 	/* Client */
 	{ K_SUPER,		K_Q,	killclient,	{ 0 } },
@@ -252,11 +246,3 @@ const struct button buttons[] = {
 
 };
 const int buttons_len = sizeof(buttons) / sizeof(buttons[0]);
-
-
-/*
- * Misc.
- */
-
-/* Update timeout */
-const unsigned int tdelay = 2;

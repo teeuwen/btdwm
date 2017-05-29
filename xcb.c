@@ -882,7 +882,9 @@ static int enternotify(xcb_generic_event_t *_e)
 	/* oc = (c ? c->mon->client : NULL); */
 
 	if (c && NEWFOCUS(c->mon)) {
-		c->mon->flags &= ~MF_NEWFOCUS;
+		if (c->tags & 1 << c->mon->tag)
+			c->mon->flags &= ~MF_NEWFOCUS;
+
 		return 0;
 	}
 
