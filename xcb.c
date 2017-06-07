@@ -1011,7 +1011,7 @@ static int propertynotify(xcb_generic_event_t *_e)
 		bars_draw();
 	} else if (e->atom == XCB_ATOM_WM_NAME || atoms[ATOM_NAME]) {
 		title_update(c);
-		rules_apply(c);
+		/* rules_apply(c); */
 
 		if (c == c->mon->client)
 			bar_draw(c->mon);

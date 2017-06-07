@@ -88,11 +88,12 @@ static const char *cmd_reboot[] = { SHCMD("systemctl reboot"), 0 };
 static const char *cmd_suspend[] = { SHCMD("systemctl suspend"), 0 };
 static const char *cmd_halt[] = { SHCMD("halt"), 0 };
 
-static const char *cmd_lock[] = { SHCMD("~/Documents/cs/scripts/wm/lock/lock.sh"), 0 };
+static const char *cmd_lock[] = { SHCMD("~/.scripts/wm/lock/lock.sh"), 0 };
 
-static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Noto Sans Mono-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
+static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Inconsolata-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
 static const char *cmd_term[]  = { "st", 0 };
 
+static const char *cmd_q[] = { SHCMD("qutebrowser --backend webengine") };
 static const char *cmd_w[] = { SHCMD("WINEARCH=win32 WINEPREFIX=~/.office2010 wine ~/.office2010/drive_c/Program\\ Files/Microsoft\\ Office/Office14/WINWORD.EXE"), 0 };
 static const char *cmd_e[] = { SHCMD("WINEARCH=win32 WINEPREFIX=~/.office2010 wine ~/.office2010/drive_c/Program\\ Files/Microsoft\\ Office/Office14/EXCEL.EXE"), 0 };
 static const char *cmd_r[] = { SHCMD("WINEARCH=win32 WINEPREFIX=~/.office2010 wine ~/.office2010/drive_c/Program\\ Files/Microsoft\\ Office/Office14/POWERPNT.EXE"), 0 };
@@ -104,25 +105,26 @@ static const char *cmd_a[] = { "audacity", 0 };
 static const char *cmd_s[] = { "tor-browser-en", 0 };
 static const char *cmd_f[] = { "firefox-nightly", 0 };
 static const char *cmd_g[] = { "gimp", 0 };
-static const char *cmd_j[] = { SHCMD("usermenu -fn 'Noto Sans Mono-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
-static const char *cmd_k[] = { SHCMD("passmenu -fn 'Noto Sans Mono-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
+static const char *cmd_j[] = { SHCMD("usermenu -fn 'Inconsolata-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
+static const char *cmd_k[] = { SHCMD("passmenu -fn 'Inconsolata-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
+static const char *cmd_l[] = { "kdenlive", 0 };
 static const char *cmd_v[] = { "virtualbox", 0 };
 
 static const char *cmd_scrot[] = { SHCMD("scrot"), 0 };
 
-static const char *cmd_toggle[] = { SHCMD("~/Documents/cs/scripts/wm/mpd.sh toggle"), 0 };
-static const char *cmd_stop[] = { SHCMD("~/Documents/cs/scripts/wm/mpd.sh stop"), 0 };
-static const char *cmd_prev[] = { SHCMD("~/Documents/cs/scripts/wm/mpd.sh prev"), 0 };
-static const char *cmd_next[] = { SHCMD("~/Documents/cs/scripts/wm/mpd.sh next"), 0 };
+static const char *cmd_toggle[] = { SHCMD("~/.scripts/wm/mpd.sh toggle"), 0 };
+static const char *cmd_stop[] = { SHCMD("~/.scripts/wm/mpd.sh stop"), 0 };
+static const char *cmd_prev[] = { SHCMD("~/.scripts/wm/mpd.sh prev"), 0 };
+static const char *cmd_next[] = { SHCMD("~/.scripts/wm/mpd.sh next"), 0 };
 
-static const char *cmd_mute[] = { SHCMD("~/Documents/cs/scripts/wm/vol.sh mute"), 0 };
-static const char *cmd_vdec[] = { SHCMD("~/Documents/cs/scripts/wm/vol.sh dec"), 0 };
-static const char *cmd_vinc[] = { SHCMD("~/Documents/cs/scripts/wm/vol.sh inc"), 0 };
+static const char *cmd_mute[] = { SHCMD("~/.scripts/wm/vol.sh mute"), 0 };
+static const char *cmd_vdec[] = { SHCMD("~/.scripts/wm/vol.sh dec"), 0 };
+static const char *cmd_vinc[] = { SHCMD("~/.scripts/wm/vol.sh inc"), 0 };
 
-static const char *cmd_bdec[] = { SHCMD("~/Documents/cs/scripts/wm/bri.sh dec"), 0 };
-static const char *cmd_binc[] = { SHCMD("~/Documents/cs/scripts/wm/bri.sh inc"), 0 };
+static const char *cmd_bdec[] = { SHCMD("~/.scripts/wm/bri.sh dec"), 0 };
+static const char *cmd_binc[] = { SHCMD("~/.scripts/wm/bri.sh inc"), 0 };
 
-static const char *cmd_status[] = { SHCMD("~/Documents/cs/scripts/wm/status.sh"), 0 };
+static const char *cmd_status[] = { SHCMD("~/.scripts/wm/status.sh"), 0 };
 
 const struct key keys[] = {
 	/* Modifier		Key	Function	union arguments */
@@ -143,6 +145,7 @@ const struct key keys[] = {
 	{ K_SUPER,		K_R,	spawn,		{ .v = cmd_run } },
 	{ K_SUPER,		K_RET,	spawn,		{ .v = cmd_term } },
 
+	{ K_CTRL | K_SHIFT,	K_Q,	spawn,		{ .v = cmd_q } },
 	{ K_CTRL | K_SHIFT,	K_W,	spawn,		{ .v = cmd_w } },
 	{ K_CTRL | K_SHIFT,	K_E,	spawn,		{ .v = cmd_e } },
 	{ K_CTRL | K_SHIFT,	K_R,	spawn,		{ .v = cmd_r } },
@@ -156,6 +159,7 @@ const struct key keys[] = {
 	{ K_CTRL | K_SHIFT,	K_G,	spawn,		{ .v = cmd_g } },
 	{ K_CTRL | K_SHIFT,	K_J,	spawn,		{ .v = cmd_j } },
 	{ K_CTRL | K_SHIFT,	K_K,	spawn,		{ .v = cmd_k } },
+	{ K_CTRL | K_SHIFT,	K_L,	spawn,		{ .v = cmd_l } },
 	{ K_CTRL | K_SHIFT,	K_V,	spawn,		{ .v = cmd_v } },
 
 	/* Screenshot */

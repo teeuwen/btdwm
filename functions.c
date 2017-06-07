@@ -74,7 +74,9 @@ void focusmon(const union arg *arg)
 
 	unfocus(selmon->client, 1);
 	selmon = m;
+
 	focus(NULL);
+	restack(m);
 }
 
 void focusstack(const union arg *arg)
