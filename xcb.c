@@ -514,6 +514,7 @@ void client_move_mouse(const union arg *arg, int move)
 		case XCB_BUTTON_PRESS:
 		case XCB_BUTTON_RELEASE:
 			active = 0;
+			/* Fallthrough */
 		case XCB_MOTION_NOTIFY:
 			/* TODO Adhere to incw and inch */
 			if (ISFULLSCREEN(c) || (!ISFLOATING(c) &&

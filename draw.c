@@ -91,6 +91,7 @@ static void rgba_get(struct monitor *m, cairo_t *cr, int palette, int status,
 			*b = colors[COLOR_STACTIVE][2];
 			break;
 		}
+		/* Fallthrough */
 	case PLT_LIGHT:
 		*r = colors[COLOR_FGLIGHT][0];
 		*g = colors[COLOR_FGLIGHT][1];
