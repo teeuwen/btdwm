@@ -43,8 +43,8 @@ void setlayout(const union arg *arg);
 void setmfact(const union arg *arg);
 void tagmon(const union arg *arg);
 
-void spawn(const union arg *arg);
 void togglebar(const union arg *arg);
+void togglegaps(const union arg *arg);
 
 void toggletag(const union arg *arg);
 void viewtag(const union arg *arg);
@@ -53,6 +53,7 @@ void killclient(const union arg *arg);
 void moveclient(const union arg *arg);
 void movemouse(const union arg *arg);
 void resizemouse(const union arg *arg);
+void spawn(const union arg *arg);
 void togglefloating(const union arg *arg);
 void toggleontop(const union arg *arg);
 void togglesticky(const union arg *arg);

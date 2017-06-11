@@ -194,6 +194,7 @@ const struct key keys[] = {
 
 	/* Global */
 	{ K_SUPER,		K_F,	togglebar,	{ 0 } },
+	{ K_SUPER,		K_G,	togglegaps,	{ 0 } },
 
 	{ K_SUPER | K_SHIFT,	K_SPACE,setlayout,	{ .i = -1 } },
 	{ K_SUPER,		K_SPACE,setlayout,	{ .i = +1 } },

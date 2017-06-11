@@ -45,16 +45,6 @@
 
 static NotifyNotification *msg;
 
-void movemouse(const union arg *arg)
-{
-	client_move_mouse(arg, 1);
-}
-
-void resizemouse(const union arg *arg)
-{
-	client_move_mouse(arg, 0);
-}
-
 void focusmon(const union arg *arg)
 {
 	struct monitor *m = NULL;
@@ -116,26 +106,44 @@ void focusstack(const union arg *arg)
 	}
 }
 
-void killclient(const union arg *arg)
+void setlayout(const union arg *arg)
 {
-	client_kill();
+	int i;
+
+	for (i = 0; i < layouts_len; i++)
+		if (&layouts[i] == selmon->layouts[selmon->tag])
+			break;
+
+	if (i + arg->i < 0)
+		i += 3;
+	if (i + arg->i > layouts_len - 1)
+		i -= 3;
+
+	selmon->layouts[selmon->tag] = &layouts[i + arg->i];
+	msg = msg_update(msg,
+			selmon->layouts[selmon->tag]->symbol,
+			selmon->layouts[selmon->tag]->name, 500);
+
+	if (selmon->client)
+		arrange(selmon);
+	else
+		bar_draw(selmon);
 }
 
-void spawn(const union arg *arg)
+void setmfact(const union arg *arg)
 {
-	if (!arg)
+	double f;
+
+	if (!arg || !selmon->layouts[selmon->tag]->arrange)
 		return;
 
-	if (fork() == 0) {
-		if (conn)
-			close(xcb_get_file_descriptor(conn));
+	f = arg->f < 1.0 ? arg->f +
+			selmon->layouts[selmon->tag]->mfact : arg->f - 1.0;
+	if (f < 0.1 || f > 0.9)
+		return;
 
-		setsid();
-		execvp(((char **) arg->v)[0], (char **) arg->v);
-
-		fprintf(stderr, "failed to execvp %s", ((char **) arg->v)[0]);
-		exit(0);
-	}
+	selmon->layouts[selmon->tag]->mfact = f;
+	arrange(selmon);
 }
 
 void tagmon(const union arg *arg)
@@ -165,39 +173,17 @@ void togglebar(const union arg *arg)
 	arrange(selmon);
 }
 
-void togglefloating(const union arg *arg)
+void togglegaps(const union arg *arg)
 {
-	if (!selmon->client)
-		return;
 
-	selmon->client->flags =
-		(!ISFLOATING(selmon->client) || ISFIXED(selmon->client)) ?
-				selmon->client->flags | CF_FLOATING :
-				selmon->client->flags & ~CF_FLOATING;
-
-	if (ISFLOATING(selmon->client))
-		resize(selmon->client, selmon->client->x, selmon->client->y,
-				selmon->client->w, selmon->client->h, 0);
-
-	arrange(selmon);
 }
 
-void toggleontop(const union arg *arg)
+void toggletag(const union arg *arg)
 {
-	if (!selmon->client)
+	if (!(selmon->tags ^ (1 << arg->i)))
 		return;
 
-	selmon->client->flags ^= CF_ONTOP;
-
-	arrange(selmon);
-}
-
-void togglesticky(const union arg *arg)
-{
-	if (!selmon->client)
-		return;
-
-	selmon->client->flags ^= CF_STICKY;
+	selmon->tags ^= 1 << arg->i;
 
 	arrange(selmon);
 }
@@ -234,14 +220,9 @@ void viewtag(const union arg *arg)
 		selmon->flags |= MF_NEWFOCUS;
 }
 
-void toggletag(const union arg *arg)
+void killclient(const union arg *arg)
 {
-	if (!(selmon->tags ^ (1 << arg->i)))
-		return;
-
-	selmon->tags ^= 1 << arg->i;
-
-	arrange(selmon);
+	client_kill();
 }
 
 void moveclient(const union arg *arg)
@@ -253,44 +234,67 @@ void moveclient(const union arg *arg)
 	arrange(selmon);
 }
 
-void setlayout(const union arg *arg)
+void movemouse(const union arg *arg)
 {
-	int i;
-
-	/* Feel like a cheap hack... */
-	for (i = 0; i < layouts_len; i++)
-		if (&layouts[i] == selmon->layouts[selmon->tag])
-			break;
-
-	if (i + arg->i < 0)
-		i += 3;
-	if (i + arg->i > layouts_len - 1)
-		i -= 3;
-
-	selmon->layouts[selmon->tag] = &layouts[i + arg->i];
-	msg = msg_update(msg,
-			selmon->layouts[selmon->tag]->symbol,
-			selmon->layouts[selmon->tag]->name, 500);
-
-	if (selmon->client)
-		arrange(selmon);
-	else
-		bar_draw(selmon);
+	client_move_mouse(arg, 1);
 }
 
-void setmfact(const union arg *arg)
+void resizemouse(const union arg *arg)
 {
-	double f;
+	client_move_mouse(arg, 0);
+}
 
-	if (!arg || !selmon->layouts[selmon->tag]->arrange)
+void spawn(const union arg *arg)
+{
+	if (!arg)
 		return;
 
-	f = arg->f < 1.0 ? arg->f +
-			selmon->layouts[selmon->tag]->mfact : arg->f - 1.0;
-	if (f < 0.1 || f > 0.9)
+	if (fork() == 0) {
+		if (conn)
+			close(xcb_get_file_descriptor(conn));
+
+		setsid();
+		execvp(((char **) arg->v)[0], (char **) arg->v);
+
+		fprintf(stderr, "failed to execvp %s", ((char **) arg->v)[0]);
+		exit(0);
+	}
+}
+
+void togglefloating(const union arg *arg)
+{
+	if (!selmon->client)
 		return;
 
-	selmon->layouts[selmon->tag]->mfact = f;
+	selmon->client->flags =
+		(!ISFLOATING(selmon->client) || ISFIXED(selmon->client)) ?
+				selmon->client->flags | CF_FLOATING :
+				selmon->client->flags & ~CF_FLOATING;
+
+	if (ISFLOATING(selmon->client))
+		resize(selmon->client, selmon->client->x, selmon->client->y,
+				selmon->client->w, selmon->client->h, 0);
+
+	arrange(selmon);
+}
+
+void toggleontop(const union arg *arg)
+{
+	if (!selmon->client)
+		return;
+
+	selmon->client->flags ^= CF_ONTOP;
+
+	arrange(selmon);
+}
+
+void togglesticky(const union arg *arg)
+{
+	if (!selmon->client)
+		return;
+
+	selmon->client->flags ^= CF_STICKY;
+
 	arrange(selmon);
 }
 
