@@ -160,8 +160,8 @@ struct client {
 	int		basew, baseh, incw, inch, maxw, maxh, minw, minh;
 	double		mina, maxa;
 
-	struct client	*prev, *sprev;
-	struct client	*next, *snext;
+	struct client	*prev, *next;
+	struct client	*sprev, *snext;
 };
 
 struct layout {

@@ -248,13 +248,12 @@ void configure(struct client *c)
 
 static void manage(xcb_window_t w)
 {
-	struct client *c, *t = NULL;
+	struct client *c, *t;
 	xcb_window_t trans_reply = 0;
 	xcb_window_t trans = 0;
 	xcb_get_geometry_reply_t *geom_reply;
 
-	c = (struct client *) calloc(1, sizeof(struct client));
-	if (!c)
+	if (!(c = (struct client *) calloc(1, sizeof(struct client))))
 		die("unable to allocate client\n");
 
 	c->win = w;
@@ -265,10 +264,7 @@ static void manage(xcb_window_t w)
 			&trans_reply, &err);
 	testerr();
 
-	if (trans_reply)
-		t = client_get(trans_reply);
-
-	if (t) {
+	if (trans_reply && (t = client_get(trans_reply))) {
 		c->mon = t->mon;
 		c->tags = t->tags;
 	} else {
@@ -619,6 +615,7 @@ void keys_grab(void)
 int textprop_get(xcb_window_t w, xcb_atom_t atom, char *text, unsigned int size)
 {
 	xcb_icccm_get_text_property_reply_t reply;
+
 	if (!xcb_icccm_get_text_property_reply(conn,
 			xcb_icccm_get_text_property(conn, w, atom),
 			&reply, &err))

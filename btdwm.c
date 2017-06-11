@@ -70,17 +70,26 @@ void die(const char *errstr, ...)
 
 void attach(struct client *c)
 {
-	struct client *cn;
+	struct client *cn = NULL;
 
-	for (cn = c->mon->clients; cn && cn->next; cn = cn->next);
+	/* if (c->mon->client) {
+		c->prev = c->mon->client;
 
-	if (cn)
-		cn->next = c;
-	else
-		c->mon->clients = c;
+		if ((c->next = c->mon->client->next)) {
+			c->mon->client->next->prev = c;
+			c->mon->client->next = c;
+		}
+	} else { */
+		if (!c->mon->client) {
+			c->mon->clients = c;
+		} else {
+			for (cn = c->mon->clients; cn->next; cn = cn->next);
+			cn->next = c;
+		}
 
-	c->prev = cn;
-	c->next = NULL;
+		c->prev = cn;
+		c->next = NULL;
+	/* } */
 
 	if (c->mon->stack)
 		c->mon->stack->sprev = c;
@@ -318,7 +327,11 @@ void arrange(struct monitor *m)
 void focus(struct client *c)
 {
 	if (!c || !ISVISIBLE(c))
+#if 0
+		for (c = selmon->clients; c && !ISVISIBLE(c); c = c->next);
+#else
 		for (c = selmon->stack; c && !ISVISIBLE(c); c = c->snext);
+#endif
 
 	if (selmon->client)
 		unfocus(selmon->client, 0);
