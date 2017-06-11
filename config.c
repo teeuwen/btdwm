@@ -43,19 +43,19 @@ const int layouts_len = sizeof(layouts) / sizeof(layouts[0]);
 
 const struct tag tags[] = {
 	/* Name				Layout */
-	{ /* "A", */ /* "α", */ /* "1", */ /* "一", */ "일",
-					&layouts[1] },
-	{ /* "B", */ /* "β", */ /* "2", */ /* "二", */ "이",
-					&layouts[2] },
-	{ /* "C", */ /* "γ", */ /* "3", */ /* "三", */ "삼",
-					&layouts[0] },
-	{ /* "D", */ /* "δ", */ /* "4", */ /* "四", */ "사",
-					&layouts[0] },
-	{ /* "E", */ /* "ε", */ /* "5", */ /* "五", */ "오",
-					&layouts[0] },
-	{ /* "F", */ /* "ζ", */ /* "6", */ /* "六", */ "육",
-					&layouts[2] },
-	{ /* "G", */ /* "η", */ /* "7", */ /* "七", */ "칠",
+	{ /* "A" */ /* "α" */ /* "1" */ /* "一" */ "일",
+		                     &layouts[1] },
+	{ /* "B" */ /* "β" */ /* "2" */ /* "二" */ "이",
+		                     &layouts[2] },
+	{ /* "C" */ /* "γ" */ /* "3" */ /* "三" */ "삼",
+		                     &layouts[0] },
+	{ /* "D" */ /* "δ" */ /* "4" */ /* "四" */ "사",
+		                     &layouts[0] },
+	{ /* "E" */ /* "ε" */ /* "5" */ /* "五" */ "오",
+		                     &layouts[0] },
+	{ /* "F" */ /* "ζ" */ /* "6" */ /* "六" */ "육",
+		                     &layouts[2] },
+	{ /* "G" */ /* "η" */ /* "7" */ /* "七" */ "칠",
 					&layouts[1] }
 };
 const int tags_len = sizeof(tags) / sizeof(tags[0]);
@@ -90,7 +90,7 @@ static const char *cmd_halt[] = { SHCMD("halt"), 0 };
 
 static const char *cmd_lock[] = { SHCMD("~/.scripts/wm/lock/lock.sh"), 0 };
 
-static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Inconsolata-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
+static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
 static const char *cmd_term[]  = { "st", 0 };
 
 static const char *cmd_q[] = { SHCMD("qutebrowser --backend webengine") };
@@ -105,8 +105,8 @@ static const char *cmd_a[] = { "audacity", 0 };
 static const char *cmd_s[] = { "tor-browser-en", 0 };
 static const char *cmd_f[] = { "firefox-nightly", 0 };
 static const char *cmd_g[] = { "gimp", 0 };
-static const char *cmd_j[] = { SHCMD("usermenu -fn 'Inconsolata-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
-static const char *cmd_k[] = { SHCMD("passmenu -fn 'Inconsolata-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
+static const char *cmd_j[] = { SHCMD("usermenu -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
+static const char *cmd_k[] = { SHCMD("passmenu -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
 static const char *cmd_l[] = { "kdenlive", 0 };
 static const char *cmd_v[] = { "virtualbox", 0 };
 

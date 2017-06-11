@@ -173,7 +173,7 @@ void resize(struct client *c, int x, int y, int w, int h, int interact)
 		if (x + w < 0)
 			x = 0;
 		if (y + h < 0)
-			y = 0;
+			y = SHOWBAR(m) ? BAR_HEIGHT : 0;
 	} else {
 		if (x > m->x + m->w)
 			x = m->x + m->w - c->w;
@@ -182,13 +182,8 @@ void resize(struct client *c, int x, int y, int w, int h, int interact)
 		if (x + w < m->x)
 			x = m->x;
 		if (y + h < m->y)
-			y = m->y;
+			y = m->y + (SHOWBAR(m) ? BAR_HEIGHT : 0);
 	}
-
-	if (h < BAR_HEIGHT)
-		h = BAR_HEIGHT;
-	if (w < BAR_HEIGHT)
-		w = BAR_HEIGHT;
 
 	if (ISFLOATING(c) || !c->mon->layouts[c->mon->tag]->arrange) {
 		baseismin = c->basew == c->minw && c->baseh == c->minh;
@@ -276,6 +271,8 @@ struct monitor *mon_get(xcb_window_t w)
 
 void mon_send(struct client *c, struct monitor *m)
 {
+	int x, y;
+
 	if (c->mon == m)
 		return;
 
@@ -284,6 +281,15 @@ void mon_send(struct client *c, struct monitor *m)
 
 	c->mon = m;
 	c->tags = m->tags;
+
+	if (!m->layouts[m->tag]->arrange || ISFLOATING(c)) {
+		x = m->x + (((double) (c->x + c->w / 2) - selmon->x) / selmon->w) * m->w - c->w / 2;
+		y = m->y + (((double) (c->y + c->h / 2) - selmon->y) / selmon->h) * m->h - c->h / 2;
+		resize(c, x, y, (x + c->w > m->x + m->w) ?
+				m->w - x - m->x : c->w,
+				(c->y + c->h > m->y + m->h) ?
+				m->h - y - m->y : c->h, 0);
+	}
 
 	attach(c);
 	focus(NULL);
@@ -703,7 +709,7 @@ void updatesizehints(struct client *c)
 	} else {
 		c->basew = c->baseh = 0;
 
-		c->minw = c->minh = 0;
+		c->minw = c->minh = 8;
 	}
 
 	if (hints.flags & XCB_ICCCM_SIZE_HINT_P_MAX_SIZE) {
