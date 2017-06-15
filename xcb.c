@@ -134,9 +134,6 @@ void bar_init(void)
 				XCB_CW_EVENT_MASK | XCB_CW_CURSOR, values);
 		xcb_map_window(conn, m->barwin);
 
-		xcb_copy_area(conn, screen->root, m->bgpix, m->gc, m->x, m->y,
-				0, 0, m->w, BAR_HEIGHT);
-
 		/* TODO Configure bar height in config.h */
 		m->barsur = cairo_xcb_surface_create(conn, m->barwin, visual,
 				m->w, BAR_HEIGHT);

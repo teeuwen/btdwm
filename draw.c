@@ -45,6 +45,19 @@ static void rgb_set(int index, const char *col)
 	colors[index][2] = strtol(b, 0, 16) / 255.0;
 }
 
+static double alpha_set(struct monitor *m, cairo_t *cr, double a)
+{
+	unsigned long alpha;
+
+	alpha = a * 0xFFFFFFFF;
+
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
+			m->barwin, atoms[ATOM_OPACITY],
+			XCB_ATOM_CARDINAL, 32, 1, &alpha);
+
+	return 1.0;
+}
+
 static void rgba_get(struct monitor *m, cairo_t *cr, int palette, int status,
 		int bg, double *r, double *g, double *b, double *a)
 {
@@ -60,22 +73,22 @@ static void rgba_get(struct monitor *m, cairo_t *cr, int palette, int status,
 				*r = colors[COLOR_BG][0];
 				*g = colors[COLOR_BG][1];
 				*b = colors[COLOR_BG][2];
-				*a = 1.0;
+				*a = alpha_set(m, cr, 1.0);
 
 				return;
 			}
 		}
 
-		if (m->barcr == cr && (!m->layouts[m->tag]->arrange ||
+		if (!m->layouts[m->tag]->arrange ||
 				!m->client || ISFLOATING(m->client) ||
-				ISTRANS(m->client))) {
+				ISTRANS(m->client)) {
 			*r = *g = *b = 0.0;
-			*a = 0.75;
+			*a = alpha_set(m, cr, 0.75);
 		} else {
 			*r = colors[COLOR_BG][0];
 			*g = colors[COLOR_BG][1];
 			*b = colors[COLOR_BG][2];
-			*a = 1.0;
+			*a = alpha_set(m, cr, 1.0);
 		}
 
 		return;
@@ -203,8 +216,7 @@ void status_draw(struct monitor *m, int x, int y, int w, int palette)
 
 void font_init(void)
 {
-	font = pango_font_description_from_string(font_desc);
-	if (!font)
+	if (!(font = pango_font_description_from_string(font_desc)))
 		die("invalid font: %s\n", font);
 
 	rgb_set(COLOR_BG, bg);
