@@ -4,9 +4,10 @@ btdwm contains a number of (in my eyes) enhancements over dwm and dwm-xcb.
 
 Changes/enhancements over dwm:
 
-	* Per tag layout
+	* Per tag layouts
 	* The status area has been removed
 	* libnotify notifications to display the active client
+	* True transparency support
 	* Probably more, I should've put this on version control earlier on...
 
 Changes/enhancements over dwm-xcb:
@@ -20,33 +21,30 @@ Changes/enhancements over dwm-xcb:
 
 
 ## Requirements
-In order to build dwm you need the Xlib header files.
+
+In order to build btdwm you need the Xlib, xcb, cairo pango and libnotify header files.
 
 
 ## Installation
-Edit config.mk to match your local setup (dwm is installed into
-the /usr/local namespace by default).
 
-Afterwards enter the following command to build and install dwm (if
-necessary as root):
+Enter the following command to build and install btdwm (if necessary as root):
 
-    make clean install
+    make install
 
 If you are going to use the default bluegray color scheme it is highly
 recommended to also install the bluegray files shipped in the dextra package.
 
 
-## Running dwm
-Add the following line to your .xinitrc to start dwm using startx:
+## Running btdwm
 
-    exec dwm
+Add the following line to your .xinitrc to start btdwm using startx:
 
-In order to connect dwm to a specific display, make sure that
+    exec /opt/btdwm/bin/btdwm
+
+In order to connect btdwm to a specific display, make sure that
 the DISPLAY environment variable is set correctly, e.g.:
 
-    DISPLAY=foo.bar:1 exec dwm
-
-(This will start dwm on display :1 of the host foo.bar.)
+    DISPLAY=host:1 exec /opt/btdwm/bin/btdwm
 
 In order to display status info in the bar, you can do something
 like this in your .xinitrc:
@@ -56,9 +54,10 @@ like this in your .xinitrc:
         xsetroot -name "`date` `uptime | sed 's/.*,//'`"
         sleep 1
     done &
-    exec dwm
+    exec /opt/btdwm/bin/btdwm
 
 
 ## Configuration
-The configuration of dwm is done by creating a custom config.h
+
+The configuration of btdwm is done by creating a custom config.h
 and (re)compiling the source code.
