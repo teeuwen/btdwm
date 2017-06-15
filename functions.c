@@ -130,6 +130,9 @@ void spawn(const union arg *arg)
 		if (conn)
 			close(xcb_get_file_descriptor(conn));
 
+		if (selmon->client)
+			selmon->flags |= MF_PTRLOCK;
+
 		setsid();
 		execvp(((char **) arg->v)[0], (char **) arg->v);
 
@@ -228,10 +231,11 @@ void viewtag(const union arg *arg)
 		selmon->tag = arg->i;
 	}
 
+	focus(NULL);
 	arrange(selmon);
 
 	if (selmon->client)
-		selmon->flags |= MF_NEWFOCUS;
+		selmon->flags |= MF_PTRLOCK;
 }
 
 void toggletag(const union arg *arg)
@@ -241,6 +245,7 @@ void toggletag(const union arg *arg)
 
 	selmon->tags ^= 1 << arg->i;
 
+	focus(NULL);
 	arrange(selmon);
 }
 
@@ -250,6 +255,8 @@ void moveclient(const union arg *arg)
 		return;
 
 	selmon->client->tags = 1 << arg->i;
+
+	focus(NULL);
 	arrange(selmon);
 }
 

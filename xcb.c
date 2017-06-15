@@ -253,8 +253,7 @@ static void manage(xcb_window_t w)
 	xcb_window_t trans = 0;
 	xcb_get_geometry_reply_t *geom_reply;
 
-	c = (struct client *) calloc(1, sizeof(struct client));
-	if (!c)
+	if (!(c = (struct client *) calloc(1, sizeof(struct client))))
 		die("unable to allocate client\n");
 
 	c->win = w;
@@ -357,8 +356,10 @@ static void unmanage(struct client *c, int destroyed)
 		xcb_ungrab_server(conn);
 	}
 
+	focus(c->prev);
+
 	free(c);
-	focus(NULL);
+
 	arrange(m);
 }
 
@@ -603,8 +604,7 @@ void keys_grab(void)
 	xcb_ungrab_key(conn, XCB_GRAB_ANY, screen->root, XCB_MOD_MASK_ANY);
 
 	for (i = 0; i < keys_len; i++) {
-		code = xcb_key_symbols_get_keycode(syms, keys[i].keysym);
-		if (!code)
+		if (!(code = xcb_key_symbols_get_keycode(syms, keys[i].keysym)))
 			continue;
 
 		for (j = 0; j < LENGTH(val); j++)
@@ -619,6 +619,7 @@ void keys_grab(void)
 int textprop_get(xcb_window_t w, xcb_atom_t atom, char *text, unsigned int size)
 {
 	xcb_icccm_get_text_property_reply_t reply;
+
 	if (!xcb_icccm_get_text_property_reply(conn,
 			xcb_icccm_get_text_property(conn, w, atom),
 			&reply, &err))
@@ -662,7 +663,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 	struct monitor *m;
 	struct client *c;
 	int i, x = 0;
-	unsigned int click = 0;
+	unsigned int click;
 	union arg arg = { 0 };
 
 	if ((m = mon_get(e->event)) && m != selmon) {
@@ -688,16 +689,17 @@ static int buttonpress(xcb_generic_event_t *_e)
 		if (i < tags_len) {
 			click = CLICK_TAGS;
 			arg.i = i;
+		} else {
+			return 0;
 		}
 	} else if ((c = client_get(e->event))) {
 		focus(c);
 		restack(c->mon);
 
 		click = CLICK_CLIENT;
-	}
-
-	if (!click)
+	} else {
 		return 0;
+	}
 
 	for (i = 0; i < buttons_len; i++) {
 		if (click == buttons[i].click && buttons[i].func &&
@@ -854,7 +856,7 @@ static int configurenotify(xcb_generic_event_t *_e)
 		return 0;
 
 	if (geom_update(e->width, e->height))
-		arrange(0);
+		arrange(NULL);
 
 	xcb_flush(conn);
 
@@ -866,8 +868,13 @@ static int destroynotify(xcb_generic_event_t *_e)
 	xcb_destroy_notify_event_t *e = (xcb_destroy_notify_event_t *) _e;
 	struct client *c;
 
-	if ((c = client_get(e->window)))
+	if ((c = client_get(e->window))) {
+		c->mon->flags |= MF_PTRLOCK;
+
 		unmanage(c, 1);
+
+		c->mon->flags |= MF_PTRLOCK;
+	}
 
 	return 0;
 }
@@ -877,19 +884,18 @@ static int enternotify(xcb_generic_event_t *_e)
 	xcb_enter_notify_event_t *e = (xcb_enter_notify_event_t *) _e;
 	struct monitor *m;
 	struct client *c;
-	/* struct client *oc; */
 
 	c = client_get(e->event);
-	/* oc = (c ? c->mon->client : NULL); */
 
-	if (c && NEWFOCUS(c->mon)) {
+	fprintf(stderr, "%u %u\n", e->detail, e->mode);
+
+	if (c && PTRLOCK(c->mon)) {
 		if (c->tags & 1 << c->mon->tag)
-			c->mon->flags &= ~MF_NEWFOCUS;
+			c->mon->flags &= ~MF_PTRLOCK;
 
 		return 0;
 	}
 
-	/* FIXME Return if new window */
 	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || ISFLOATING(c) ||
 			(c->mon == selmon && selmon->client &&
 			ISFLOATING(selmon->client)))) ||
@@ -904,10 +910,6 @@ static int enternotify(xcb_generic_event_t *_e)
 	}
 
 	focus(c);
-
-	/* FIXME */
-	/* if (oc)
-		restack(m); */
 
 	return 0;
 }
@@ -1010,6 +1012,7 @@ static int propertynotify(xcb_generic_event_t *_e)
 	} else if (e->atom == XCB_ATOM_WM_HINTS) {
 		updatewmhints(c);
 		bars_draw();
+		fflush(stdout);
 	} else if (e->atom == XCB_ATOM_WM_NAME || atoms[ATOM_NAME]) {
 		title_update(c);
 		/* rules_apply(c); */
@@ -1152,6 +1155,7 @@ void cur_init(void)
 	xcb_cursor_context_t *ctx;
 
 	xcb_cursor_context_new(conn, screen, &ctx);
+
 	cursor[CUR_NORMAL] = xcb_cursor_load_cursor(ctx, "left_ptr");
 	cursor[CUR_MOVE] = xcb_cursor_load_cursor(ctx, "fleur");
 	cursor[CUR_RESIZE_TL] = xcb_cursor_load_cursor(ctx, "top_left_corner");
@@ -1200,13 +1204,12 @@ void xcb_init(void)
 	if (!(conn = xcb_connect(0, 0)))
 		die("unable to open display\n");
 
-	screen = xcb_setup_roots_iterator(xcb_get_setup(conn)).data;
-	if (!screen)
+	if (!(screen = xcb_setup_roots_iterator(xcb_get_setup(conn)).data))
 		die("unable to open screen\n");
 
-	err = xcb_request_check(conn, xcb_change_window_attributes_checked(conn,
-			screen->root, XCB_CW_EVENT_MASK, values));
-	if (err) {
+	if ((err = xcb_request_check(conn,
+			xcb_change_window_attributes_checked(conn,
+			screen->root, XCB_CW_EVENT_MASK, values)))) {
 		free(err);
 		die("another window manager is already running\n");
 	}

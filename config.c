@@ -90,7 +90,7 @@ static const char *cmd_halt[] = { SHCMD("halt"), 0 };
 
 static const char *cmd_lock[] = { SHCMD("~/.scripts/wm/lock/lock.sh"), 0 };
 
-static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Inconsolata-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
+static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
 static const char *cmd_term[]  = { "st", 0 };
 
 static const char *cmd_q[] = { SHCMD("qutebrowser --backend webengine") };
@@ -105,8 +105,8 @@ static const char *cmd_a[] = { "audacity", 0 };
 static const char *cmd_s[] = { "tor-browser-en", 0 };
 static const char *cmd_f[] = { "firefox-nightly", 0 };
 static const char *cmd_g[] = { "gimp", 0 };
-static const char *cmd_j[] = { SHCMD("usermenu -fn 'Inconsolata-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
-static const char *cmd_k[] = { SHCMD("passmenu -fn 'Inconsolata-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC' -l 16"), 0 };
+static const char *cmd_j[] = { SHCMD("usermenu -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
+static const char *cmd_k[] = { SHCMD("passmenu -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
 static const char *cmd_l[] = { "kdenlive", 0 };
 static const char *cmd_v[] = { "virtualbox", 0 };
 

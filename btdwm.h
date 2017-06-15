@@ -93,7 +93,7 @@
 #define COLOR_MAX	6
 
 #define MF_SHOWBAR	0x01
-#define MF_NEWFOCUS	0x02
+#define MF_PTRLOCK	0x02
 
 #define CF_FIXED	0x01
 #define CF_FLOATING	0x02
@@ -104,7 +104,7 @@
 #define CF_URGENT	0x40
 
 #define SHOWBAR(m)	(m->flags & MF_SHOWBAR)
-#define NEWFOCUS(m)	(m->flags & MF_NEWFOCUS)
+#define PTRLOCK(m)	(m->flags & MF_PTRLOCK)
 
 #define ISFIXED(c)	(c->flags & CF_FIXED)
 #define ISFLOATING(c)	(((c->flags & CF_FLOATING) || (c->flags & CF_STICKY)))

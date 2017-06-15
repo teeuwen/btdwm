@@ -72,15 +72,24 @@ void attach(struct client *c)
 {
 	struct client *cn;
 
-	for (cn = c->mon->clients; cn && cn->next; cn = cn->next);
+	if (c->mon->client) {
+		c->prev = c->mon->client;
+		c->next = c->mon->client->next;
 
-	if (cn)
-		cn->next = c;
-	else
-		c->mon->clients = c;
+		if (c->mon->client->next)
+			c->mon->client->next->prev = c;
+		c->mon->client->next = c;
+	} else {
+		for (cn = c->mon->clients; cn && cn->next; cn = cn->next);
 
-	c->prev = cn;
-	c->next = NULL;
+		if (cn)
+			cn->next = c;
+		else
+			c->mon->clients = c;
+
+		c->prev = cn;
+		c->next = NULL;
+	}
 
 	if (c->mon->stack)
 		c->mon->stack->sprev = c;
@@ -306,8 +315,6 @@ void arrange(struct monitor *m)
 		for (m = mons; m; m = m->next)
 			showhide(m->clients);
 
-	focus(NULL);
-
 	if (m)
 		mon_arrange(m);
 	else
@@ -318,7 +325,8 @@ void arrange(struct monitor *m)
 void focus(struct client *c)
 {
 	if (!c || !ISVISIBLE(c))
-		for (c = selmon->stack; c && !ISVISIBLE(c); c = c->snext);
+		for (c = selmon->stack;
+				c && !ISVISIBLE(c); c = c->snext);
 
 	if (selmon->client)
 		unfocus(selmon->client, 0);
@@ -522,9 +530,10 @@ int isprotodel(struct client *c)
 
 void restack(struct monitor *m)
 {
+	struct client *c;
+
 	uint32_t normal[] = { 0, XCB_STACK_MODE_BELOW };
 	uint32_t ontop[] = { XCB_STACK_MODE_ABOVE };
-	struct client *c;
 
 	bar_draw(m);
 
@@ -537,26 +546,23 @@ void restack(struct monitor *m)
 		if (!ISVISIBLE(c))
 			continue;
 
-		if (ISONTOP(c) || ISFULLSCREEN(c)) {
+		if (ISONTOP(c))
 			xcb_configure_window(conn, c->win,
-					XCB_CONFIG_WINDOW_STACK_MODE,
-					ontop);
-		} else {
+					XCB_CONFIG_WINDOW_STACK_MODE, ontop);
+		else
 			xcb_configure_window(conn, c->win,
 					XCB_CONFIG_WINDOW_SIBLING |
-					XCB_CONFIG_WINDOW_STACK_MODE,
-					normal);
-		}
+					XCB_CONFIG_WINDOW_STACK_MODE, normal);
 
 		normal[0] = c->win;
 	}
 
-	/* FIXME */
-	if (!ISFULLSCREEN(m->client))
+	if (ISFULLSCREEN(m->client))
+		xcb_configure_window(conn, m->client->win,
+				XCB_CONFIG_WINDOW_STACK_MODE, ontop);
+	else
 		xcb_configure_window(conn, m->barwin,
 				XCB_CONFIG_WINDOW_STACK_MODE, ontop);
-
-	xcb_flush(conn);
 }
 
 void setclientstate(struct client *c, long state)
