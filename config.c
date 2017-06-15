@@ -66,13 +66,14 @@ const int tags_len = sizeof(tags) / sizeof(tags[0]);
  */
 
 const struct rule rules[] = {
-	/* Class	Instance	Title		Monitor	Tags	Float.	Transparent */
-	{ "st-256color",NULL,		NULL,		-1,	0,	0,	1 },
-	{ "st-256color",NULL,		"vim",		-1,	0,	0,	0 },
-	{ "st-256color",NULL,		"VIM",		-1,	0,	0,	0 },
-	{ "Firefox",	NULL,		"Page Info",	-1,	0,	1,	0 },
-	{ NULL,		NULL,		"QEMU",		-1,	0,	1,	0 },
-	{ NULL,		NULL,		"pinentry",	-1,	0,	1,	0 },
+	/* Class	Instance	Title		Float.	Transparent */
+	{ "st-256color",NULL,		NULL,		0,	1 },
+	{ "st-256color",NULL,		"vim",		0,	0 },
+	{ "st-256color",NULL,		"VIM",		0,	0 },
+	{ "Firefox",	NULL,		"Page Info",	1,	0 },
+	/* { "feh",	NULL,		NULL,		0,	0 }, */
+	{ NULL,		NULL,		"QEMU",		1,	0 },
+	{ NULL,		NULL,		"pinentry",	1,	0 }
 };
 const int rules_len = sizeof(rules) / sizeof(rules[0]);
 
@@ -110,7 +111,7 @@ static const char *cmd_k[] = { SHCMD("passmenu -fn 'Inconsolata\\-g for Powerlin
 static const char *cmd_l[] = { "kdenlive", 0 };
 static const char *cmd_v[] = { "virtualbox", 0 };
 
-static const char *cmd_scrot[] = { SHCMD("scrot"), 0 };
+static const char *cmd_scrot[] = { SHCMD("~/.scripts/scrot.sh"), 0 };
 
 static const char *cmd_toggle[] = { SHCMD("~/.scripts/wm/mpd.sh toggle"), 0 };
 static const char *cmd_stop[] = { SHCMD("~/.scripts/wm/mpd.sh stop"), 0 };

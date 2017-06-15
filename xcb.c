@@ -181,7 +181,6 @@ static void title_update(struct client *c)
 static void rules_apply(struct client *c)
 {
 	xcb_icccm_get_wm_class_reply_t ch;
-	struct monitor *m;
 	int i;
 
 	c->tags = 0;
@@ -201,19 +200,12 @@ static void rules_apply(struct client *c)
 					(!rules[i].instance ||
 					strstr(ch.instance_name,
 					rules[i].instance))) {
-				c->tags |= rules[i].tags;
 				c->flags = rules[i].floating ?
 						c->flags | CF_FLOATING :
 						c->flags & ~CF_FLOATING;
 				c->flags = rules[i].transparent ?
 						c->flags | CF_TRANS :
 						c->flags & ~CF_TRANS;
-
-				for (m = mons; m && m->id != rules[i].monitor;
-						m = m->next);
-
-				if (m)
-					c->mon = m;
 			}
 		}
 
@@ -283,8 +275,6 @@ static void manage(xcb_window_t w)
 	c->h = c->oldh = geom_reply->height;
 
 	if (c->w == c->mon->w && c->h == c->mon->h) {
-		c->flags |= CF_FLOATING;
-
 		c->x = c->mon->x;
 		c->y = c->mon->y;
 	} else {

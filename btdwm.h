@@ -184,9 +184,6 @@ struct rule {
 	const char	*instance;
 	const char	*title;
 
-	int		monitor;
-	unsigned int	tags;
-
 	int		floating;
 	int		transparent;
 };
