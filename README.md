@@ -46,16 +46,6 @@ the DISPLAY environment variable is set correctly, e.g.:
 
     DISPLAY=host:1 exec /opt/btdwm/bin/btdwm
 
-In order to display status info in the bar, you can do something
-like this in your .xinitrc:
-
-    while true
-    do
-        xsetroot -name "`date` `uptime | sed 's/.*,//'`"
-        sleep 1
-    done &
-    exec /opt/btdwm/bin/btdwm
-
 
 ## Configuration
 
