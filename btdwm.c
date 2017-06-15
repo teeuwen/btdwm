@@ -604,22 +604,25 @@ void atom_init(void)
 	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
 			atoms[ATOM_NET], XCB_ATOM_ATOM, 32, ATOM_MAX - ATOM_NET,
 			(const char *) &atoms[ATOM_NET]);
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
+			atoms[ATOM_NAME], atom_add("UTF8_STRING"),
+			8, strlen("btdwm"), (const char *) "btdwm");
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
+			atoms[ATOM_WMCHECK], XCB_ATOM_WINDOW,
+			32, 1, (const char *) &mons->barwin);
 
-	for (m = mons; m; m = m->next) {
-		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, screen->root,
-				atoms[ATOM_WMCHECK], XCB_ATOM_WINDOW,
-				32, 1, (const char *) &m->barwin);
-		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, m->barwin,
-				atoms[ATOM_WMCHECK], XCB_ATOM_WINDOW,
-				32, 1, (const char *) &m->barwin);
-		xcb_change_property(conn, XCB_PROP_MODE_REPLACE, m->barwin,
-				atoms[ATOM_NAME], atom_add("UTF8_STRING"),
-				8, strlen("btdwm"), (const char *) "btdwm");
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, mons->barwin,
+			atoms[ATOM_WMCHECK], XCB_ATOM_WINDOW,
+			32, 1, (const char *) &mons->barwin);
+	xcb_change_property(conn, XCB_PROP_MODE_REPLACE, mons->barwin,
+			atoms[ATOM_NAME], atom_add("UTF8_STRING"),
+			8, strlen("btdwm"), (const char *) "btdwm");
+
+	for (m = mons; m; m = m->next)
 		xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
 				m->barwin, atoms[ATOM_TYPE],
 				XCB_ATOM_ATOM, 32, 1,
 				(const char *) &atoms[ATOM_TYPE_DOCK]);
-	}
 
 }
 
