@@ -29,10 +29,10 @@ const char status_urgent[]	= "#F0C674";
  */
 
 struct layout layouts[] = {
-	/* Symbol	Name		Layout	mfact */
-	{ "[F]",	"Floating",	NULL,	0.0 },
-	{ "[T]",	"Tile",		&tile,	0.5 },
-	{ "[M]",	"Max",		&max,	0.0 }
+	/* Symbol	Name		Layout */
+	{ "[F]",	"Floating",	NULL },
+	{ "[T]",	"Tile",		&tile },
+	{ "[M]",	"Max",		&max }
 };
 const int layouts_len = sizeof(layouts) / sizeof(layouts[0]);
 
@@ -86,10 +86,9 @@ static const char *cmd_eject[] = { SHCMD("eject -t"), 0 };
 
 static const char *cmd_poweroff[] = { SHCMD("systemctl poweroff"), 0 };
 static const char *cmd_reboot[] = { SHCMD("systemctl reboot"), 0 };
-static const char *cmd_suspend[] = { SHCMD("systemctl suspend"), 0 };
 static const char *cmd_halt[] = { SHCMD("halt"), 0 };
 
-static const char *cmd_lock[] = { SHCMD("~/.scripts/wm/lock/lock.sh"), 0 };
+static const char *cmd_lock[] = { SHCMD("~/.scripts/lock/lock.sh"), 0 };
 
 static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
 static const char *cmd_term[]  = { "st", 0 };
@@ -109,23 +108,25 @@ static const char *cmd_g[] = { "gimp", 0 };
 static const char *cmd_j[] = { SHCMD("usermenu -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
 static const char *cmd_k[] = { SHCMD("passmenu -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
 static const char *cmd_l[] = { "kdenlive", 0 };
-static const char *cmd_v[] = { "virtualbox", 0 };
+static const char *cmd_v[] = { SHCMD("~/.scripts/vm/spice.sh 'Windows 7 Professional x86_64'"), 0 };
 
 static const char *cmd_scrot[] = { SHCMD("~/.scripts/scrot.sh"), 0 };
 
-static const char *cmd_toggle[] = { SHCMD("~/.scripts/wm/mpd.sh toggle"), 0 };
-static const char *cmd_stop[] = { SHCMD("~/.scripts/wm/mpd.sh stop"), 0 };
-static const char *cmd_prev[] = { SHCMD("~/.scripts/wm/mpd.sh prev"), 0 };
-static const char *cmd_next[] = { SHCMD("~/.scripts/wm/mpd.sh next"), 0 };
+static const char *cmd_toggle[] = { SHCMD("~/.scripts/osd/mpd.sh toggle"), 0 };
+static const char *cmd_stop[] = { SHCMD("~/.scripts/osd/mpd.sh stop"), 0 };
+static const char *cmd_prev[] = { SHCMD("~/.scripts/osd/mpd.sh prev"), 0 };
+static const char *cmd_next[] = { SHCMD("~/.scripts/osd/mpd.sh next"), 0 };
 
-static const char *cmd_mute[] = { SHCMD("~/.scripts/wm/vol.sh mute"), 0 };
-static const char *cmd_vdec[] = { SHCMD("~/.scripts/wm/vol.sh dec"), 0 };
-static const char *cmd_vinc[] = { SHCMD("~/.scripts/wm/vol.sh inc"), 0 };
+static const char *cmd_mute[] = { SHCMD("~/.scripts/osd/vol.sh mute"), 0 };
+static const char *cmd_vdec[] = { SHCMD("~/.scripts/osd/vol.sh dec"), 0 };
+static const char *cmd_vinc[] = { SHCMD("~/.scripts/osd/vol.sh inc"), 0 };
 
-static const char *cmd_bdec[] = { SHCMD("~/.scripts/wm/bri.sh dec"), 0 };
-static const char *cmd_binc[] = { SHCMD("~/.scripts/wm/bri.sh inc"), 0 };
+static const char *cmd_bdec[] = { SHCMD("~/.scripts/osd/bri.sh dec"), 0 };
+static const char *cmd_binc[] = { SHCMD("~/.scripts/osd/bri.sh inc"), 0 };
 
-static const char *cmd_status[] = { SHCMD("~/.scripts/wm/status.sh"), 0 };
+static const char *cmd_mtg[] = { SHCMD("~/.scripts/osd/mtg.sh inc"), 0 };
+
+static const char *cmd_status[] = { SHCMD("~/.scripts/osd/status.sh"), 0 };
 
 const struct key keys[] = {
 	/* Modifier		Key	Function	union arguments */
@@ -136,8 +137,7 @@ const struct key keys[] = {
 	/* Power */
 	{ K_SUPER | K_CTRL,	K_ESC,	spawn,		{ .v = cmd_poweroff } },
 	{ K_SUPER | K_CTRL,	K_F1,	spawn,		{ .v = cmd_reboot } },
-	{ K_SUPER | K_CTRL,	K_F2,	spawn,		{ .v = cmd_suspend } },
-	{ K_SUPER | K_CTRL,	K_F3,	spawn,		{ .v = cmd_halt } },
+	{ K_SUPER | K_CTRL,	K_F2,	spawn,		{ .v = cmd_halt } },
 
 	/* Locking */
 	{ K_SUPER,		K_L,	spawn,		{ .v = cmd_lock } },
@@ -189,6 +189,10 @@ const struct key keys[] = {
 	{ 0,			K_BINC,	spawn,		{ .v = cmd_binc } },
 	{ K_SUPER,		K_J,	spawn,		{ .v = cmd_bdec } },
 	{ K_SUPER,		K_K,	spawn,		{ .v = cmd_binc } },
+
+	/* Touchpad */
+	{ 0,			K_LA,	spawn,		{ .v = cmd_mtg } },
+	{ K_SUPER,		K_P,	spawn,		{ .v = cmd_mtg } },
 
 	/* Status */
 	{ K_SUPER,		K_Z,	spawn,		{ .v = cmd_status } },

@@ -141,6 +141,7 @@ struct monitor {
 	unsigned int	tags;
 	unsigned int	tag;
 	struct layout	*layouts[7];/* [LENGTH(tags)]; FIXME FIXME FIXME FIXME FIXME */
+	double		mfact[7]; /* TODO [LENGTH(tags)]; */
 
 	struct client	*clients;
 	struct client	*stack;
@@ -170,8 +171,6 @@ struct layout {
 	const char	*symbol;
 	const char	*name;
 	void		(*arrange) (struct monitor *);
-
-	double		mfact;
 };
 
 struct tag {

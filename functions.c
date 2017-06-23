@@ -292,12 +292,11 @@ void setmfact(const union arg *arg)
 	if (!arg || !selmon->layouts[selmon->tag]->arrange)
 		return;
 
-	f = arg->f < 1.0 ? arg->f +
-			selmon->layouts[selmon->tag]->mfact : arg->f - 1.0;
+	f = arg->f < 1.0 ? arg->f + selmon->mfact[selmon->tag] : arg->f - 1.0;
 	if (f < 0.1 || f > 0.9)
 		return;
 
-	selmon->layouts[selmon->tag]->mfact = f;
+	selmon->mfact[selmon->tag] = f;
 	arrange(selmon);
 }
 

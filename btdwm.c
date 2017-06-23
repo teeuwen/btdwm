@@ -250,13 +250,15 @@ struct monitor *mon_alloc(void)
 	struct monitor *m;
 	unsigned int i;
 
-	m = calloc(1, sizeof(struct monitor));
-	if (!m)
+	if (!(m = calloc(1, sizeof(struct monitor))))
 		die("unable to allocate monitor\n");
 
 	m->tags = 1;
-	for (i = 0; i < LENGTH(m->layouts); i++)
+	for (i = 0; i < LENGTH(m->layouts); i++) {
 		m->layouts[i] = tags[i].layout;
+		m->mfact[i] = 0.5;
+	}
+
 	m->flags |= MF_SHOWBAR;
 
 	return m;

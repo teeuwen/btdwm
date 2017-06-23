@@ -47,7 +47,7 @@ void tile(struct monitor *m)
 		return;
 
 	c = nexttiled(m->clients);
-	mw = m->layouts[m->tag]->mfact * m->w;
+	mw = m->mfact[m->tag] * m->w;
 	resize(c, m->x, m->y + (SHOWBAR(m) ? BAR_HEIGHT : 0),
 			(n == 1 ? m->w : mw),
 			m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0), 0);
