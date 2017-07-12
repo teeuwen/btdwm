@@ -600,6 +600,8 @@ void atom_init(void)
 	atoms[ATOM_TYPE] = atom_add("_NET_WM_WINDOW_TYPE");
 	atoms[ATOM_TYPE_DIALOG] = atom_add("_NET_WM_WINDOW_TYPE_DIALOG");
 	atoms[ATOM_TYPE_DOCK] = atom_add("_NET_WM_WINDOW_TYPE_DOCK");
+	atoms[ATOM_TYPE_NOTIFICATION] =
+		atom_add("_NET_WM_WINDOW_TYPE_NOTIFICATION");
 	atoms[ATOM_TYPE_SPLASH] = atom_add("_NET_WM_WINDOW_TYPE_SPLASH");
 	atoms[ATOM_OPACITY] = atom_add("_NET_WM_WINDOW_OPACITY");
 

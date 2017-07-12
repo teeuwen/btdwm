@@ -27,6 +27,9 @@ clean:
 	rm -f btdwm
 	find . -type f -name '*.o' -delete -exec sh -c "echo '  RM      {}'" \;
 
+config.c:
+	cp config.c.def config.c
+
 %.o: %.c
 	echo -e "  CC      $<"
 	$(CC) $(CFLAGS) -c $< -o $@

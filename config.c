@@ -67,9 +67,10 @@ const int tags_len = sizeof(tags) / sizeof(tags[0]);
 
 const struct rule rules[] = {
 	/* Class	Instance	Title		Float.	Transparent */
-	{ "st-256color",NULL,		NULL,		0,	1 },
-	{ "st-256color",NULL,		"vim",		0,	0 },
-	{ "st-256color",NULL,		"VIM",		0,	0 },
+	{ "URxvt",	NULL,		NULL,		0,	1 },
+	{ "URxvt",	NULL,		"mutt",		0,	0 },
+	{ "URxvt",	NULL,		"transmission-remote-cli",0,	0 },
+	{ "URxvt",	NULL,		"VIM",		0,	0 },
 	{ "Firefox",	NULL,		"Page Info",	1,	0 },
 	/* { "feh",	NULL,		NULL,		0,	0 }, */
 	{ NULL,		NULL,		"QEMU",		1,	0 },
@@ -91,23 +92,18 @@ static const char *cmd_halt[] = { SHCMD("halt"), 0 };
 static const char *cmd_lock[] = { SHCMD("~/.scripts/lock/lock.sh"), 0 };
 
 static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
-static const char *cmd_term[]  = { "st", 0 };
+static const char *cmd_term[]  = { "urxvt", 0 };
 
 static const char *cmd_q[] = { SHCMD("qutebrowser --backend webengine") };
-static const char *cmd_w[] = { SHCMD("WINEARCH=win32 WINEPREFIX=~/.office2010 wine ~/.office2010/drive_c/Program\\ Files/Microsoft\\ Office/Office14/WINWORD.EXE"), 0 };
-static const char *cmd_e[] = { SHCMD("WINEARCH=win32 WINEPREFIX=~/.office2010 wine ~/.office2010/drive_c/Program\\ Files/Microsoft\\ Office/Office14/EXCEL.EXE"), 0 };
-static const char *cmd_r[] = { SHCMD("WINEARCH=win32 WINEPREFIX=~/.office2010 wine ~/.office2010/drive_c/Program\\ Files/Microsoft\\ Office/Office14/POWERPNT.EXE"), 0 };
-static const char *cmd_y[] = { "lowriter", 0 };
-static const char *cmd_u[] = { "localc", 0 };
-static const char *cmd_i[] = { "loimpress", 0 };
-static const char *cmd_p[] = { SHCMD("firefox-nightly --private-window about:privatebrowsing"), 0 };
-static const char *cmd_a[] = { "audacity", 0 };
-static const char *cmd_s[] = { "tor-browser-en", 0 };
+static const char *cmd_w[] = { "lowriter", 0 };
+static const char *cmd_e[] = { "localc", 0 };
+static const char *cmd_r[] = { "loimpress", 0 };
+static const char *cmd_u[] = { SHCMD("usermenu -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
+static const char *cmd_o[] = { "tor-browser-en", 0 };
+static const char *cmd_p[] = { SHCMD("passmenu -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
+static const char *cmd_s[] = { SHCMD("firefox-nightly --private-window about:privatebrowsing"), 0 };
 static const char *cmd_f[] = { "firefox-nightly", 0 };
 static const char *cmd_g[] = { "gimp", 0 };
-static const char *cmd_j[] = { SHCMD("usermenu -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
-static const char *cmd_k[] = { SHCMD("passmenu -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
-static const char *cmd_l[] = { "kdenlive", 0 };
 static const char *cmd_v[] = { SHCMD("~/.scripts/vm/spice.sh 'Windows 7 Professional x86_64'"), 0 };
 
 static const char *cmd_scrot[] = { SHCMD("~/.scripts/scrot.sh"), 0 };
@@ -124,7 +120,8 @@ static const char *cmd_vinc[] = { SHCMD("~/.scripts/osd/vol.sh inc"), 0 };
 static const char *cmd_bdec[] = { SHCMD("~/.scripts/osd/bri.sh dec"), 0 };
 static const char *cmd_binc[] = { SHCMD("~/.scripts/osd/bri.sh inc"), 0 };
 
-static const char *cmd_mtg[] = { SHCMD("~/.scripts/osd/mtg.sh inc"), 0 };
+static const char *cmd_ttg[] = { SHCMD("~/.scripts/osd/ttg.sh"), 0 };
+static const char *cmd_mtg[] = { SHCMD("~/.scripts/osd/mtg.sh"), 0 };
 
 static const char *cmd_status[] = { SHCMD("~/.scripts/osd/status.sh"), 0 };
 
@@ -150,17 +147,12 @@ const struct key keys[] = {
 	{ K_CTRL | K_SHIFT,	K_W,	spawn,		{ .v = cmd_w } },
 	{ K_CTRL | K_SHIFT,	K_E,	spawn,		{ .v = cmd_e } },
 	{ K_CTRL | K_SHIFT,	K_R,	spawn,		{ .v = cmd_r } },
-	{ K_CTRL | K_SHIFT,	K_Y,	spawn,		{ .v = cmd_y } },
 	{ K_CTRL | K_SHIFT,	K_U,	spawn,		{ .v = cmd_u } },
-	{ K_CTRL | K_SHIFT,	K_I,	spawn,		{ .v = cmd_i } },
+	{ K_CTRL | K_SHIFT,	K_O,	spawn,		{ .v = cmd_o } },
 	{ K_CTRL | K_SHIFT,	K_P,	spawn,		{ .v = cmd_p } },
-	{ K_CTRL | K_SHIFT,	K_A,	spawn,		{ .v = cmd_a } },
 	{ K_CTRL | K_SHIFT,	K_S,	spawn,		{ .v = cmd_s } },
 	{ K_CTRL | K_SHIFT,	K_F,	spawn,		{ .v = cmd_f } },
 	{ K_CTRL | K_SHIFT,	K_G,	spawn,		{ .v = cmd_g } },
-	{ K_CTRL | K_SHIFT,	K_J,	spawn,		{ .v = cmd_j } },
-	{ K_CTRL | K_SHIFT,	K_K,	spawn,		{ .v = cmd_k } },
-	{ K_CTRL | K_SHIFT,	K_L,	spawn,		{ .v = cmd_l } },
 	{ K_CTRL | K_SHIFT,	K_V,	spawn,		{ .v = cmd_v } },
 
 	/* Screenshot */
@@ -190,9 +182,13 @@ const struct key keys[] = {
 	{ K_SUPER,		K_J,	spawn,		{ .v = cmd_bdec } },
 	{ K_SUPER,		K_K,	spawn,		{ .v = cmd_binc } },
 
+	/* Touch screen */
+	{ 0,			K_EXP,	spawn,		{ .v = cmd_ttg } },
+	{ K_SUPER,		K_SCOL,	spawn,		{ .v = cmd_ttg } },
+
 	/* Touchpad */
 	{ 0,			K_LA,	spawn,		{ .v = cmd_mtg } },
-	{ K_SUPER,		K_P,	spawn,		{ .v = cmd_mtg } },
+	{ K_SUPER,		K_APO,	spawn,		{ .v = cmd_mtg } },
 
 	/* Status */
 	{ K_SUPER,		K_Z,	spawn,		{ .v = cmd_status } },

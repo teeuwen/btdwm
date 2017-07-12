@@ -1,0 +1,133 @@
+/*
+ * TODO
+ * Relocate in header file
+ */
+
+#include "btdwm.h"
+#include "functions.h"
+#include "layouts.h"
+#include "keysym.h"
+
+/*
+ * Appearance
+ */
+
+const char font_desc[]		= "sans-serif 12";
+
+const char bg[]			= "#000000";
+
+const char fg[]			= "#FFFFFF";
+const char fg_light[]		= "#AAAAAA";
+
+const char status_active[]	= "#83A598";
+const char status_focus[]	= "#DFDFDF";
+const char status_urgent[]	= "#F0C674";
+
+
+/*
+ * Layouts
+ */
+
+struct layout layouts[] = {
+	/* Name		Layout */
+	{ "Floating",	NULL },
+	{ "Tile",	&tile },
+	{ "Max",	&max }
+};
+const int layouts_len = sizeof(layouts) / sizeof(layouts[0]);
+
+
+/*
+ * Tags
+ */
+
+const struct tag tags[] = {
+	/* Name		Layout */
+	{ " 1 ",	&layouts[0] },
+	{ " 2 ",	&layouts[0] },
+	{ " 3 ",	&layouts[0] },
+	{ " 4 ",	&layouts[0] },
+	{ " 5 ",	&layouts[0] },
+	{ " 6 ",	&layouts[0] },
+	{ " 7 ",	&layouts[0] }
+};
+const int tags_len = sizeof(tags) / sizeof(tags[0]);
+
+
+/*
+ * Rules
+ */
+
+const struct rule rules[] = {
+	/* Class	Instance	Title		Float.	Transparent */
+	{ NULL,		NULL,		NULL,		0,	0 },
+};
+const int rules_len = sizeof(rules) / sizeof(rules[0]);
+
+
+/*
+ * Key bindings
+ */
+
+const struct key keys[] = {
+	/* Modifier		Key	Function	union arguments */
+	{ K_SUPER | K_CTRL,	K_Q,	quit,		{ 0 } },
+
+	/* Global */
+	{ K_SUPER,		K_F,	togglebar,	{ 0 } },
+
+	{ K_SUPER | K_SHIFT,	K_SPACE,setlayout,	{ .i = -1 } },
+	{ K_SUPER,		K_SPACE,setlayout,	{ .i = +1 } },
+
+	{ K_SUPER,		K_UP,	focusstack,	{ .i = -1 } },
+	{ K_SUPER,		K_DOWN,	focusstack,	{ .i = +1 } },
+	{ K_SUPER,		K_LEFT,	focusstack,	{ .i = -1 } },
+	{ K_SUPER,		K_RIGHT,focusstack,	{ .i = +1 } },
+	{ K_ALT | K_SHIFT,	K_TAB,	focusstack,	{ .i = -2 } },
+	{ K_ALT,		K_TAB,	focusstack,	{ .i = +2 } },
+
+	/* Tags */
+	{ TAGKEYS(K_1, 0) },
+	{ TAGKEYS(K_2, 1) },
+	{ TAGKEYS(K_3, 2) },
+	{ TAGKEYS(K_4, 3) },
+	{ TAGKEYS(K_5, 4) },
+	{ TAGKEYS(K_6, 5) },
+	{ TAGKEYS(K_7, 6) },
+
+	{ K_SUPER | K_SHIFT,	K_TAB,	viewtag,	{ .i = -2 } },
+	{ K_SUPER,		K_TAB,	viewtag,	{ .i = -1 } },
+
+	/* Client */
+	{ K_SUPER,		K_Q,	killclient,	{ 0 } },
+
+	{ K_SUPER | K_CTRL,	K_SPACE,togglefloating,	{ 0 } },
+	{ K_SUPER,		K_T,	toggleontop,	{ 0 } },
+	{ K_SUPER,		K_Y,	togglesticky,	{ 0 } },
+
+	{ K_SUPER | K_SHIFT,	K_LEFT,	setmfact,	{ .f = -0.05 } },
+	{ K_SUPER | K_SHIFT,	K_RIGHT,setmfact,	{ .f = +0.05 } },
+
+	/* Multihead */
+	{ K_SUPER,		K_BL,	focusmon,	{ .i = -1 } },
+	{ K_SUPER,		K_BR,	focusmon,	{ .i = +1 } },
+	{ K_SUPER,		K_O,	tagmon,		{ .i = +1 } }
+};
+const int keys_len = sizeof(keys) / sizeof(keys[0]);
+
+
+/*
+ * Mouse bindings
+ */
+
+const struct button buttons[] = {
+	/* Event	Mask	Button	Function	union arguments */
+	{ CLICK_TAGS,	0,	B_LEFT,	viewtag,	{ 0 } },
+	{ CLICK_TAGS,	0,	B_RIGHT,toggletag,	{ 0 } },
+	{ CLICK_TAGS,	K_SUPER,B_LEFT,	moveclient,	{ 0 } },
+
+	{ CLICK_CLIENT,	K_SUPER,B_LEFT,	movemouse,	{ 0 } },
+	{ CLICK_CLIENT,	K_SUPER,B_RIGHT,resizemouse,	{ 0 } }
+
+};
+const int buttons_len = sizeof(buttons) / sizeof(buttons[0]);

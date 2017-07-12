@@ -178,13 +178,15 @@ static void title_update(struct client *c)
 			strcpy(c->name, "broken");
 }
 
-static void rules_apply(struct client *c)
+static void rules_apply(struct client *c, int init)
 {
 	xcb_icccm_get_wm_class_reply_t ch;
 	int i;
 
-	c->tags = 0;
-	c->flags &= ~CF_FLOATING;
+	if (init) {
+		c->tags = 0;
+		c->flags &= ~CF_FLOATING;
+	}
 
 	if (xcb_icccm_get_wm_class_reply(conn, xcb_icccm_get_wm_class(conn,
 			c->win), &ch, 0)) {
@@ -200,9 +202,10 @@ static void rules_apply(struct client *c)
 					(!rules[i].instance ||
 					strstr(ch.instance_name,
 					rules[i].instance))) {
-				c->flags = rules[i].floating ?
-						c->flags | CF_FLOATING :
-						c->flags & ~CF_FLOATING;
+				if (init)
+					c->flags = rules[i].floating ?
+							c->flags | CF_FLOATING :
+							c->flags & ~CF_FLOATING;
 				c->flags = rules[i].transparent ?
 						c->flags | CF_TRANS :
 						c->flags & ~CF_TRANS;
@@ -261,7 +264,7 @@ static void manage(xcb_window_t w)
 		c->tags = t->tags;
 	} else {
 		c->mon = selmon;
-		rules_apply(c);
+		rules_apply(c, 1);
 	}
 
 	geom_reply = xcb_get_geometry_reply(conn,
@@ -883,12 +886,18 @@ static int enternotify(xcb_generic_event_t *_e)
 		return 0;
 	}
 
-	if ((c && (!c->mon->layouts[c->mon->tag]->arrange || ISFLOATING(c) ||
+	if (c && (!c->mon->layouts[c->mon->tag]->arrange || ISFLOATING(c) ||
 			(c->mon == selmon && selmon->client &&
-			ISFLOATING(selmon->client)))) ||
-			((e->mode != XCB_NOTIFY_MODE_NORMAL ||
+			ISFLOATING(selmon->client))))
+		return 0;
+
+	if (c && atom_check(c->win, atoms[ATOM_TYPE],
+			atoms[ATOM_TYPE_NOTIFICATION]))
+		return 0;
+
+	if  ((e->mode != XCB_NOTIFY_MODE_NORMAL ||
 			e->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
-			e->event != screen->root))
+			e->event != screen->root)
 		return 0;
 
 	if ((m = mon_get(e->event)) && m != selmon) {
@@ -897,6 +906,9 @@ static int enternotify(xcb_generic_event_t *_e)
 	}
 
 	focus(c);
+
+	/* if (c)
+		restack(c->mon); */
 
 	return 0;
 }
@@ -1002,7 +1014,7 @@ static int propertynotify(xcb_generic_event_t *_e)
 		fflush(stdout);
 	} else if (e->atom == XCB_ATOM_WM_NAME || atoms[ATOM_NAME]) {
 		title_update(c);
-		/* rules_apply(c); */
+		rules_apply(c, 0);
 
 		if (c == c->mon->client)
 			bar_draw(c->mon);

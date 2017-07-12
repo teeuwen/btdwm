@@ -90,6 +90,8 @@
 #define K_J	XK_j
 #define K_K	XK_k
 #define K_L	XK_l
+#define K_SCOL	XK_semicolon
+#define K_APO	XK_apostrophe
 #define K_RET	XK_Return
 
 #define K_Z	XK_z
@@ -131,6 +133,8 @@
 
 #define K_BDEC	XF86XK_MonBrightnessDown
 #define K_BINC	XF86XK_MonBrightnessUp
+
+#define K_EXP	XF86XK_Explorer
 
 #define K_LA	XF86XK_LaunchA
 
