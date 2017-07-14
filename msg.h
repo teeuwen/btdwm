@@ -29,10 +29,9 @@
 
 void msg_destroy(NotifyNotification *n);
 
-NotifyNotification *msg_create(const char *title, const char *body,
-		int t, int destroy);
-NotifyNotification *msg_update(NotifyNotification *n,
-		const char *title, const char *body, int timeout);
+NotifyNotification *msg_create(const char *str, int timeout, int destroy);
+NotifyNotification *msg_update(NotifyNotification *n, const char *str,
+		int timeout);
 
 void msg_init(void);
 void msg_quit(void);

@@ -45,12 +45,12 @@
 
 static NotifyNotification *msg;
 
-void movemouse(const union arg *arg)
+void moveclientm(const union arg *arg)
 {
 	client_move_mouse(arg, 1);
 }
 
-void resizemouse(const union arg *arg)
+void resizeclientm(const union arg *arg)
 {
 	client_move_mouse(arg, 0);
 }
@@ -79,7 +79,7 @@ void focusmon(const union arg *arg)
 	restack(m);
 }
 
-void focusstack(const union arg *arg)
+void focusclient(const union arg *arg)
 {
 	struct client *c;
 
@@ -109,7 +109,7 @@ void focusstack(const union arg *arg)
 	if (c) {
 		/* TODO Icon */
 		if (arg->i < -1 || arg->i > 1)
-			msg = msg_update(msg, c->name, NULL, 500);
+			msg = msg_update(msg, c->name, 500);
 
 		focus(c);
 		restack(c->mon);
@@ -141,14 +141,15 @@ void spawn(const union arg *arg)
 	}
 }
 
-void tagmon(const union arg *arg)
+void sendmon(const union arg *arg)
 {
 	if (!arg || !selmon->client || !mons->next)
 		return;
 
 	mon_send(selmon->client, dirtomon(arg->i));
 
-	focusmon(arg);
+	if (arg->i < -1 || arg->i > 1)
+		focusmon(arg);
 }
 
 void togglebar(const union arg *arg)
@@ -212,9 +213,9 @@ void viewtag(const union arg *arg)
 			if (selmon->tag > 0)
 				selmon->tag--;
 			else
-				selmon->tag = (unsigned int) tags_len - 1;
+				selmon->tag = (unsigned int) LENGTH(tags) - 1;
 		} else if (arg->i == -1) {
-			if (selmon->tag + 1 < (unsigned int) tags_len)
+			if (selmon->tag + 1 < (unsigned int) LENGTH(tags))
 				selmon->tag++;
 			else
 				selmon->tag = 0;
@@ -230,6 +231,8 @@ void viewtag(const union arg *arg)
 		selmon->tags = 1 << arg->i;
 		selmon->tag = arg->i;
 	}
+
+	/* TODO Readd to end of stack */
 
 	focus(NULL);
 	arrange(selmon);
@@ -249,7 +252,7 @@ void toggletag(const union arg *arg)
 	arrange(selmon);
 }
 
-void moveclient(const union arg *arg)
+void sendtag(const union arg *arg)
 {
 	if (!selmon->client)
 		return;
@@ -264,20 +267,16 @@ void setlayout(const union arg *arg)
 {
 	int i;
 
-	/* Feel like a cheap hack... */
-	for (i = 0; i < layouts_len; i++)
-		if (&layouts[i] == selmon->layouts[selmon->tag])
-			break;
+	for (i = 0; i < (int) LENGTH(layouts) &&
+			&layouts[i] != selmon->layouts[selmon->tag]; i++);
 
 	if (i + arg->i < 0)
 		i += 3;
-	if (i + arg->i > layouts_len - 1)
+	if (i + arg->i > (int) LENGTH(layouts) - 1)
 		i -= 3;
 
 	selmon->layouts[selmon->tag] = &layouts[i + arg->i];
-	msg = msg_update(msg,
-			selmon->layouts[selmon->tag]->symbol,
-			selmon->layouts[selmon->tag]->name, 500);
+	msg = msg_update(msg, selmon->layouts[selmon->tag]->name, 500);
 
 	if (selmon->client)
 		arrange(selmon);
@@ -292,11 +291,11 @@ void setmfact(const union arg *arg)
 	if (!arg || !selmon->layouts[selmon->tag]->arrange)
 		return;
 
-	f = arg->f < 1.0 ? arg->f + selmon->mfact[selmon->tag] : arg->f - 1.0;
+	f = arg->f < 1.0 ? arg->f + selmon->mfacts[selmon->tag] : arg->f - 1.0;
 	if (f < 0.1 || f > 0.9)
 		return;
 
-	selmon->mfact[selmon->tag] = f;
+	selmon->mfacts[selmon->tag] = f;
 	arrange(selmon);
 }
 

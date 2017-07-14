@@ -37,24 +37,85 @@
 #ifndef _FUNCTIONS_H
 #define _FUNCTIONS_H
 
+union arg {
+	int		i, b;
+	double		f;
+	const void	*v;
+};
+
+struct monitor;
+
+struct layout {
+	const char	*name;
+	void		(*arrange) (struct monitor *);
+};
+
+struct tag {
+	const char	*name;
+	struct layout	*layout;
+};
+
+struct rule {
+	const char	*class;
+	const char	*instance;
+	const char	*title;
+
+	int		floating;
+	int		transparent;
+};
+
+struct hook {
+	void		(*event) (void);
+	const char	*cmd;
+};
+
+#define TAGKEYS(k,t) \
+	K_SUPER,		k,	viewtag,	{ .i = t } }, \
+	{ K_SUPER | K_CTRL,	k,	toggletag,	{ .i = t } }, \
+	{ K_SUPER | K_SHIFT,	k,	sendtag,	{ .i = t } \
+
+#define SHCMD(cmd) "/usr/bin/env", "sh", "-c", cmd
+
+struct key {
+	unsigned int	mod;
+	xcb_keysym_t	keysym;
+	void		(*func) (const union arg *);
+	const union arg	arg;
+};
+
+struct button {
+	unsigned int	click;
+	unsigned int	mask;
+	unsigned int	button;
+	void		(*func) (const union arg *);
+	const union arg	arg;
+};
+
+#define E_CLIENT	1
+#define E_LAYOUT	2
+#define E_TAG		3
+
+#define H_TAG		1
+#define H_CLIENT	2
+
+void focusclient(const union arg *arg);
 void focusmon(const union arg *arg);
-void focusstack(const union arg *arg);
+void killclient(const union arg *arg);
+/* void moveclient(const union arg *arg); */
+void moveclientm(const union arg *arg);
+void quit(const union arg *arg);
+/* void resizeclient(const union arg *arg); */
+void resizeclientm(const union arg *arg);
+void sendmon(const union arg *arg);
+void sendtag(const union arg *arg);
 void setlayout(const union arg *arg);
 void setmfact(const union arg *arg);
-void tagmon(const union arg *arg);
-
 void spawn(const union arg *arg);
 void togglebar(const union arg *arg);
-
-void toggletag(const union arg *arg);
-void viewtag(const union arg *arg);
-
-void killclient(const union arg *arg);
-void moveclient(const union arg *arg);
-void movemouse(const union arg *arg);
-void resizemouse(const union arg *arg);
 void togglefloating(const union arg *arg);
 void toggleontop(const union arg *arg);
 void togglesticky(const union arg *arg);
+void toggletag(const union arg *arg);
+void viewtag(const union arg *arg);
 
 #endif

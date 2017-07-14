@@ -24,16 +24,15 @@
 
 #include "msg.h"
 
-NotifyNotification *msg_create(const char *title, const char *body,
-		int t, int destroy)
+NotifyNotification *msg_create(const char *str, int timeout, int destroy)
 {
 	NotifyNotification *n;
 
-	n = notify_notification_new(title, body, 0);
+	n = notify_notification_new(str, NULL, 0);
 
-	if (t < 0)
-		t = NOTIFY_EXPIRES_DEFAULT;
-	notify_notification_set_timeout(n, t);
+	if (timeout < 0)
+		timeout = NOTIFY_EXPIRES_DEFAULT;
+	notify_notification_set_timeout(n, timeout);
 
 	notify_notification_show(n, 0);
 
@@ -43,17 +42,17 @@ NotifyNotification *msg_create(const char *title, const char *body,
 	return n;
 }
 
-NotifyNotification *msg_update(NotifyNotification *n,
-		const char *title, const char *body, int t)
+NotifyNotification *msg_update(NotifyNotification *n, const char *str,
+		int timeout)
 {
 	if (!n)
-		return msg_create(title, body, t, 0);
+		return msg_create(str, timeout, 0);
 
-	notify_notification_update(n, title, body, 0);
+	notify_notification_update(n, str, NULL, 0);
 
-	if (t < 0)
-		t = NOTIFY_EXPIRES_DEFAULT;
-	notify_notification_set_timeout(n, t);
+	if (timeout < 0)
+		timeout = NOTIFY_EXPIRES_DEFAULT;
+	notify_notification_set_timeout(n, timeout);
 
 	notify_notification_show(n, 0);
 

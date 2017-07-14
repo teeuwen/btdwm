@@ -256,7 +256,7 @@ struct monitor *mon_alloc(void)
 	m->tags = 1;
 	for (i = 0; i < LENGTH(m->layouts); i++) {
 		m->layouts[i] = tags[i].layout;
-		m->mfact[i] = 0.5;
+		m->mfacts[i] = 0.5;
 	}
 
 	m->flags |= MF_SHOWBAR;
@@ -363,7 +363,8 @@ void focus(struct client *c)
 void bar_draw(struct monitor *m)
 {
 	struct client *c;
-	int i, x = 0, w, ca = 0, cu = 0;
+	unsigned int i;
+	int x = 0, w, ca = 0, cu = 0;
 
 	for (c = m->clients; c; c = c->next) {
 		ca |= c->tags;
@@ -377,12 +378,12 @@ void bar_draw(struct monitor *m)
 
 	rectangle_draw(m, m->barcr, x, 0, m->w, BAR_HEIGHT, PLT_NORMAL);
 
-	for (i = 0; i < tags_len; i++)
+	for (i = 0; i < LENGTH(tags); i++)
 		x += textw(m->barcr, tags[i].name) + 8;
 
 	x = m->w / 2 - x / 2;
 
-	for (i = 0; i < tags_len; i++) {
+	for (i = 0; i < LENGTH(tags); i++) {
 		w = textw(m->barcr, tags[i].name) + 8;
 
 		text_draw(m, m->barcr, x, 0, w, BAR_HEIGHT, tags[i].name,
@@ -565,6 +566,8 @@ void restack(struct monitor *m)
 	else
 		xcb_configure_window(conn, m->barwin,
 				XCB_CONFIG_WINDOW_STACK_MODE, ontop);
+
+	xcb_flush(conn);
 }
 
 void setclientstate(struct client *c, long state)

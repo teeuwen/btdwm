@@ -16,7 +16,7 @@ MAKEFLAGS	:= -s
 CFLAGS		:= -Wall -Wextra -Wno-unused-parameter -std=gnu89 `pkg-config --cflags $(PKGLIST)`
 LDFLAGS		:= `pkg-config --libs $(PKGLIST)`
 
-objects = btdwm.o config.o draw.o functions.o layouts.o msg.o xcb.o
+objects = btdwm.o draw.o functions.o layouts.o msg.o xcb.o
 
 PHONY += all
 all: release
@@ -27,15 +27,15 @@ clean:
 	rm -f btdwm
 	find . -type f -name '*.o' -delete -exec sh -c "echo '  RM      {}'" \;
 
-config.c:
-	cp config.c.def config.c
+config.h:
+	cp config.h.def config.h
 
 %.o: %.c
 	echo -e "  CC      $<"
 	$(CC) $(CFLAGS) -c $< -o $@
 
 PHONY += btdwm
-btdwm: $(objects)
+btdwm: config.h $(objects)
 	echo -e "  LD      $<"
 	$(LD) -o $@ $(objects) $(LDFLAGS)
 

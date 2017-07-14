@@ -38,12 +38,14 @@
 #define _DWH_H
 
 #include <cairo/cairo-xcb.h>
+#include "config.h"
 
 /* TODO Move to config.h */
 #define BAR_HEIGHT	16
 
 /* FIXME */
-#define INRECT(x,y,rx,ry,rw,rh)	((x) >= (rx) && (x) < (rx) + (rw) && (y) >= (ry) && (y) < (ry) + (rh))
+#define INRECT(x,y,rx,ry,rw,rh)	((x) >= (rx) && (x) < (rx) + (rw) && \
+		(y) >= (ry) && (y) < (ry) + (rh))
 #define LENGTH(x)		(sizeof(x) / sizeof(x[0]))
 #ifndef MAX
 #   define MAX(a, b)		((a) > (b) ? (a) : (b))
@@ -70,9 +72,6 @@
 #define ATOM_TYPE_SPLASH	15
 #define ATOM_OPACITY		16
 #define ATOM_MAX		17
-
-#define CLICK_TAGS	1
-#define CLICK_CLIENT	2
 
 #define CUR_NORMAL	0
 #define CUR_MOVE	1
@@ -118,14 +117,7 @@
 #define ISURGENT(c)	(c->flags & CF_URGENT)
 #define ISVISIBLE(c)	(((c->tags & c->mon->tags) | ISSTICKY(c)))
 
-/* To avoid conflicts with limits.h */
 #define MAX_NAME	256
-
-union arg {
-	int		i, b;
-	double		f;
-	const void	*v;
-};
 
 struct monitor {
 	int		id;
@@ -141,8 +133,8 @@ struct monitor {
 
 	unsigned int	tags;
 	unsigned int	tag;
-	struct layout	*layouts[7];/* [LENGTH(tags)]; FIXME FIXME FIXME FIXME FIXME */
-	double		mfact[7]; /* TODO [LENGTH(tags)]; */
+	struct layout	*layouts[LENGTH(tags)];
+	double		mfacts[LENGTH(tags)];
 
 	struct client	*clients;
 	struct client	*stack;
@@ -167,66 +159,6 @@ struct client {
 	struct client	*prev, *sprev;
 	struct client	*next, *snext;
 };
-
-struct layout {
-	const char	*symbol;
-	const char	*name;
-	void		(*arrange) (struct monitor *);
-};
-
-struct tag {
-	const char	*name;
-	struct layout	*layout;
-};
-
-struct rule {
-	const char	*class;
-	const char	*instance;
-	const char	*title;
-
-	int		floating;
-	int		transparent;
-};
-
-#define TAGKEYS(k,t) \
-	K_SUPER,		k,	viewtag,	{ .i = t } }, \
-	{ K_SUPER | K_CTRL,	k,	toggletag,	{ .i = t } }, \
-	{ K_SUPER | K_SHIFT,	k,	moveclient,	{ .i = t } \
-
-#define SHCMD(cmd) "/bin/sh", "-c", cmd
-
-struct key {
-	unsigned int	mod;
-	xcb_keysym_t	keysym;
-	void		(*func) (const union arg *);
-	const union arg	arg;
-};
-
-struct button {
-	unsigned int	click;
-	unsigned int	mask;
-	unsigned int	button;
-	void		(*func) (const union arg *);
-	const union arg	arg;
-};
-
-extern const char font_desc[];
-extern const char bg[];
-extern const char fg[];
-extern const char fg_light[];
-extern const char status_active[];
-extern const char status_focus[];
-extern const char status_urgent[];
-extern struct layout layouts[];
-extern const int layouts_len;
-extern const struct tag tags[];
-extern const int tags_len;
-extern const struct rule rules[];
-extern const int rules_len;
-extern const struct key keys[];
-extern const int keys_len;
-extern const struct button buttons[];
-extern const int buttons_len;
 
 extern xcb_connection_t *conn;
 extern xcb_screen_t *screen;
@@ -298,7 +230,6 @@ void xcb_quit(void);
 void setup(void);
 void run(void);
 
-void quit(const union arg *arg);
 void die(const char *errstr, ...);
 
 /* **** */

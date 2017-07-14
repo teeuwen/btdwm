@@ -1,47 +1,40 @@
-/*
- * TODO
- * Relocate in header file
- */
-
-#include "btdwm.h"
 #include "functions.h"
-#include "layouts.h"
 #include "keysym.h"
+#include "layouts.h"
 
 /*
  * Appearance
  */
 
-const char font_desc[]		= "sans-serif 5.8";
+static const char font_desc[]		= "sans-serif 5.8";
 
-const char bg[]			= "#1C1C1C";
+static const char bg[]			= "#1C1C1C";
 
-const char fg[]			= "#ECECEC";
-const char fg_light[]		= "#AAAAAA";
+static const char fg[]			= "#ECECEC";
+static const char fg_light[]		= "#AAAAAA";
 
-const char status_active[]	= "#83A598";
-const char status_focus[]	= "#DFDFDF";
-const char status_urgent[]	= "#F0C674";
+static const char status_active[]	= "#83A598";
+static const char status_focus[]	= "#DFDFDF";
+static const char status_urgent[]	= "#F0C674";
 
 
 /*
  * Layouts
  */
 
-struct layout layouts[] = {
-	/* Symbol	Name		Layout */
-	{ "[F]",	"Floating",	NULL },
-	{ "[T]",	"Tile",		&tile },
-	{ "[M]",	"Max",		&max }
+static struct layout layouts[] = {
+	/* Name		Layout */
+	{ "Floating",	NULL },
+	{ "Tile",	&tile },
+	{ "Max",	&max }
 };
-const int layouts_len = sizeof(layouts) / sizeof(layouts[0]);
 
 
 /*
  * Tags
  */
 
-const struct tag tags[] = {
+static const struct tag tags[] = {
 	/* Name				Layout */
 	{ /* "A", */ /* "α", */ /* "1", */ /* "一", */ "일",
 					&layouts[1] },
@@ -58,14 +51,13 @@ const struct tag tags[] = {
 	{ /* "G", */ /* "η", */ /* "7", */ /* "七", */ "칠",
 					&layouts[1] }
 };
-const int tags_len = sizeof(tags) / sizeof(tags[0]);
 
 
 /*
  * Rules
  */
 
-const struct rule rules[] = {
+static const struct rule rules[] = {
 	/* Class	Instance	Title		Float.	Transparent */
 	{ "URxvt",	NULL,		NULL,		0,	1 },
 	{ "URxvt",	NULL,		"mutt",		0,	0 },
@@ -76,7 +68,16 @@ const struct rule rules[] = {
 	{ NULL,		NULL,		"QEMU",		1,	0 },
 	{ NULL,		NULL,		"pinentry",	1,	0 }
 };
-const int rules_len = sizeof(rules) / sizeof(rules[0]);
+
+
+/*
+ * Hooks
+ */
+
+static const struct hook hooks[] = {
+	/* Hook			Command */
+	{ NULL,			NULL }
+};
 
 
 /*
@@ -85,16 +86,14 @@ const int rules_len = sizeof(rules) / sizeof(rules[0]);
 
 static const char *cmd_eject[] = { SHCMD("eject -t"), 0 };
 
-static const char *cmd_poweroff[] = { SHCMD("systemctl poweroff"), 0 };
-static const char *cmd_reboot[] = { SHCMD("systemctl reboot"), 0 };
-static const char *cmd_halt[] = { SHCMD("halt"), 0 };
+static const char *cmd_poweroff[] = { SHCMD("openrc-shutdown -p"), 0 };
+static const char *cmd_reboot[] = { SHCMD("openrc-shutdown -r"), 0 };
 
 static const char *cmd_lock[] = { SHCMD("~/.scripts/lock/lock.sh"), 0 };
 
 static const char *cmd_run[] = { SHCMD("dmenu_run -fn 'Inconsolata\\-g for Powerline-8' -nb '#1C1C1C' -nf '#AAAAAA' -sb '#1C1C1C' -sf '#ECECEC'"), 0 };
 static const char *cmd_term[]  = { "urxvt", 0 };
 
-static const char *cmd_q[] = { SHCMD("qutebrowser --backend webengine") };
 static const char *cmd_w[] = { "lowriter", 0 };
 static const char *cmd_e[] = { "localc", 0 };
 static const char *cmd_r[] = { "loimpress", 0 };
@@ -125,7 +124,7 @@ static const char *cmd_mtg[] = { SHCMD("~/.scripts/osd/mtg.sh"), 0 };
 
 static const char *cmd_status[] = { SHCMD("~/.scripts/osd/status.sh"), 0 };
 
-const struct key keys[] = {
+static const struct key keys[] = {
 	/* Modifier		Key	Function	union arguments */
 	{ K_SUPER | K_CTRL,	K_Q,	quit,		{ 0 } },
 
@@ -134,7 +133,6 @@ const struct key keys[] = {
 	/* Power */
 	{ K_SUPER | K_CTRL,	K_ESC,	spawn,		{ .v = cmd_poweroff } },
 	{ K_SUPER | K_CTRL,	K_F1,	spawn,		{ .v = cmd_reboot } },
-	{ K_SUPER | K_CTRL,	K_F2,	spawn,		{ .v = cmd_halt } },
 
 	/* Locking */
 	{ K_SUPER,		K_L,	spawn,		{ .v = cmd_lock } },
@@ -143,7 +141,6 @@ const struct key keys[] = {
 	{ K_SUPER,		K_R,	spawn,		{ .v = cmd_run } },
 	{ K_SUPER,		K_RET,	spawn,		{ .v = cmd_term } },
 
-	{ K_CTRL | K_SHIFT,	K_Q,	spawn,		{ .v = cmd_q } },
 	{ K_CTRL | K_SHIFT,	K_W,	spawn,		{ .v = cmd_w } },
 	{ K_CTRL | K_SHIFT,	K_E,	spawn,		{ .v = cmd_e } },
 	{ K_CTRL | K_SHIFT,	K_R,	spawn,		{ .v = cmd_r } },
@@ -199,12 +196,12 @@ const struct key keys[] = {
 	{ K_SUPER | K_SHIFT,	K_SPACE,setlayout,	{ .i = -1 } },
 	{ K_SUPER,		K_SPACE,setlayout,	{ .i = +1 } },
 
-	{ K_SUPER,		K_UP,	focusstack,	{ .i = -1 } },
-	{ K_SUPER,		K_DOWN,	focusstack,	{ .i = +1 } },
-	{ K_SUPER,		K_LEFT,	focusstack,	{ .i = -1 } },
-	{ K_SUPER,		K_RIGHT,focusstack,	{ .i = +1 } },
-	{ K_ALT | K_SHIFT,	K_TAB,	focusstack,	{ .i = -2 } },
-	{ K_ALT,		K_TAB,	focusstack,	{ .i = +2 } },
+	{ K_SUPER,		K_UP,	focusclient,	{ .i = -1 } },
+	{ K_SUPER,		K_DOWN,	focusclient,	{ .i = +1 } },
+	{ K_SUPER,		K_LEFT,	focusclient,	{ .i = -1 } },
+	{ K_SUPER,		K_RIGHT,focusclient,	{ .i = +1 } },
+	{ K_ALT | K_SHIFT,	K_TAB,	focusclient,	{ .i = -2 } },
+	{ K_ALT,		K_TAB,	focusclient,	{ .i = +2 } },
 
 	/* Tags */
 	{ TAGKEYS(K_1, 0) },
@@ -231,23 +228,21 @@ const struct key keys[] = {
 	/* Multihead */
 	{ K_SUPER,		K_BL,	focusmon,	{ .i = -1 } },
 	{ K_SUPER,		K_BR,	focusmon,	{ .i = +1 } },
-	{ K_SUPER,		K_O,	tagmon,		{ .i = +1 } }
+	{ K_SUPER,		K_O,	sendmon,	{ .i = +1 } }
 };
-const int keys_len = sizeof(keys) / sizeof(keys[0]);
 
 
 /*
  * Mouse bindings
  */
 
-const struct button buttons[] = {
+static const struct button buttons[] = {
 	/* Event	Mask	Button	Function	union arguments */
-	{ CLICK_TAGS,	0,	B_LEFT,	viewtag,	{ 0 } },
-	{ CLICK_TAGS,	0,	B_RIGHT,toggletag,	{ 0 } },
-	{ CLICK_TAGS,	K_SUPER,B_LEFT,	moveclient,	{ 0 } },
+	{ H_TAG,	0,	B_LEFT,	viewtag,	{ 0 } },
+	{ H_TAG,	0,	B_RIGHT,toggletag,	{ 0 } },
+	{ H_TAG,	K_SUPER,B_LEFT,	sendtag,	{ 0 } },
 
-	{ CLICK_CLIENT,	K_SUPER,B_LEFT,	movemouse,	{ 0 } },
-	{ CLICK_CLIENT,	K_SUPER,B_RIGHT,resizemouse,	{ 0 } }
+	{ H_CLIENT,	K_SUPER,B_LEFT,	moveclientm,	{ 0 } },
+	{ H_CLIENT,	K_SUPER,B_RIGHT,resizeclientm,	{ 0 } }
 
 };
-const int buttons_len = sizeof(buttons) / sizeof(buttons[0]);

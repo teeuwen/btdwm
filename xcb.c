@@ -44,14 +44,14 @@
 #include <xcb/xcb_keysyms.h>
 #include <xcb/xinerama.h>
 
+#include <limits.h>
+
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "btdwm.h"
 #include "keysym.h"
-
-#include <limits.h>
 
 #define CLEANMASK(m)	(m & ~(numlockmask | XCB_MOD_MASK_LOCK))
 
@@ -181,7 +181,7 @@ static void title_update(struct client *c)
 static void rules_apply(struct client *c, int init)
 {
 	xcb_icccm_get_wm_class_reply_t ch;
-	int i;
+	unsigned int i;
 
 	if (init) {
 		c->tags = 0;
@@ -193,7 +193,7 @@ static void rules_apply(struct client *c, int init)
 		if (!ch.class_name || !ch.instance_name)
 			return;
 
-		for (i = 0; i < rules_len; i++) {
+		for (i = 0; i < LENGTH(rules); i++) {
 			if ((!rules[i].title ||
 					strstr(c->name, rules[i].title)) &&
 					(!rules[i].class ||
@@ -540,8 +540,7 @@ void client_move_mouse(const union arg *arg, int move)
 
 void buttons_grab(struct client *c, int focused)
 {
-	int i;
-	unsigned int j;
+	unsigned int i, j;
 
 	numlockmask_update();
 	uint32_t val[] = {
@@ -561,8 +560,8 @@ void buttons_grab(struct client *c, int focused)
 		return;
 	}
 
-	for (i = 0; i < buttons_len; i++) {
-		if (buttons[i].click != CLICK_CLIENT)
+	for (i = 0; i < LENGTH(buttons); i++) {
+		if (buttons[i].click != H_CLIENT)
 			continue;
 
 		for (j = 0; j < LENGTH(val); j++)
@@ -577,8 +576,7 @@ void buttons_grab(struct client *c, int focused)
 void keys_grab(void)
 {
 	xcb_keycode_t *code;
-	int i;
-	unsigned int j;
+	unsigned int i, j;
 
 	numlockmask_update();
 	uint32_t val[] = {
@@ -593,7 +591,7 @@ void keys_grab(void)
 
 	xcb_ungrab_key(conn, XCB_GRAB_ANY, screen->root, XCB_MOD_MASK_ANY);
 
-	for (i = 0; i < keys_len; i++) {
+	for (i = 0; i < LENGTH(keys); i++) {
 		if (!(code = xcb_key_symbols_get_keycode(syms, keys[i].keysym)))
 			continue;
 
@@ -652,8 +650,8 @@ static int buttonpress(xcb_generic_event_t *_e)
 	xcb_button_press_event_t *e = (xcb_button_press_event_t *) _e;
 	struct monitor *m;
 	struct client *c;
-	int i, x = 0;
-	unsigned int click;
+	int x = 0;
+	unsigned int i, click;
 	union arg arg = { 0 };
 
 	if ((m = mon_get(e->event)) && m != selmon) {
@@ -663,7 +661,7 @@ static int buttonpress(xcb_generic_event_t *_e)
 	}
 
 	if (e->event == selmon->barwin) {
-		for (i = 0; i < tags_len; i++)
+		for (i = 0; i < LENGTH(tags); i++)
 			x += textw(m->barcr, tags[i].name) + 8;
 
 		i = 0;
@@ -674,10 +672,10 @@ static int buttonpress(xcb_generic_event_t *_e)
 
 		do {
 			x += textw(selmon->barcr, tags[i].name) + 8;
-		} while (e->event_x >= x && ++i < tags_len);
+		} while (e->event_x >= x && ++i < LENGTH(tags));
 
-		if (i < tags_len) {
-			click = CLICK_TAGS;
+		if (i < LENGTH(tags)) {
+			click = H_TAG;
 			arg.i = i;
 		} else {
 			return 0;
@@ -686,17 +684,17 @@ static int buttonpress(xcb_generic_event_t *_e)
 		focus(c);
 		restack(c->mon);
 
-		click = CLICK_CLIENT;
+		click = H_CLIENT;
 	} else {
 		return 0;
 	}
 
-	for (i = 0; i < buttons_len; i++) {
+	for (i = 0; i < LENGTH(buttons); i++) {
 		if (click == buttons[i].click && buttons[i].func &&
 				buttons[i].button == e->detail &&
 				CLEANMASK(buttons[i].mask) ==
 				CLEANMASK(e->state)) {
-			buttons[i].func(click == CLICK_TAGS &&
+			buttons[i].func(click == H_TAG &&
 					buttons[i].arg.i == 0 ?
 					&arg : &buttons[i].arg);
 			return 0;
@@ -939,11 +937,11 @@ static int keypress(xcb_generic_event_t *_e)
 {
 	xcb_key_press_event_t *e = (xcb_key_press_event_t *) _e;;
 	xcb_keysym_t keysym;
-	int i;
+	unsigned int i;
 
 	keysym = xcb_key_press_lookup_keysym(syms, e, 0);
 
-	for (i = 0; i < keys_len; i++)
+	for (i = 0; i < LENGTH(keys); i++)
 		if (keysym == keys[i].keysym && CLEANMASK(keys[i].mod) ==
 				CLEANMASK(e->state) && keys[i].func)
 			keys[i].func(&(keys[i].arg));

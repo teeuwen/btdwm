@@ -1,0 +1,177 @@
+#include "functions.h"
+#include "keysym.h"
+#include "layouts.h"
+
+/*
+ * Functions:
+ *  - focusclient(int): cycle through client stack on selected tags
+ *      int: -1 and 1 cycle backwards and forwards through the stack
+ *           respectively. -2 and 2 in addition, wraps around
+ *  - focusmon(int): change focus to another monitor
+ *      int: -1 and 1 change focus to the monitor before or after the selected
+ *           monitor respectively
+ *  - killclient(void): kill the selected client
+ *  - moveclient: TODO NYI
+ *  - moveclientm(void): move client using mouse
+ *  - quit(void): quit btdwm
+ *  - resizeclient: TODO NYI
+ *  - resizeclientm(void): resize client using mouse
+ *  - sendmon(int): send the selected client to another monitor
+ *      int: -1 and 1 move the client to the monitor before or after the
+ *           selected monitor respectively. -2 and 2 in addition, changes focus
+ *           the newly selected monitor as well
+ *  - sendtag(int): send the selected client to another tag
+ *      int: index of the tag to send the client to
+ *  - setlayout(int): set the layout of the selected tag
+ *      int: index of the new layout
+ *  - setmfact(double): increase of decrease the mfact for the selected tag
+ *      double: number of pixels to increase or decrease mfact with
+ *  - spawn(const char **): create a new process
+ *      const char **: argv to pass to execvp
+ *  - togglebar(void): toggle visibility of bar
+ *  - togglefloating(void): toggle floating property of selected client
+ *  - toggleontop(void): toggle always on top property of selected client
+ *  - togglesticky(void): toggle sticky property of selected client
+ *  - toggletag(int): toggle visibility of tag
+ *      int: index of the tag to toggle visibility of
+ *  - viewtag(int): switch to tag
+ *      int: index of the tag to switch to
+ *
+ * Events:
+ *  - E_CLIENT: on client focus change
+ *  - E_LAYOUT: on layout change
+ *  - E_TAG: on tag toggle or switch
+ *
+ * Mouse events:
+ *  - H_TAG: on tag hover
+ *  - H_CLIENT: on client hover
+ */
+
+/*
+ * Appearance
+ */
+
+static const char font_desc[]		= "sans-serif 12";
+
+static const char bg[]			= "#000000";
+
+static const char fg[]			= "#FFFFFF";
+static const char fg_light[]		= "#AAAAAA";
+
+static const char status_active[]	= "#83A598";
+static const char status_focus[]	= "#DFDFDF";
+static const char status_urgent[]	= "#F0C674";
+
+
+/*
+ * Layouts
+ */
+
+static struct layout layouts[] = {
+	/* Name		Layout */
+	{ "Floating",	NULL },
+	{ "Tile",	&tile },
+	{ "Max",	&max }
+};
+
+
+/*
+ * Tags
+ */
+
+static const struct tag tags[] = {
+	/* Name		Layout */
+	{ " 1 ",	&layouts[0] },
+	{ " 2 ",	&layouts[0] },
+	{ " 3 ",	&layouts[0] },
+	{ " 4 ",	&layouts[0] },
+	{ " 5 ",	&layouts[0] },
+	{ " 6 ",	&layouts[0] },
+	{ " 7 ",	&layouts[0] }
+};
+
+
+/*
+ * Rules
+ */
+
+static const struct rule rules[] = {
+	/* Class	Instance	Title		Float.	Transparent */
+	{ NULL,		NULL,		NULL,		0,	0 }
+};
+
+
+/*
+ * Hooks
+ */
+
+static const struct hook hooks[] = {
+	/* Hook			Command */
+	{ NULL,			NULL }
+};
+
+
+/*
+ * Key bindings
+ */
+
+static const struct key keys[] = {
+	/* Mask			Key	Function	Arguments */
+	{ K_SUPER | K_CTRL,	K_Q,	quit,		{ 0 } },
+
+	/* Global */
+	{ K_SUPER,		K_F,	togglebar,	{ 0 } },
+
+	{ K_SUPER | K_SHIFT,	K_SPACE,setlayout,	{ .i = -1 } },
+	{ K_SUPER,		K_SPACE,setlayout,	{ .i = +1 } },
+
+	{ K_SUPER,		K_UP,	focusclient,	{ .i = -1 } },
+	{ K_SUPER,		K_DOWN,	focusclient,	{ .i = +1 } },
+	{ K_SUPER,		K_LEFT,	focusclient,	{ .i = -1 } },
+	{ K_SUPER,		K_RIGHT,focusclient,	{ .i = +1 } },
+	{ K_ALT | K_SHIFT,	K_TAB,	focusclient,	{ .i = -2 } },
+	{ K_ALT,		K_TAB,	focusclient,	{ .i = +2 } },
+
+	/* Tags */
+	{ TAGKEYS(K_1, 0) },
+	{ TAGKEYS(K_2, 1) },
+	{ TAGKEYS(K_3, 2) },
+	{ TAGKEYS(K_4, 3) },
+	{ TAGKEYS(K_5, 4) },
+	{ TAGKEYS(K_6, 5) },
+	{ TAGKEYS(K_7, 6) },
+
+	{ K_SUPER | K_SHIFT,	K_TAB,	viewtag,	{ .i = -2 } },
+	{ K_SUPER,		K_TAB,	viewtag,	{ .i = -1 } },
+
+	/* Client */
+	{ K_SUPER,		K_Q,	killclient,	{ 0 } },
+
+	{ K_SUPER | K_CTRL,	K_SPACE,togglefloating,	{ 0 } },
+	{ K_SUPER,		K_T,	toggleontop,	{ 0 } },
+	{ K_SUPER,		K_Y,	togglesticky,	{ 0 } },
+
+	{ K_SUPER | K_SHIFT,	K_LEFT,	setmfact,	{ .f = -0.05 } },
+	{ K_SUPER | K_SHIFT,	K_RIGHT,setmfact,	{ .f = +0.05 } },
+
+	/* Multihead */
+	{ K_SUPER,		K_BL,	focusmon,	{ .i = -1 } },
+	{ K_SUPER,		K_BR,	focusmon,	{ .i = +1 } },
+	{ K_SUPER,		K_O,	sendmon,	{ .i = +1 } }
+};
+
+
+/*
+ * Mouse bindings
+ */
+
+static const struct button buttons[] = {
+	/* Event	Mask	Button	Function	Arguments */
+	{ H_TAG,	0,	B_LEFT,	viewtag,	{ 0 } },
+	{ H_TAG,	0,	B_RIGHT,toggletag,	{ 0 } },
+	{ H_TAG,	K_SUPER,B_LEFT,	sendtag,	{ 0 } },
+
+	{ H_CLIENT,	K_SUPER,B_LEFT,	moveclientm,	{ 0 } },
+	{ H_CLIENT,	K_SUPER,B_RIGHT,resizeclientm,	{ 0 } }
+
+};
