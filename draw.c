@@ -118,9 +118,9 @@ static void rgba_get(struct monitor *m, cairo_t *cr, int palette, int status,
 	case PLT_NORMAL:
 	default:
 		if (status) {
-			*r = colors[COLOR_STFOCUS][0];
-			*g = colors[COLOR_STFOCUS][1];
-			*b = colors[COLOR_STFOCUS][2];
+			*r = colors[COLOR_STSELECT][0];
+			*g = colors[COLOR_STSELECT][1];
+			*b = colors[COLOR_STSELECT][2];
 		} else {
 			*r = colors[COLOR_FG][0];
 			*g = colors[COLOR_FG][1];
@@ -223,7 +223,7 @@ void font_init(void)
 	rgb_set(COLOR_FG, fg);
 	rgb_set(COLOR_FGLIGHT, fg_light);
 	rgb_set(COLOR_STACTIVE, status_active);
-	rgb_set(COLOR_STFOCUS, status_focus);
+	rgb_set(COLOR_STSELECT, status_select);
 	rgb_set(COLOR_STURGENT, status_urgent);
 }
 

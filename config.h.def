@@ -1,13 +1,22 @@
+/*
+ *
+ * btdwm
+ * config.h
+ *
+ */
+
 #include "functions.h"
 #include "keysym.h"
 #include "layouts.h"
 
 /*
+ * General
+ *
  * Functions:
  *  - focusclient(int): cycle through client stack on selected tags
  *      int: -1 and 1 cycle backwards and forwards through the stack
- *           respectively. -2 and 2, wrap around and trigger the E_CLIENT event
- *           as well
+ *           respectively
+ *             -2 and 2, wrap around and trigger the E_CLIENT event as well
  *  - focusmon(int): change focus to another monitor
  *      int: -1 and 1 change focus to the monitor before or after the selected
  *           monitor respectively
@@ -19,8 +28,9 @@
  *  - resizeclientm(void): resize client using mouse
  *  - sendmon(int): send the selected client to another monitor
  *      int: -1 and 1 move the client to the monitor before or after the
- *           selected monitor respectively. -2 and 2 in addition, change focus
- *           the newly selected monitor as well
+ *           selected monitor respectively
+ *             -2 and 2 in addition, change focus the newly selected monitor as
+ *           well
  *  - sendtag(int): send the selected client to another tag
  *      int: index of the tag to send the client to
  *  - setlayout(int): set the layout of the selected tag
@@ -37,69 +47,88 @@
  *      int: index of the tag to toggle visibility of
  *  - viewtag(int): switch to tag
  *      int: index of the tag to switch to
+ *             -2 and -1 cycle backwards and forwards through tags respectively
  *
  *
  * Events:
  *  - E_CLIENT: on client focus change
- *      %n: first occurence of %n in any argv (excluding argv[0]) will be
- *          replaced by the WM_NAME of the selected client. escape using %
+ *      %n: first occurrence of %n in any argv will be replaced by the WM_NAME
+ *          of the selected client
+ *            escape using %
  *  - E_LAYOUT: on layout change
- *      %n: first occurence of %n in any argv (excluding argv[0]) will be
- *          replaced by the name of the selected layout specified below.
- *          escape using %
+ *      %n: first occurrence of %n in any argv will be replaced by the name of
+ *          the selected layout specified below
+ *            escape using %
  *  - E_TAG: on tag toggle or switch: TODO NYI
+ *      %n: first occurrence of %n in any argv will be replaced by an array
+ *          separated by commas
+ *            array entries consist of 2 characters, the first can either be
+ *          '1' or '0' to indicate either a focused or unfocused tag
+ *          respectively
+ *            the second character indicates the status of the tag:
+ *          'a' indicates an active tag, 'c' indicates the selected tag,
+ *          'i' indicates an inactive tag and 'u' indicates an urgent tag
  *
  * Mouse events:
  *  - H_TAG: on tag hover
  *  - H_CLIENT: on client hover
  */
 
+
 /*
  * Appearance
  */
 
-static const char font_desc[]		= "sans-serif 12";
+static const char font_desc[]		= "sans-serif 8";
 
 static const char bg[]			= "#000000";
 
 static const char fg[]			= "#FFFFFF";
-static const char fg_light[]		= "#AAAAAA";
+static const char fg_light[]		= "#808080";
 
-static const char status_active[]	= "#83A598";
-static const char status_focus[]	= "#DFDFDF";
-static const char status_urgent[]	= "#F0C674";
+static const char status_active[]	= "#008000";
+static const char status_select[]	= "#FFFFFF";
+static const char status_urgent[]	= "#FFA500";
 
 
 /*
  * Layouts
+ *
+ * These can usually be left alone, you might want to change the name perhaps
  */
 
 static struct layout layouts[] = {
 	/* Name		Layout */
 	{ "Floating",	NULL },
-	{ "Tile",	&tile },
-	{ "Max",	&max }
+	{ "Tiling",	&tile },
+	{ "Maximize",	&max }
 };
 
 
 /*
  * Tags
+ *
+ * Tags are static, unlike in window managers like i3
+ * Layouts can be switched dynamically using setlayout
  */
 
 static const struct tag tags[] = {
 	/* Name		Layout */
-	{ " 1 ",	&layouts[0] },
-	{ " 2 ",	&layouts[0] },
-	{ " 3 ",	&layouts[0] },
-	{ " 4 ",	&layouts[0] },
-	{ " 5 ",	&layouts[0] },
-	{ " 6 ",	&layouts[0] },
-	{ " 7 ",	&layouts[0] }
+	{ "1",		&layouts[1] },
+	{ "2",		&layouts[2] },
+	{ "3",		&layouts[0] },
+	{ "4",		&layouts[1] },
+	{ "5",		&layouts[2] },
+	{ "6",		&layouts[0] },
+	{ "7",		&layouts[1] }
 };
 
 
 /*
  * Rules
+ *
+ * Rules are used to override default layout or application behavior
+ * Rules are parsed on every property change, go crazy
  */
 
 static const struct rule rules[] = {
@@ -110,6 +139,10 @@ static const struct rule rules[] = {
 
 /*
  * Hooks
+ *
+ * Hooks are used to communicate with the rest of the system by executing other
+ *   binaries or scripts
+ * See the top of this file for a list of all hooks and functions
  * WARNING: Always include a NULL entry to terminate the array!
  */
 
@@ -121,6 +154,10 @@ static const struct hook hooks[] = {
 
 /*
  * Key bindings
+ *
+ * See the top of this file for a list of all functions
+ * keysym.h contains a list of all keys
+ * Additional keysym codes can be viewed in /usr/include/X11/keysymdef.h
  */
 
 static const struct key keys[] = {
@@ -152,7 +189,7 @@ static const struct key keys[] = {
 	{ K_SUPER | K_SHIFT,	K_TAB,	viewtag,	{ .i = -2 } },
 	{ K_SUPER,		K_TAB,	viewtag,	{ .i = -1 } },
 
-	/* Client */
+	/* Clients */
 	{ K_SUPER,		K_Q,	killclient,	{ 0 } },
 
 	{ K_SUPER | K_CTRL,	K_SPACE,togglefloating,	{ 0 } },
@@ -171,6 +208,8 @@ static const struct key keys[] = {
 
 /*
  * Mouse bindings
+ *
+ * See the top of this file for a list of all mouse events and functions
  */
 
 static const struct button buttons[] = {

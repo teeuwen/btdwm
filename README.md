@@ -49,4 +49,6 @@ the DISPLAY environment variable is set correctly, e.g.:
 ## Configuration
 
 The configuration of btdwm is done by creating a custom config.h
-and (re)compiling the source code.
+and (re)compiling the source code. config.h is automatically
+copied from config.h.def on first build. The file also contains
+comments to elaborate on all of btdwm's functionality.

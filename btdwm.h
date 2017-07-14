@@ -90,7 +90,7 @@
 #define COLOR_FG	1
 #define COLOR_FGLIGHT	2
 #define COLOR_STACTIVE	3
-#define COLOR_STFOCUS	4
+#define COLOR_STSELECT	4
 #define COLOR_STURGENT	5
 #define COLOR_MAX	6
 
