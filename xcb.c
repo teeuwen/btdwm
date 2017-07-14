@@ -875,7 +875,7 @@ static int enternotify(xcb_generic_event_t *_e)
 
 	c = client_get(e->event);
 
-	fprintf(stderr, "%u %u\n", e->detail, e->mode);
+	/* fprintf(stderr, "%u %u\n", e->detail, e->mode); */
 
 	if (c && PTRLOCK(c->mon)) {
 		if (c->tags & 1 << c->mon->tag)

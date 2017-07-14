@@ -6,7 +6,8 @@
  * Functions:
  *  - focusclient(int): cycle through client stack on selected tags
  *      int: -1 and 1 cycle backwards and forwards through the stack
- *           respectively. -2 and 2 in addition, wraps around
+ *           respectively. -2 and 2, wrap around and trigger the E_CLIENT event
+ *           as well
  *  - focusmon(int): change focus to another monitor
  *      int: -1 and 1 change focus to the monitor before or after the selected
  *           monitor respectively
@@ -18,7 +19,7 @@
  *  - resizeclientm(void): resize client using mouse
  *  - sendmon(int): send the selected client to another monitor
  *      int: -1 and 1 move the client to the monitor before or after the
- *           selected monitor respectively. -2 and 2 in addition, changes focus
+ *           selected monitor respectively. -2 and 2 in addition, change focus
  *           the newly selected monitor as well
  *  - sendtag(int): send the selected client to another tag
  *      int: index of the tag to send the client to
@@ -37,10 +38,16 @@
  *  - viewtag(int): switch to tag
  *      int: index of the tag to switch to
  *
+ *
  * Events:
  *  - E_CLIENT: on client focus change
+ *      %n: first occurence of %n in any argv (excluding argv[0]) will be
+ *          replaced by the WM_NAME of the selected client. escape using %
  *  - E_LAYOUT: on layout change
- *  - E_TAG: on tag toggle or switch
+ *      %n: first occurence of %n in any argv (excluding argv[0]) will be
+ *          replaced by the name of the selected layout specified below.
+ *          escape using %
+ *  - E_TAG: on tag toggle or switch: TODO NYI
  *
  * Mouse events:
  *  - H_TAG: on tag hover
@@ -103,11 +110,12 @@ static const struct rule rules[] = {
 
 /*
  * Hooks
+ * WARNING: Always include a NULL entry to terminate the array!
  */
 
 static const struct hook hooks[] = {
-	/* Hook			Command */
-	{ NULL,			NULL }
+	/* Event		Command */
+	{ 0,			NULL }
 };
 
 
@@ -116,7 +124,7 @@ static const struct hook hooks[] = {
  */
 
 static const struct key keys[] = {
-	/* Mask			Key	Function	Arguments */
+	/* Mask			Key	Function	Args. */
 	{ K_SUPER | K_CTRL,	K_Q,	quit,		{ 0 } },
 
 	/* Global */
@@ -151,8 +159,8 @@ static const struct key keys[] = {
 	{ K_SUPER,		K_T,	toggleontop,	{ 0 } },
 	{ K_SUPER,		K_Y,	togglesticky,	{ 0 } },
 
-	{ K_SUPER | K_SHIFT,	K_LEFT,	setmfact,	{ .f = -0.05 } },
-	{ K_SUPER | K_SHIFT,	K_RIGHT,setmfact,	{ .f = +0.05 } },
+	{ K_SUPER | K_SHIFT,	K_LEFT,	setmfact,	{ .d = -0.05 } },
+	{ K_SUPER | K_SHIFT,	K_RIGHT,setmfact,	{ .d = +0.05 } },
 
 	/* Multihead */
 	{ K_SUPER,		K_BL,	focusmon,	{ .i = -1 } },
@@ -166,12 +174,11 @@ static const struct key keys[] = {
  */
 
 static const struct button buttons[] = {
-	/* Event	Mask	Button	Function	Arguments */
-	{ H_TAG,	0,	B_LEFT,	viewtag,	{ 0 } },
-	{ H_TAG,	0,	B_RIGHT,toggletag,	{ 0 } },
-	{ H_TAG,	K_SUPER,B_LEFT,	sendtag,	{ 0 } },
+	/* Mask		Button		Mouse event	Function	Args. */
+	{ 0,		B_LEFT,		H_TAG,		viewtag,	{ 0 } },
+	{ 0,		B_RIGHT,	H_TAG,		toggletag,	{ 0 } },
+	{ K_SUPER,	B_LEFT,		H_TAG,		sendtag,	{ 0 } },
 
-	{ H_CLIENT,	K_SUPER,B_LEFT,	moveclientm,	{ 0 } },
-	{ H_CLIENT,	K_SUPER,B_RIGHT,resizeclientm,	{ 0 } }
-
+	{ K_SUPER,	B_LEFT,		H_CLIENT,	moveclientm,	{ 0 } },
+	{ K_SUPER,	B_RIGHT,	H_CLIENT,	resizeclientm,	{ 0 } }
 };

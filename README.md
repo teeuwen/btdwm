@@ -6,7 +6,6 @@ Changes/enhancements over dwm:
 
 	* Per tag layouts
 	* The status area has been removed
-	* libnotify notifications to display the active client
 	* True transparency support
 	* Probably more, I should've put this on version control earlier on...
 
@@ -22,7 +21,7 @@ Changes/enhancements over dwm-xcb:
 
 ## Requirements
 
-In order to build btdwm you need the Xlib, xcb, cairo pango and libnotify header files.
+In order to build btdwm you need the Xlib, xcb, cairo pango header files.
 
 
 ## Installation

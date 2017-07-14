@@ -4,26 +4,24 @@
 
 PREFIX		:= /opt/btdwm
 
-
 CC		:= gcc
 LD		:= gcc
 
-
-PKGLIST		= xcb-aux xcb-cursor xcb-ewmh xcb-icccm xcb-keysyms xcb-xinerama xcb pangocairo pango libnotify xau x11 xdmcp
+PKGLIST		= xcb-aux xcb-cursor xcb-ewmh xcb-icccm xcb-keysyms xcb-xinerama xcb pangocairo pango xau x11 xdmcp
 
 MAKEFLAGS	:= -s
 
 CFLAGS		:= -Wall -Wextra -Wno-unused-parameter -std=gnu89 `pkg-config --cflags $(PKGLIST)`
 LDFLAGS		:= `pkg-config --libs $(PKGLIST)`
 
-objects = btdwm.o draw.o functions.o layouts.o msg.o xcb.o
+objects = btdwm.o draw.o functions.o layouts.o xcb.o
 
 PHONY += all
 all: release
 
 PHONY += clean
 clean:
-	echo -e "  RM      btdwm"
+	[ -f btdwm ] && echo -e "  RM      btdwm" || true
 	rm -f btdwm
 	find . -type f -name '*.o' -delete -exec sh -c "echo '  RM      {}'" \;
 

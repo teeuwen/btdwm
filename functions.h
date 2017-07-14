@@ -38,9 +38,9 @@
 #define _FUNCTIONS_H
 
 union arg {
-	int		i, b;
-	double		f;
-	const void	*v;
+	int		i;
+	double		d;
+	const char	**s;
 };
 
 struct monitor;
@@ -65,8 +65,8 @@ struct rule {
 };
 
 struct hook {
-	void		(*event) (void);
-	const char	*cmd;
+	int		event;
+	char		**cmd;
 };
 
 #define TAGKEYS(k,t) \
@@ -84,9 +84,9 @@ struct key {
 };
 
 struct button {
-	unsigned int	click;
 	unsigned int	mask;
 	unsigned int	button;
+	unsigned int	click;
 	void		(*func) (const union arg *);
 	const union arg	arg;
 };

@@ -189,6 +189,7 @@ struct client *client_get(xcb_window_t w);
 void client_kill(void);
 void client_move_mouse(const union arg *arg, int move);
 
+void event_trigger(int event, const char *str);
 
 void bar_draw(struct monitor *m);
 void bars_draw(void);

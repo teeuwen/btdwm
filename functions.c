@@ -41,9 +41,6 @@
 #include <unistd.h>
 
 #include "btdwm.h"
-#include "msg.h"
-
-static NotifyNotification *msg;
 
 void moveclientm(const union arg *arg)
 {
@@ -109,7 +106,7 @@ void focusclient(const union arg *arg)
 	if (c) {
 		/* TODO Icon */
 		if (arg->i < -1 || arg->i > 1)
-			msg = msg_update(msg, c->name, 500);
+			event_trigger(E_CLIENT, c->name);
 
 		focus(c);
 		restack(c->mon);
@@ -130,13 +127,13 @@ void spawn(const union arg *arg)
 		if (conn)
 			close(xcb_get_file_descriptor(conn));
 
-		if (selmon->client)
-			selmon->flags |= MF_PTRLOCK;
+		/* if (selmon->client)
+			selmon->flags |= MF_PTRLOCK; */
 
 		setsid();
-		execvp(((char **) arg->v)[0], (char **) arg->v);
+		execvp(((char **) arg->s)[0], (char **) arg->s);
 
-		fprintf(stderr, "failed to execvp %s", ((char **) arg->v)[0]);
+		fprintf(stderr, "failed to execvp %s", ((char **) arg->s)[0]);
 		exit(0);
 	}
 }
@@ -276,7 +273,7 @@ void setlayout(const union arg *arg)
 		i -= 3;
 
 	selmon->layouts[selmon->tag] = &layouts[i + arg->i];
-	msg = msg_update(msg, selmon->layouts[selmon->tag]->name, 500);
+	event_trigger(E_LAYOUT, selmon->layouts[selmon->tag]->name);
 
 	if (selmon->client)
 		arrange(selmon);
@@ -291,7 +288,7 @@ void setmfact(const union arg *arg)
 	if (!arg || !selmon->layouts[selmon->tag]->arrange)
 		return;
 
-	f = arg->f < 1.0 ? arg->f + selmon->mfacts[selmon->tag] : arg->f - 1.0;
+	f = arg->d < 1.0 ? arg->d + selmon->mfacts[selmon->tag] : arg->d - 1.0;
 	if (f < 0.1 || f > 0.9)
 		return;
 
