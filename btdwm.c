@@ -435,7 +435,8 @@ fork:
 					strlen(str) + 1)))
 				die("out of memory\n");
 
-			strncpy(cmd, hooks[i].cmd[j], p - hooks[i].cmd[j] - 1);
+			cmd[0] = '\0';
+			strncat(cmd, hooks[i].cmd[j], p - hooks[i].cmd[j] - 1);
 			strcat(cmd, str);
 			strcat(cmd, ++p);
 
