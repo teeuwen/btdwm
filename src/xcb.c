@@ -67,6 +67,7 @@ static xcb_key_symbols_t *syms;
 
 static int (*xcb_handlers[XCB_NO_OPERATION]) (xcb_generic_event_t *);
 static xcb_generic_error_t *err;
+static xcb_window_t win_prev;
 
 static unsigned int numlockmask;
 
@@ -860,11 +861,7 @@ static int destroynotify(xcb_generic_event_t *_e)
 	struct client *c;
 
 	if ((c = client_get(e->window))) {
-		c->mon->flags |= MF_PTRLOCK;
-
 		unmanage(c, 1);
-
-		c->mon->flags |= MF_PTRLOCK;
 	}
 
 	return 0;
@@ -876,13 +873,20 @@ static int enternotify(xcb_generic_event_t *_e)
 	struct monitor *m;
 	struct client *c;
 
+	if  ((e->mode != XCB_NOTIFY_MODE_NORMAL ||
+			e->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
+			e->event != screen->root)
+		return 0;
+
 	c = client_get(e->event);
 
-	/* fprintf(stderr, "%u %u\n", e->detail, e->mode); */
-
 	if (c && PTRLOCK(c->mon)) {
-		if (c->tags & 1 << c->mon->tag)
+		if (e->event != win_prev && c->tags & 1 << c->mon->tag) {
 			c->mon->flags &= ~MF_PTRLOCK;
+			win_prev = 0;
+		} else {
+			win_prev = e->event;
+		}
 
 		return 0;
 	}
@@ -896,20 +900,12 @@ static int enternotify(xcb_generic_event_t *_e)
 			atoms[ATOM_TYPE_NOTIFICATION]))
 		return 0;
 
-	if  ((e->mode != XCB_NOTIFY_MODE_NORMAL ||
-			e->detail == XCB_NOTIFY_DETAIL_INFERIOR) &&
-			e->event != screen->root)
-		return 0;
-
 	if ((m = mon_get(e->event)) && m != selmon) {
 		unfocus(selmon->client, 1);
 		selmon = m;
 	}
 
 	focus(c);
-
-	/* if (c)
-		restack(c->mon); */
 
 	return 0;
 }

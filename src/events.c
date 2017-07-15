@@ -47,7 +47,7 @@
 void event_trigger(int event, const char *str)
 {
 	unsigned int i, j;
-	char *p, *ocmd = NULL, *cmd;
+	char *p, *ocmd = NULL, *cmd = NULL;
 
 	for (i = 0; i < LENGTH(hooks); i++)
 		if (hooks[i].event == event)
@@ -78,15 +78,20 @@ fork:
 		}
 	}
 
-	if (fork() == 0) {
+	switch (fork()) {
+	case 0:
 		if (conn)
 			close(xcb_get_file_descriptor(conn));
 
 		setsid();
-		execvp(((char **) hooks[i].cmd)[0], (char **) hooks[i].cmd);
+		execvp(hooks[i].cmd[0], hooks[i].cmd);
 
-		fprintf(stderr, "failed to execvp %s", hooks[i].cmd[0]);
+		fprintf(stderr, "failed to execvp %s\n", hooks[i].cmd[0]);
 		exit(0);
+		break;
+	case -1:
+		fprintf(stderr, "failed to fork\n");
+		break;
 	}
 
 	if (ocmd) {
