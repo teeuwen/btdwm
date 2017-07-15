@@ -35,6 +35,8 @@
  *      int: index of the tag to send the client to
  *  - setlayout(int): set the layout of the selected tag
  *      int: index of the new layout
+ *             -2 and -1 cycle backwards and forwards through layouts
+ *           respectively
  *  - setmfact(double): increase of decrease the mfact for the selected tag
  *      double: number of pixels to increase or decrease mfact with
  *  - spawn(const char **): create a new process
@@ -169,8 +171,8 @@ static const struct key keys[] = {
 	/* Global */
 	{ K_SUPER,		K_F,	togglebar,	{ 0 } },
 
-	{ K_SUPER | K_SHIFT,	K_SPACE,setlayout,	{ .i = -1 } },
-	{ K_SUPER,		K_SPACE,setlayout,	{ .i = +1 } },
+	{ K_SUPER | K_SHIFT,	K_SPACE,setlayout,	{ .i = -2 } },
+	{ K_SUPER,		K_SPACE,setlayout,	{ .i = -1 } },
 
 	{ K_SUPER,		K_UP,	focusclient,	{ .i = -1 } },
 	{ K_SUPER,		K_DOWN,	focusclient,	{ .i = +1 } },

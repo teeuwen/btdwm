@@ -264,15 +264,26 @@ void setlayout(const union arg *arg)
 {
 	int i;
 
-	for (i = 0; i < (int) LENGTH(layouts) &&
-			&layouts[i] != selmon->layouts[selmon->tag]; i++);
+	if (arg->i < 0) {
+		for (i = 0; i < (int) LENGTH(layouts) &&
+				&layouts[i] != selmon->layouts[selmon->tag];
+				i++);
 
-	if (i + arg->i < 0)
-		i += 3;
-	if (i + arg->i > (int) LENGTH(layouts) - 1)
-		i -= 3;
+		if (arg->i == -2) {
+			if (++i + arg->i < 0)
+				i += 3;
+		} else if (arg->i == -1) {
+			if ((i += 2) + arg->i > (int) LENGTH(layouts) - 1)
+				i -= 3;
+		} else {
+			return;
+		}
 
-	selmon->layouts[selmon->tag] = &layouts[i + arg->i];
+		selmon->layouts[selmon->tag] = &layouts[i + arg->i];
+	} else if (arg->i < LENGTH(layouts)) {
+		selmon->layouts[selmon->tag] = &layouts[arg->i];
+	}
+
 	event_trigger(E_LAYOUT, selmon->layouts[selmon->tag]->name);
 
 	if (selmon->client)
