@@ -1,5 +1,8 @@
 /*
  *
+ * btdwm
+ * src/include/functions.h
+ *
  * © 2006-2010 Anselm R Garbe <anselm@garbe.us>
  * © 2006-2007 Sander van Dijk <a dot h dot vandijk at gmail dot com>
  * © 2006-2009 Jukka Salmi <jukka at salmi dot ch>
@@ -90,13 +93,6 @@ struct button {
 	void		(*func) (const union arg *);
 	const union arg	arg;
 };
-
-#define E_CLIENT	1
-#define E_LAYOUT	2
-#define E_TAG		3
-
-#define H_TAG		1
-#define H_CLIENT	2
 
 void focusclient(const union arg *arg);
 void focusmon(const union arg *arg);

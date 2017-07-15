@@ -5,9 +5,7 @@
  *
  */
 
-#include "functions.h"
-#include "keysym.h"
-#include "layouts.h"
+#include <confdef.h>
 
 /*
  * General

@@ -11,10 +11,10 @@ PKGLIST		= xcb-aux xcb-cursor xcb-ewmh xcb-icccm xcb-keysyms xcb-xinerama xcb pa
 
 MAKEFLAGS	:= -s
 
-CFLAGS		:= -Wall -Wextra -Wno-unused-parameter -std=gnu89 `pkg-config --cflags $(PKGLIST)`
+CFLAGS		:= -Wall -Wextra -Wno-unused-parameter -Wpedantic -std=c99 `pkg-config --cflags $(PKGLIST)`
 LDFLAGS		:= `pkg-config --libs $(PKGLIST)`
 
-objects = btdwm.o draw.o functions.o layouts.o xcb.o
+include src/Makefile
 
 PHONY += all
 all: release
@@ -25,17 +25,20 @@ clean:
 	rm -f btdwm
 	find . -type f -name '*.o' -delete -exec sh -c "echo '  RM      {}'" \;
 
-config.h:
-	cp config.h.def config.h
+cfg/config.h:
+	mkdir -p cfg
+	cp src/include/config.h.def cfg/config.h
 
 %.o: %.c
 	echo -e "  CC      $<"
-	$(CC) $(CFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) -c $< $(btdwm-i) -o $@
 
-PHONY += btdwm
-btdwm: config.h $(objects)
+PHONY += btdwm bin/btdwm
+btdwm: bin/btdwm
+bin/btdwm: cfg/config.h $(btdwm-o)
+	mkdir -p bin
 	echo -e "  LD      $<"
-	$(LD) -o $@ $(objects) $(LDFLAGS)
+	$(LD) -o $@ $(btdwm-o) $(LDFLAGS)
 
 PHONY += release
 release: CFLAGS+=-Os
@@ -44,13 +47,13 @@ release: btdwm
 
 PHONY += debug
 debug: CFLAGS+=-g
-debug: btdwm
+debug: bin/btdwm
 
 PHONY += install
 install: release
 	echo -e "  INSTALL $(PREFIX)/bin/btdwm"
 	mkdir -p $(PREFIX)/bin/
-	cp -f btdwm $(PREFIX)/bin/.
+	cp -f bin/btdwm $(PREFIX)/bin/.
 	chmod 755 $(PREFIX)/bin/btdwm
 
 PHONY += uninstall

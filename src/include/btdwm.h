@@ -1,5 +1,8 @@
 /*
  *
+ * btdwm
+ * src/include/btdwm.h
+ *
  * © 2006-2010 Anselm R Garbe <anselm@garbe.us>
  * © 2006-2007 Sander van Dijk <a dot h dot vandijk at gmail dot com>
  * © 2006-2009 Jukka Salmi <jukka at salmi dot ch>
@@ -38,7 +41,7 @@
 #define _DWH_H
 
 #include <cairo/cairo-xcb.h>
-#include "config.h"
+#include "../../cfg/config.h"
 
 /* TODO Move to config.h */
 #define BAR_HEIGHT	16
@@ -188,8 +191,6 @@ void scan(void);
 struct client *client_get(xcb_window_t w);
 void client_kill(void);
 void client_move_mouse(const union arg *arg, int move);
-
-void event_trigger(int event, const char *str);
 
 void bar_draw(struct monitor *m);
 void bars_draw(void);

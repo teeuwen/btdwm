@@ -1,5 +1,8 @@
 /*
  *
+ * btdwm
+ * src/include/keysym.h
+ *
  * © 2016-2017 Bastiaan Teeuwen <bastiaan@mkcl.nl>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a

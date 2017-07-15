@@ -1,5 +1,8 @@
 /*
  *
+ * btdwm
+ * src/draw.c
+ *
  * © 2016-2017 Bastiaan Teeuwen <bastiaan@mkcl.nl>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a
@@ -28,7 +31,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include "btdwm.h"
+#include <btdwm.h>
 
 PangoFontDescription *font;
 double colors[COLOR_MAX][3];

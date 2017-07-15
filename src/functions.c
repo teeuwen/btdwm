@@ -1,5 +1,8 @@
 /*
  *
+ * btdwm
+ * src/functions.c
+ *
  * © 2006-2010 Anselm R Garbe <anselm@garbe.us>
  * © 2006-2007 Sander van Dijk <a dot h dot vandijk at gmail dot com>
  * © 2006-2009 Jukka Salmi <jukka at salmi dot ch>
@@ -40,7 +43,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#include "btdwm.h"
+#include <btdwm.h>
 
 void moveclientm(const union arg *arg)
 {
@@ -280,7 +283,7 @@ void setlayout(const union arg *arg)
 		}
 
 		selmon->layouts[selmon->tag] = &layouts[i + arg->i];
-	} else if (arg->i < LENGTH(layouts)) {
+	} else if (arg->i < (int) LENGTH(layouts)) {
 		selmon->layouts[selmon->tag] = &layouts[arg->i];
 	}
 

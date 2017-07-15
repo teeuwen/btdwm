@@ -1,5 +1,8 @@
 /*
  *
+ * btdwm
+ * src/include/events.h
+ *
  * © 2006-2010 Anselm R Garbe <anselm@garbe.us>
  * © 2006-2007 Sander van Dijk <a dot h dot vandijk at gmail dot com>
  * © 2006-2009 Jukka Salmi <jukka at salmi dot ch>
@@ -34,61 +37,16 @@
  *
  */
 
-#include "btdwm.h"
+#ifndef _EVENTS_H
+#define _EVENTS_H
 
-void tile(struct monitor *m)
-{
-	struct client *c;
-	int x, y, h, w, mw;
-	unsigned int i, n;
+#define E_CLIENT	1
+#define E_LAYOUT	2
+#define E_TAG		3
 
-	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
-	if (!n)
-		return;
+#define H_TAG		1
+#define H_CLIENT	2
 
-	c = nexttiled(m->clients);
-	mw = m->mfacts[m->tag] * m->w;
-	resize(c, m->x, m->y + (SHOWBAR(m) ? BAR_HEIGHT : 0),
-			(n == 1 ? m->w : mw),
-			m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0), 0);
-	if (!--n)
-		return;
+void event_trigger(int event, const char *str);
 
-	x = (m->x + mw > c->x + c->w) ? c->x + c->w : m->x + mw;
-	y = m->y + (SHOWBAR(m) ? BAR_HEIGHT : 0);
-	w = (m->x + mw > c->x + c->w) ? m->x + m->w - x : m->w - mw;
-	h = (m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0)) / n;
-
-	if (h < BAR_HEIGHT)
-		h = m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0);
-
-	for (i = 0, c = nexttiled(c->next); c; c = nexttiled(c->next), i++) {
-		resize(c, x, y, w, ((i + 1 == n) ? m->y + m->h - y : h), 0);
-
-		if (h != m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0))
-			y = c->y + c->h;
-	}
-}
-
-void col(struct monitor *m)
-{
-#if 0
-	struct client *c;
-	unsigned int i, n, h, w, x, y, mw;
-
-	for (n = 0, c = nexttiled(m->clients); c; c = nexttiled(c->next), n++);
-	if (!n)
-		return;
-
-	if (n > m->nmaster
 #endif
-}
-
-void max(struct monitor *m)
-{
-	struct client *c;
-
-	for (c = nexttiled(m->clients); c; c = nexttiled(c->next))
-		resize(c, m->x, m->y + (SHOWBAR(m) ? BAR_HEIGHT : 0),
-				m->w, m->h - (SHOWBAR(m) ? BAR_HEIGHT : 0), 0);
-}

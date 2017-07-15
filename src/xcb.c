@@ -1,5 +1,8 @@
 /*
  *
+ * btdwm
+ * src/xcb.c
+ *
  * © 2006-2010 Anselm R Garbe <anselm@garbe.us>
  * © 2006-2007 Sander van Dijk <a dot h dot vandijk at gmail dot com>
  * © 2006-2009 Jukka Salmi <jukka at salmi dot ch>
@@ -50,8 +53,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "btdwm.h"
-#include "keysym.h"
+#include <btdwm.h>
+#include <keysym.h>
 
 #define CLEANMASK(m)	(m & ~(numlockmask | XCB_MOD_MASK_LOCK))
 
@@ -1045,8 +1048,8 @@ static int (*xcb_handlers[XCB_NO_OPERATION]) (xcb_generic_event_t *) = {
 	[XCB_CONFIGURE_NOTIFY] =	&configurenotify,
 	[XCB_DESTROY_NOTIFY] =		&destroynotify,
 	[XCB_ENTER_NOTIFY] =		&enternotify,
-	[XCB_EXPOSE]			&expose,
-	[XCB_FOCUS_IN]			&focusin,
+	[XCB_EXPOSE] =			&expose,
+	[XCB_FOCUS_IN] =		&focusin,
 	[XCB_KEY_PRESS] =		&keypress,
 	[XCB_MAPPING_NOTIFY] =		&mappingnotify,
 	[XCB_MAP_REQUEST] =		&maprequest,
