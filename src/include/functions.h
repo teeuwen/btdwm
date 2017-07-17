@@ -109,6 +109,7 @@ void setmfact(const union arg *arg);
 void spawn(const union arg *arg);
 void togglebar(const union arg *arg);
 void togglefloating(const union arg *arg);
+void togglefullscr(const union arg *arg);
 void toggleontop(const union arg *arg);
 void togglesticky(const union arg *arg);
 void toggletag(const union arg *arg);

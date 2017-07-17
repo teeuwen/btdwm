@@ -41,6 +41,7 @@
  *      const char **: argv to pass to execvp
  *  - togglebar(void): toggle visibility of bar
  *  - togglefloating(void): toggle floating property of selected client
+ *  - togglefullscr(void): toggle fullscreen property of selected client
  *  - toggleontop(void): toggle always on top property of selected client
  *  - togglesticky(void): toggle sticky property of selected client
  *  - toggletag(int): toggle visibility of tag
@@ -167,7 +168,7 @@ static const struct key keys[] = {
 	{ K_SUPER | K_CTRL,	K_Q,	quit,		{ 0 } },
 
 	/* Global */
-	{ K_SUPER,		K_F,	togglebar,	{ 0 } },
+	{ K_SUPER | K_SHIFT,	K_F,	togglebar,	{ 0 } },
 
 	{ K_SUPER | K_SHIFT,	K_SPACE,setlayout,	{ .i = -2 } },
 	{ K_SUPER,		K_SPACE,setlayout,	{ .i = -1 } },
@@ -197,6 +198,7 @@ static const struct key keys[] = {
 	{ K_SUPER,		K_Q,	killclient,	{ 0 } },
 
 	{ K_SUPER | K_CTRL,	K_SPACE,togglefloating,	{ 0 } },
+	{ K_SUPER,		K_F,	togglefullscr,	{ 0 } },
 	{ K_SUPER,		K_T,	toggleontop,	{ 0 } },
 	{ K_SUPER,		K_Y,	togglesticky,	{ 0 } },
 

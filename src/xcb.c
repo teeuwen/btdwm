@@ -711,6 +711,36 @@ static int buttonpress(xcb_generic_event_t *_e)
 	return 0;
 }
 
+void fullscreen_set(struct client *c, int fullscr)
+{
+	if (fullscr) {
+		xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
+				c->win, atoms[ATOM_NETSTATE],
+				XCB_ATOM_ATOM, 32, 1,
+				(const char *)
+				&atoms[ATOM_NETSTATE_FULLSCR]);
+
+		c->flags |= CF_FULLSCREEN;
+
+		client_resize(c, c->mon->x, c->mon->y,
+				c->mon->w, c->mon->h);
+	} else {
+		xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
+				c->win, atoms[ATOM_NETSTATE],
+				XCB_ATOM_ATOM, 32, 0,
+				(const char *) 0);
+
+		c->flags &= ~CF_FULLSCREEN;
+		c->x = c->oldx;
+		c->y = c->oldy;
+		c->w = c->oldw;
+		c->h = c->oldh;
+		client_resize(c, c->x, c->y, c->w, c->h);
+	}
+
+	arrange(c->mon);
+}
+
 static int clientmessage(xcb_generic_event_t *_e)
 {
 	xcb_client_message_event_t *e = (xcb_client_message_event_t *) _e;
@@ -721,34 +751,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 
 	if (e->type == atoms[ATOM_NETSTATE]) {
 		if (e->data.data32[1] == atoms[ATOM_NETSTATE_FULLSCR]) {
-			if (e->data.data32[0]) {
-				xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
-						e->window, atoms[ATOM_NETSTATE],
-						XCB_ATOM_ATOM, 32, 1,
-						(const char *)
-						&atoms[ATOM_NETSTATE_FULLSCR]);
-
-				c->flags |= CF_FULLSCREEN;
-
-				client_resize(c, c->mon->x, c->mon->y,
-						c->mon->w, c->mon->h);
-
-				arrange(c->mon);
-			} else {
-				xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
-						e->window, atoms[ATOM_NETSTATE],
-						XCB_ATOM_ATOM, 32, 0,
-						(const char *) 0);
-
-				c->flags &= ~CF_FULLSCREEN;
-				c->x = c->oldx;
-				c->y = c->oldy;
-				c->w = c->oldw;
-				c->h = c->oldh;
-				client_resize(c, c->x, c->y, c->w, c->h);
-
-				arrange(c->mon);
-			}
+			fullscreen_set(c, e->data.data32[0]);
 		} else if (e->data.data32[1] == atoms[ATOM_NETSTATE_ONTOP]) {
 			c->flags |= CF_ONTOP;
 

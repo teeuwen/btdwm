@@ -185,6 +185,17 @@ void togglefloating(const union arg *arg)
 	arrange(selmon);
 }
 
+void togglefullscr(const union arg *arg)
+{
+	if (!selmon->client)
+		return;
+
+	fullscreen_set(selmon->client,
+			!(selmon->client->flags & CF_FULLSCREEN));
+
+	arrange(selmon);
+}
+
 void toggleontop(const union arg *arg)
 {
 	if (!selmon->client)

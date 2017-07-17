@@ -178,6 +178,7 @@ void arrange(struct monitor *m);
 void focus(struct client *c);
 void restack(struct monitor *m);
 
+void fullscreen_set(struct client *c, int fullscr);
 void client_resize(struct client *c, int x, int y, int w, int h);
 void resize(struct client *c, int x, int y, int w, int h, int interact);
 
