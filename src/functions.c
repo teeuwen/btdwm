@@ -128,8 +128,7 @@ void spawn(const union arg *arg)
 
 	selmon->flags |= MF_PTRLOCK;
 
-	switch (fork()) {
-	case 0:
+	if (fork() == 0) {
 		if (conn)
 			close(xcb_get_file_descriptor(conn));
 
@@ -138,11 +137,6 @@ void spawn(const union arg *arg)
 
 		fprintf(stderr, "failed to execvp %s\n", arg->s[0]);
 		exit(0);
-		break;
-	case -1:
-		selmon->flags &= ~MF_PTRLOCK;
-		fprintf(stderr, "failed to fork\n");
-		break;
 	}
 }
 

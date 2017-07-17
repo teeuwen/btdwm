@@ -551,13 +551,9 @@ void restack(struct monitor *m)
 		if (!ISVISIBLE(c))
 			continue;
 
-		if (ISONTOP(c))
-			xcb_configure_window(conn, c->win,
-					XCB_CONFIG_WINDOW_STACK_MODE, ontop);
-		else
-			xcb_configure_window(conn, c->win,
-					XCB_CONFIG_WINDOW_SIBLING |
-					XCB_CONFIG_WINDOW_STACK_MODE, normal);
+		xcb_configure_window(conn, c->win,
+				XCB_CONFIG_WINDOW_SIBLING |
+				XCB_CONFIG_WINDOW_STACK_MODE, normal);
 
 		normal[0] = c->win;
 	}
@@ -568,6 +564,16 @@ void restack(struct monitor *m)
 	else
 		xcb_configure_window(conn, m->barwin,
 				XCB_CONFIG_WINDOW_STACK_MODE, ontop);
+
+	for (c = m->stack; c; c = c->snext) {
+		if (!ISVISIBLE(c))
+			continue;
+
+		if (ISONTOP(c) ||
+				(m->layouts[m->tag]->arrange && ISFLOATING(c)))
+			xcb_configure_window(conn, c->win,
+					XCB_CONFIG_WINDOW_STACK_MODE, ontop);
+	}
 
 	xcb_flush(conn);
 }
@@ -796,20 +802,22 @@ void quit(const union arg *arg)
 	xcb_quit();
 }
 
-static void sigchld(int unused)
-{
-	while (0 < waitpid(-1, 0, WNOHANG));
-}
-
-static void sigint(int unused)
+static void sigint(int sig)
 {
 	exit(0);
 }
 
-int main(int argc, char *argv[])
+static void sigchld(int sig)
 {
-	signal(SIGINT, sigint);
-	signal(SIGCHLD, sigchld);
+	signal(SIGCHLD, &sigchld);
+
+	while (waitpid(-1, NULL, WNOHANG) > 0);
+}
+
+int main(int argc, char **argv)
+{
+	signal(SIGINT, &sigint);
+	sigchld(0);
 
 	xcb_init();
 	mon_init();

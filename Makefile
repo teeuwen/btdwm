@@ -35,7 +35,7 @@ cfg/config.h:
 
 PHONY += btdwm bin/btdwm
 btdwm: bin/btdwm
-bin/btdwm: cfg/config.h $(btdwm-o)
+bin/btdwm: $(btdwm-o) cfg/config.h
 	mkdir -p bin
 	echo -e "  LD      $<"
 	$(LD) -o $@ $(btdwm-o) $(LDFLAGS)

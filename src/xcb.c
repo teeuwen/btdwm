@@ -339,8 +339,6 @@ static void unmanage(struct client *c, int destroyed)
 {
 	struct monitor *m = c->mon;
 
-	detach(c);
-
 	if (!destroyed) {
 		xcb_grab_server(conn);
 		xcb_ungrab_button_checked(conn, XCB_BUTTON_INDEX_ANY, c->win,
@@ -350,8 +348,8 @@ static void unmanage(struct client *c, int destroyed)
 		xcb_ungrab_server(conn);
 	}
 
-	focus(c->prev);
-
+	focus(c->snext);
+	detach(c);
 	free(c);
 
 	arrange(m);
@@ -717,7 +715,6 @@ static int clientmessage(xcb_generic_event_t *_e)
 {
 	xcb_client_message_event_t *e = (xcb_client_message_event_t *) _e;
 	struct client *c;
-	uint32_t val[] = { XCB_STACK_MODE_ABOVE };
 
 	if (!(c = client_get(e->window)))
 		return 0;
@@ -736,9 +733,7 @@ static int clientmessage(xcb_generic_event_t *_e)
 				client_resize(c, c->mon->x, c->mon->y,
 						c->mon->w, c->mon->h);
 
-				xcb_configure_window(conn, c->win,
-						XCB_CONFIG_WINDOW_STACK_MODE,
-						val);
+				arrange(c->mon);
 			} else {
 				xcb_change_property(conn, XCB_PROP_MODE_REPLACE,
 						e->window, atoms[ATOM_NETSTATE],
@@ -750,19 +745,19 @@ static int clientmessage(xcb_generic_event_t *_e)
 				c->y = c->oldy;
 				c->w = c->oldw;
 				c->h = c->oldh;
-
 				client_resize(c, c->x, c->y, c->w, c->h);
-				arrange(c->mon); /* XXX Or just restack? */
+
+				arrange(c->mon);
 			}
 		} else if (e->data.data32[1] == atoms[ATOM_NETSTATE_ONTOP]) {
 			c->flags |= CF_ONTOP;
 
-			restack(c->mon); /* XXX Sure? */
+			restack(c->mon);
 		} else if (e->data.data32[1] == atoms[ATOM_NETSTATE_MODAL]) {
 			c->flags |= CF_FLOATING;
 
 			client_resize(c, c->x, c->y, c->w, c->h);
-			arrange(c->mon); /* XXX Or restack? */
+			arrange(c->mon);
 		}
 	} else if (e->type == atoms[ATOM_ACTIVE]) {
 		if (!ISVISIBLE(c)) /* XXX Set urgent or something maybe? */
