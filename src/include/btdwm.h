@@ -143,7 +143,7 @@ struct monitor {
 	struct client	*stack;
 	struct client	*client;
 
-	struct monitor	*next;
+	struct monitor	*prev, *next;
 };
 
 struct client {

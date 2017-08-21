@@ -263,6 +263,8 @@ struct monitor *mon_alloc(void)
 
 	m->flags |= MF_SHOWBAR;
 
+	m->prev = m->next = NULL;
+
 	return m;
 }
 

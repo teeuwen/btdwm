@@ -1074,7 +1074,7 @@ int xinerama_init(void)
 	xcb_xinerama_is_active_reply_t *xia;
 	xcb_xinerama_query_screens_reply_t *xiq;
 	xcb_xinerama_screen_info_t *xii;
-	struct monitor *m;
+	struct monitor *m, *cm;
 	int i, l, n, res = 0;
 
 	xia = xcb_xinerama_is_active_reply(conn,
@@ -1097,10 +1097,12 @@ int xinerama_init(void)
 	for (i = 0; i < (l - n); i++) {
 		for (m = mons; m && m->next; m = m->next);
 
-		if (m)
+		if (m) {
 			m->next = mon_alloc();
-		else
+			m->next->prev = m;
+		} else {
 			mons = mon_alloc();
+		}
 	}
 
 	for (i = 0, m = mons; i < l && m; m = m->next, i++) {
@@ -1110,6 +1112,22 @@ int xinerama_init(void)
 		m->y = xii[i].y_org;
 		m->w = xii[i].width;
 		m->h = xii[i].height;
+	}
+
+	for (m = mons; m; m = m->next) {
+recheck:
+		for (cm = mons; cm; cm = cm->next) {
+			if (cm == m || (cm->x != m->x || cm->y != m->y))
+				continue;
+
+			if (cm->prev)
+				cm->prev->next = cm->next;
+			if (cm->next)
+				cm->next->prev = cm->prev;
+
+			free(cm);
+			goto recheck;
+		}
 	}
 
 	free(xiq);
