@@ -548,7 +548,20 @@ void restack(struct monitor *m)
 	normal[0] = m->barwin;
 
 	for (c = m->stack; c; c = c->snext) {
-		if (!ISVISIBLE(c))
+		if (!ISVISIBLE(c) || ISONTOP(c))
+			continue;
+
+		if (m->layouts[m->tag]->arrange && ISFLOATING(c)) {
+			xcb_configure_window(conn, c->win,
+					XCB_CONFIG_WINDOW_SIBLING |
+					XCB_CONFIG_WINDOW_STACK_MODE, normal);
+			normal[0] = c->win;
+		}
+	}
+
+	for (c = m->stack; c; c = c->snext) {
+		if (!ISVISIBLE(c) || ISONTOP(c) ||
+				(m->layouts[m->tag]->arrange && ISFLOATING(c)))
 			continue;
 
 		xcb_configure_window(conn, c->win,
@@ -565,12 +578,12 @@ void restack(struct monitor *m)
 		xcb_configure_window(conn, m->barwin,
 				XCB_CONFIG_WINDOW_STACK_MODE, ontop);
 
+	/* TODO Reverse */
 	for (c = m->stack; c; c = c->snext) {
-		if (!ISVISIBLE(c))
-			continue;
-
-		if (ISONTOP(c) ||
+		if (!ISVISIBLE(c) ||
 				(m->layouts[m->tag]->arrange && ISFLOATING(c)))
+
+		if (ISONTOP(c))
 			xcb_configure_window(conn, c->win,
 					XCB_CONFIG_WINDOW_STACK_MODE, ontop);
 	}

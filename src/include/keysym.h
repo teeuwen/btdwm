@@ -138,6 +138,7 @@
 #define K_BINC	XF86XK_MonBrightnessUp
 
 #define K_EXP	XF86XK_Explorer
+#define K_TOOLS	XF86XK_Tools
 
 #define K_LA	XF86XK_LaunchA
 
