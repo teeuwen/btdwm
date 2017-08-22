@@ -448,10 +448,8 @@ int geom_update(int w, int h) {
 		}
 	}
 
-	if (res) {
-		selmon = mons;
+	if (res)
 		selmon = mon_get(screen->root);
-	}
 
 	return res;
 }

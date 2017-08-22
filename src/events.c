@@ -47,7 +47,7 @@
 void event_trigger(int event, const char *str)
 {
 	unsigned int i, j;
-	char *p, *ocmd = NULL, *cmd = NULL;
+	char *p, *ocmd = NULL, *cmd = NULL, *_str = NULL;
 
 	for (i = 0; i < LENGTH(hooks); i++)
 		if (hooks[i].event == event)
@@ -56,6 +56,18 @@ void event_trigger(int event, const char *str)
 	return;
 
 fork:
+	if (!(_str = malloc(strlen(str) * 2)))
+		die("out of memory");
+
+	p = _str;
+
+	while (*str) {
+		if (*str == '"')
+			*p++ = '\\';
+
+		*p++ = *str++;
+	}
+
 	/* Not using sprintf here to prevent it from tampering with the rest
 	 * of the string. Could escape all other sequences but this is probably
 	 * easier in the end.
@@ -63,12 +75,12 @@ fork:
 	for (j = 1; hooks[i].cmd[j]; j++) {
 		if ((p = strchr(hooks[i].cmd[j], '%')) && *++p == 'n') {
 			if (!(cmd = malloc(strlen(hooks[i].cmd[j]) +
-					strlen(str) + 1)))
+					strlen(_str) + 1)))
 				die("out of memory\n");
 
 			cmd[0] = '\0';
 			strncat(cmd, hooks[i].cmd[j], p - hooks[i].cmd[j] - 1);
-			strcat(cmd, str);
+			strcat(cmd, _str);
 			strcat(cmd, ++p);
 
 			ocmd = hooks[i].cmd[j];
@@ -97,5 +109,6 @@ fork:
 	if (ocmd) {
 		hooks[i].cmd[j] = ocmd;
 		free(cmd);
+		free(_str);
 	}
 }

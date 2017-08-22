@@ -55,14 +55,16 @@
  *  - E_CLIENT: on client focus change
  *      %n: first occurrence of %n in any argv will be replaced by the WM_NAME
  *          of the selected client
+ *          (double quotes are automatically escaped with \)
  *            escape using %
  *  - E_LAYOUT: on layout change
  *      %n: first occurrence of %n in any argv will be replaced by the name of
  *          the selected layout specified below
+ *          (double quotes are automatically escaped with \)
  *            escape using %
  *  - E_TAG: on tag toggle or switch: TODO NYI
  *      %n: first occurrence of %n in any argv will be replaced by an array
- *          separated by commas
+ *          separated by commas (double quotes are automatically escaped with \)
  *            array entries consist of 2 characters, the first can either be
  *          '1' or '0' to indicate either a focused or unfocused tag
  *          respectively

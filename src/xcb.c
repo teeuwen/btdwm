@@ -845,6 +845,7 @@ static int configurenotify(xcb_generic_event_t *_e)
 	if (e->window != screen->root)
 		return 0;
 
+	/* FIXME Not really working */
 	if (geom_update(e->width, e->height))
 		arrange(NULL);
 
