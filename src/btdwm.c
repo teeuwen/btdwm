@@ -307,8 +307,18 @@ void mon_send(struct client *c, struct monitor *m)
 
 static void mon_arrange(struct monitor *m)
 {
+	struct client *c;
+	int cc;
+
 	if (m->layouts[m->tag]->arrange)
 		m->layouts[m->tag]->arrange(m);
+
+	for (c = m->clients, cc = 0; c; c = c->next)
+		if (ISVISIBLE(c))
+			cc++;
+
+	if (cc < 2)
+		m->mfacts[m->tag] = 0.5;
 
 	restack(m);
 }
